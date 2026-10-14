@@ -1,0 +1,1185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>APDC | BBA DEPARTMENT - Central Attendance System</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <style>
+    :root { --apdc-green: #006837; --apdc-dark: #004d28; }
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background-color: #f4f7f5;
+      overflow-x: hidden;
+    }
+    .bg-apdc { background-color: var(--apdc-green); }
+    .bg-apdc-dark { background-color: var(--apdc-dark); }
+    .text-apdc { color: var(--apdc-green); }
+    .tick-label { cursor: pointer; user-select: none; transition: all 0.15s ease; }
+    .status-cell { cursor: pointer; user-select: none; transition: all 0.15s ease; }
+    .status-cell:hover { transform: scale(1.08); }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col w-full">
+
+  <div id="syncBanner" class="hidden fixed top-0 left-0 right-0 bg-amber-500 text-white text-center py-1.5 px-2 text-xs font-bold z-50 shadow">
+    <i class="fa-solid fa-cloud-arrow-up fa-bounce mr-1"></i> Syncing with APDC Server...
+  </div>
+
+  <!-- LOGIN SCREEN -->
+  <div id="loginScreen" class="flex-grow flex items-center justify-center p-3 sm:p-6 bg-gradient-to-br from-[#004d28] via-[#006837] to-[#008547]">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 sm:p-8 border-t-8 border-[#004d28]">
+      <div class="text-center mb-6">
+        <div class="w-24 h-24 mx-auto mb-3 rounded-full bg-[#e6f4ed] border-2 border-[#006837] flex flex-col items-center justify-center text-[#006837] shadow-inner">
+          <i class="fa-solid fa-book-open text-3xl"></i>
+          <span class="text-[11px] font-extrabold tracking-widest mt-1">APSACS</span>
+        </div>
+        <p class="text-xs font-bold uppercase tracking-widest text-gray-500">APDC</p>
+        <h1 class="text-2xl sm:text-3xl font-extrabold text-[#006837] tracking-wide mt-0.5 uppercase">BBA DEPARTMENT</h1>
+        <p class="text-sm font-semibold text-gray-600 mt-1">Central Attendance System</p>
+      </div>
+
+      <form onsubmit="handleLogin(event)" class="space-y-4">
+        <div>
+          <label class="block text-xs font-bold uppercase text-gray-600 mb-1">Sign-In ID</label>
+          <div class="relative">
+            <i class="fa-solid fa-user absolute left-3.5 top-3.5 text-gray-400"></i>
+            <input id="usernameInput" type="text" required placeholder="Enter Sign-In ID"
+              class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#006837] text-base sm:text-sm" />
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-bold uppercase text-gray-600 mb-1">Password / PIN</label>
+          <div class="relative">
+            <i class="fa-solid fa-lock absolute left-3.5 top-3.5 text-gray-400"></i>
+            <input id="passwordInput" type="password" required placeholder="Enter PIN"
+              class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#006837] text-base sm:text-sm" />
+          </div>
+        </div>
+        <div id="loginError" class="hidden text-xs text-red-600 bg-red-50 border border-red-200 p-2.5 rounded-lg font-medium">
+          Invalid Login ID or PIN.
+        </div>
+        <button type="submit" id="loginBtn" class="w-full bg-apdc hover:bg-apdc-dark text-white font-bold py-3.5 rounded-lg shadow-md transition text-sm sm:text-base">
+          Sign In to Portal
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- MAIN APPLICATION -->
+  <div id="appScreen" class="hidden flex-grow flex flex-col w-full">
+    <header class="bg-apdc text-white shadow-md w-full">
+      <div class="max-w-7xl mx-auto px-3 sm:px-4 py-3 flex flex-wrap justify-between items-center gap-2">
+        <div class="flex items-center space-x-3 min-w-0">
+          <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white flex items-center justify-center text-[#006837] shadow shrink-0">
+            <i class="fa-solid fa-building-columns text-lg sm:text-xl"></i>
+          </div>
+          <div class="min-w-0">
+            <div class="text-[11px] uppercase tracking-widest text-emerald-100 font-bold leading-none">APDC</div>
+            <h1 class="text-lg sm:text-xl font-extrabold leading-tight tracking-tight mt-0.5 truncate">BBA Department</h1>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2.5 ml-auto">
+          <button onclick="refreshFromServer()" class="bg-white/15 hover:bg-white/25 text-white px-2.5 py-1.5 rounded-lg text-xs font-bold">
+            <i class="fa-solid fa-rotate"></i> <span class="hidden sm:inline ml-1">Sync</span>
+          </button>
+          <div class="text-right leading-tight">
+            <div id="userNameDisplay" class="text-xs sm:text-sm font-bold truncate max-w-[130px] sm:max-w-none"></div>
+            <div id="userRoleBadge" class="text-[10px] bg-emerald-800 px-2 py-0.5 rounded-full inline-block text-emerald-100"></div>
+          </div>
+          <button onclick="logout()" class="bg-white/15 hover:bg-white/25 text-white px-2.5 py-1.5 rounded-lg text-xs font-bold">
+            <i class="fa-solid fa-right-from-bracket"></i> <span class="hidden sm:inline ml-1">Sign Out</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="bg-apdc-dark w-full">
+        <div class="max-w-7xl mx-auto px-2 sm:px-4 flex space-x-1 overflow-x-auto no-scrollbar">
+          <button onclick="switchTab('summary')" id="tabBtn-summary" class="px-3 sm:px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-white border-b-4 border-white whitespace-nowrap shrink-0">
+            <i class="fa-solid fa-chart-pie mr-1"></i> Summary
+          </button>
+          <button onclick="switchTab('calendar')" id="tabBtn-calendar" class="px-3 sm:px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-emerald-200 border-b-4 border-transparent whitespace-nowrap shrink-0">
+            <i class="fa-solid fa-calendar-days mr-1"></i> Mark Attendance
+          </button>
+          <button onclick="switchTab('leaves')" id="tabBtn-leaves" class="px-3 sm:px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-emerald-200 border-b-4 border-transparent whitespace-nowrap shrink-0">
+            <i class="fa-solid fa-file-signature mr-1"></i> Leave Records
+          </button>
+          <button onclick="switchTab('students')" id="tabBtn-students" class="px-3 sm:px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-emerald-200 border-b-4 border-transparent whitespace-nowrap shrink-0">
+            <i class="fa-solid fa-users-gear mr-1"></i> Student Roster
+          </button>
+          <button onclick="switchTab('handover')" id="tabBtn-handover" class="px-3 sm:px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-emerald-200 border-b-4 border-transparent whitespace-nowrap shrink-0">
+            <i class="fa-solid fa-crown mr-1 text-amber-300"></i> Access &amp; Handover
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main class="max-w-7xl w-full mx-auto p-3 sm:p-6 flex-grow space-y-5">
+      <!-- TAB 1: SUMMARY -->
+      <section id="tab-summary" class="space-y-5">
+        <div class="bg-white p-4 rounded-xl shadow-sm border flex flex-col sm:flex-row justify-between sm:items-center gap-3">
+          <div>
+            <h2 class="text-base sm:text-lg font-extrabold text-gray-800">Live Attendance &amp; Leave Summary</h2>
+            <p class="text-xs text-gray-500" id="activeSemestersSubtitle">Real-time overview across all active BBA semesters.</p>
+          </div>
+          <input type="date" id="summaryDateInput" onchange="renderSummary()" class="w-full sm:w-auto border rounded-lg px-3 py-2 text-sm font-semibold text-[#006837]" />
+        </div>
+
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+          <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-[#006837]">
+            <div class="text-[11px] font-bold text-gray-500 uppercase">Total Students</div>
+            <div id="kpiTotalStudents" class="text-2xl sm:text-3xl font-extrabold text-gray-800 mt-1">0</div>
+          </div>
+          <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-emerald-500">
+            <div class="text-[11px] font-bold text-emerald-700 uppercase">Present</div>
+            <div id="kpiPresent" class="text-2xl sm:text-3xl font-extrabold text-emerald-600 mt-1">0</div>
+          </div>
+          <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-amber-500">
+            <div class="text-[11px] font-bold text-amber-700 uppercase">On Leave</div>
+            <div id="kpiLeave" class="text-2xl sm:text-3xl font-extrabold text-amber-600 mt-1">0</div>
+          </div>
+          <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-red-500">
+            <div class="text-[11px] font-bold text-red-700 uppercase">Below 75%</div>
+            <div id="kpiRedZone" class="text-2xl sm:text-3xl font-extrabold text-red-600 mt-1">0</div>
+          </div>
+        </div>
+
+        <div class="bg-emerald-900 text-white p-4 sm:p-5 rounded-xl shadow-md">
+          <div class="flex flex-wrap justify-between items-center gap-2 mb-2">
+            <span class="text-xs uppercase tracking-widest font-bold text-emerald-300">Quick Executive Briefing</span>
+            <button onclick="copySummaryBrief()" class="bg-white/15 hover:bg-white/25 text-xs px-3 py-1.5 rounded font-semibold">Copy for WhatsApp</button>
+          </div>
+          <p id="executiveBriefText" class="text-xs sm:text-sm leading-relaxed font-medium text-emerald-50 break-words"></p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+          <div class="bg-white rounded-xl shadow-sm border overflow-hidden">
+            <div class="bg-gray-50 px-4 py-3 border-b font-bold text-sm text-gray-800">Students on Leave (Selected Date)</div>
+            <div id="summaryLeaveList" class="p-4 divide-y text-sm"></div>
+          </div>
+          <div class="bg-white rounded-xl shadow-sm border overflow-hidden">
+            <div class="bg-red-50 px-4 py-3 border-b font-bold text-sm text-red-800">Short Attendance Watchlist (&lt; 75%)</div>
+            <div id="summaryRedZoneList" class="p-4 divide-y text-sm"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 2: ATTENDANCE -->
+      <section id="tab-calendar" class="hidden space-y-5">
+        <div class="bg-white p-4 rounded-xl shadow-sm border flex flex-col sm:flex-row justify-between sm:items-end gap-3">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full sm:w-auto">
+            <div>
+              <label class="block text-[10px] font-bold uppercase text-gray-500 mb-1">Select Semester</label>
+              <select id="calSemesterSelect" onchange="renderCalendarTab()" class="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm font-bold text-[#006837]"></select>
+            </div>
+            <div>
+              <label class="block text-[10px] font-bold uppercase text-gray-500 mb-1">Attendance Date</label>
+              <div class="flex items-center">
+                <button onclick="shiftDate(-1)" class="px-3 py-2.5 border border-gray-300 rounded-l-lg hover:bg-gray-100 text-xs font-bold"><i class="fa-solid fa-chevron-left"></i></button>
+                <input type="date" id="calDateInput" onchange="renderCalendarTab()" class="w-full border-y border-gray-300 px-2 py-2 text-sm font-bold text-gray-800 text-center" />
+                <button onclick="shiftDate(1)" class="px-3 py-2.5 border border-gray-300 rounded-r-lg hover:bg-gray-100 text-xs font-bold"><i class="fa-solid fa-chevron-right"></i></button>
+              </div>
+            </div>
+          </div>
+          <button onclick="markAllPresentForDay()" class="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-lg text-xs font-bold shadow-sm">
+            <i class="fa-solid fa-check-double mr-1"></i> Tick All Present
+          </button>
+        </div>
+
+        <div id="crLockNotice" class="hidden bg-amber-50 border border-amber-200 text-amber-800 px-4 py-2.5 rounded-lg text-xs font-medium">
+          <strong>CR Restricted Mode:</strong> You can tick today's attendance for your semester. Editing past dates is restricted to Council &amp; Faculty.
+        </div>
+
+        <div class="bg-white rounded-xl shadow-sm border overflow-hidden">
+          <div class="bg-apdc text-white px-4 py-3 flex flex-wrap justify-between items-center gap-2">
+            <div>
+              <h3 class="font-bold text-sm" id="daySheetTitle">Attendance Sheet</h3>
+              <p class="text-[11px] text-emerald-100">Tick one option in front of each student's name below.</p>
+            </div>
+            <span class="text-[11px] bg-white/20 px-2.5 py-1 rounded font-semibold">Auto-Saves</span>
+          </div>
+          <div class="divide-y divide-gray-200" id="dailyAttendanceList"></div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+          <div class="bg-gray-50 px-4 py-3 border-b border-gray-200 flex flex-wrap justify-between items-center gap-3">
+            <div>
+              <h3 class="font-bold text-sm text-gray-800"><i class="fa-solid fa-table-cells text-[#006837] mr-1.5"></i>Monthly Attendance Calendar Overview</h3>
+              <p class="text-xs text-gray-500">Click any date header to load that date above, or tap any cell to cycle <strong>P → A → L</strong>.</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <label class="text-xs font-bold text-gray-600">Month:</label>
+              <input type="month" id="calMonthPicker" onchange="renderMonthlyMatrix()" class="border border-gray-300 rounded-lg px-2.5 py-1.5 text-xs font-bold text-[#006837]" />
+            </div>
+          </div>
+          <div class="overflow-x-auto p-3">
+            <table class="w-full border-collapse text-xs" id="monthlyMatrixTable"></table>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 3: LEAVES -->
+      <section id="tab-leaves" class="hidden space-y-6">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div class="bg-white p-4 sm:p-5 rounded-xl shadow-sm border lg:col-span-1 h-fit">
+            <h3 class="font-extrabold text-base text-[#006837] mb-1">Attach Official Student Leave</h3>
+            <p class="text-xs text-gray-500 mb-4">Uploads physical leave letter to Google Drive &amp; automatically ticks "On Leave (Record Attached)".</p>
+            <form onsubmit="handleLeaveSubmit(event)" class="space-y-3 text-sm">
+              <div>
+                <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Semester</label>
+                <select id="leaveSemSelect" onchange="populateLeaveStudents()" class="w-full border rounded-lg px-3 py-2.5 text-sm font-semibold"></select>
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Student</label>
+                <select id="leaveStudentSelect" required class="w-full border rounded-lg px-3 py-2.5 text-sm"></select>
+              </div>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <div>
+                  <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Start Date</label>
+                  <input type="date" id="leaveStartDate" required class="w-full border rounded-lg px-2.5 py-2 text-xs" />
+                </div>
+                <div>
+                  <label class="block text-xs font-bold text-gray-600 uppercase mb-1">End Date</label>
+                  <input type="date" id="leaveEndDate" required class="w-full border rounded-lg px-2.5 py-2 text-xs" />
+                </div>
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Category</label>
+                <select id="leaveCategory" class="w-full border rounded-lg px-3 py-2.5 text-sm">
+                  <option value="Medical Leave">Medical Leave</option>
+                  <option value="Council/Event Duty">Council/Event Duty</option>
+                  <option value="Personal/Emergency">Personal/Emergency</option>
+                  <option value="Sports/Representation">Sports/Representation</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Short Note</label>
+                <input type="text" id="leaveNote" required placeholder="Details..." class="w-full border rounded-lg px-3 py-2.5 text-sm" />
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Attach Leave Letter</label>
+                <input type="file" id="leaveFileInput" accept="image/*,.pdf" required class="w-full text-xs" />
+              </div>
+              <button type="submit" class="w-full bg-apdc hover:bg-apdc-dark text-white font-bold py-3 rounded-lg shadow text-sm">
+                Record Leave &amp; Attach File
+              </button>
+            </form>
+          </div>
+
+          <div class="bg-white rounded-xl shadow-sm border lg:col-span-2 overflow-hidden">
+            <div class="bg-gray-50 px-4 py-3 border-b font-bold text-sm text-gray-800">Recorded Leave Applications Archive</div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left border-collapse text-sm">
+                <thead>
+                  <tr class="bg-gray-50 border-b text-[11px] font-bold uppercase text-gray-500">
+                    <th class="py-3 px-3">Student</th>
+                    <th class="py-3 px-3">Dates</th>
+                    <th class="py-3 px-3">Reason</th>
+                    <th class="py-3 px-3">File</th>
+                    <th class="py-3 px-3 text-right">Action</th>
+                  </tr>
+                </thead>
+                <tbody id="leaveRecordsBody" class="divide-y"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 4: STUDENTS & PROMOTE -->
+      <section id="tab-students" class="hidden space-y-6">
+        <div id="promotionPanel" class="bg-gradient-to-r from-[#004d28] to-[#006837] text-white p-5 rounded-xl shadow-md">
+          <div class="flex flex-wrap justify-between items-start gap-4">
+            <div class="max-w-xl">
+              <span class="bg-amber-400 text-gray-900 text-[10px] font-extrabold uppercase px-2.5 py-0.5 rounded-full">President &amp; Faculty Authority Only</span>
+              <h3 class="text-lg font-extrabold mt-1"><i class="fa-solid fa-graduation-cap mr-1.5"></i>Promote or Revert Semester Batch</h3>
+              <p class="text-xs text-emerald-100 mt-1 leading-relaxed">
+                Select any batch below to upgrade them to the next semester—or select a lower semester to <strong>revert</strong> an accidental promotion.
+              </p>
+            </div>
+            <div class="bg-white/10 p-4 rounded-xl border border-white/20 w-full lg:w-auto flex flex-col sm:flex-row flex-wrap items-stretch sm:items-end gap-3">
+              <div>
+                <label class="block text-[10px] font-bold uppercase text-emerald-200 mb-1">From Semester</label>
+                <select id="promoteFromSem" onchange="updatePromoteTargetPreview()" class="w-full bg-white text-gray-900 font-bold text-xs rounded-lg px-3 py-2.5"></select>
+              </div>
+              <div>
+                <label class="block text-[10px] font-bold uppercase text-emerald-200 mb-1">Convert To (Promote / Revert)</label>
+                <select id="promoteToSem" class="w-full bg-white text-[#006837] font-extrabold text-xs rounded-lg px-3 py-2.5">
+                  <option value="1">Semester 1</option>
+                  <option value="2">Semester 2</option>
+                  <option value="3">Semester 3</option>
+                  <option value="4">Semester 4</option>
+                  <option value="5">Semester 5</option>
+                  <option value="6">Semester 6</option>
+                  <option value="7">Semester 7</option>
+                  <option value="8">Semester 8</option>
+                  <option value="GRAD">Graduate (Remove Batch)</option>
+                </select>
+              </div>
+              <label class="flex items-center gap-1.5 text-xs text-emerald-100 font-semibold py-2 cursor-pointer">
+                <input type="checkbox" id="resetAttendanceOnPromote" class="w-4 h-4 accent-amber-400 rounded" />
+                <span>Reset Sem Attendance to 0</span>
+              </label>
+              <div class="flex gap-2">
+                <button onclick="promoteSelectedSemester()" class="bg-amber-400 hover:bg-amber-300 text-gray-900 font-extrabold px-4 py-2.5 rounded-lg text-xs shadow transition whitespace-nowrap">
+                  <i class="fa-solid fa-arrows-rotate mr-1"></i> Apply Batch Change
+                </button>
+                <button id="undoPromoBtn" onclick="undoLastPromotion()" class="hidden bg-white/20 hover:bg-white/30 text-white font-bold px-3 py-2.5 rounded-lg text-xs border border-white/30 transition whitespace-nowrap">
+                  <i class="fa-solid fa-rotate-left mr-1"></i> Undo Last
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white p-4 sm:p-5 rounded-xl shadow-sm border">
+          <div class="flex flex-wrap justify-between items-center gap-3 mb-4">
+            <div>
+              <h3 class="font-extrabold text-base text-gray-800">Mid-Session Attendance &amp; Student Roster</h3>
+              <p class="text-xs text-gray-500">Edit previous held/attended classes anytime.</p>
+            </div>
+            <button onclick="document.getElementById('addStudentModal').classList.remove('hidden')" class="w-full sm:w-auto bg-apdc text-white px-4 py-2.5 rounded-lg text-xs font-bold">
+              + Add New Student
+            </button>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse text-sm">
+              <thead>
+                <tr class="bg-gray-50 border-b text-[11px] font-bold uppercase text-gray-500">
+                  <th class="py-3 px-2">Sem</th>
+                  <th class="py-3 px-2">Roll No</th>
+                  <th class="py-3 px-2">Name</th>
+                  <th class="py-3 px-2 text-center">Prev Held</th>
+                  <th class="py-3 px-2 text-center">Prev Att</th>
+                  <th class="py-3 px-2 text-center">Total %</th>
+                  <th class="py-3 px-2 text-right">Del</th>
+                </tr>
+              </thead>
+              <tbody id="rosterTableBody" class="divide-y"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 5: HANDOVER -->
+      <section id="tab-handover" class="hidden space-y-6">
+        <div class="bg-gradient-to-r from-[#004d28] to-[#006837] text-white p-5 sm:p-6 rounded-xl shadow-md">
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-5 items-center">
+            <div class="lg:col-span-2 space-y-2">
+              <span class="bg-amber-400 text-gray-900 text-[10px] font-extrabold uppercase px-2.5 py-0.5 rounded-full">Server Ownership &amp; Graduation Handover</span>
+              <h3 class="text-lg sm:text-xl font-extrabold">Grant Google Cloud Database &amp; Drive Control</h3>
+              <p class="text-xs text-emerald-100 leading-relaxed">
+                When you graduate or pass control to the next President or Faculty Coordinator, enter their Gmail address below to grant them full Google Sheet &amp; Drive Editor ownership.
+              </p>
+              <div class="pt-1">
+                <a id="rawSheetLink" href="#" target="_blank" class="inline-flex items-center gap-1.5 text-xs font-bold text-amber-300 underline hover:text-white">
+                  <i class="fa-solid fa-table"></i> Open Master Google Sheet Database Directly
+                </a>
+              </div>
+            </div>
+            <form onsubmit="handleGrantGoogleAccess(event)" class="bg-white/10 p-4 rounded-xl border border-white/20 space-y-3">
+              <label class="block text-xs font-bold uppercase text-emerald-100">New Admin's Gmail Address</label>
+              <input type="email" id="newGoogleAdminEmail" required placeholder="Enter Gmail address"
+                class="w-full px-3 py-2.5 rounded-lg text-gray-900 text-sm font-semibold focus:outline-none" />
+              <button type="submit" class="w-full bg-amber-400 hover:bg-amber-300 text-gray-900 font-extrabold py-2.5 rounded-lg text-xs shadow transition">
+                <i class="fa-solid fa-key mr-1"></i> Grant Google Server Control
+              </button>
+            </form>
+          </div>
+        </div>
+
+        <div class="bg-white p-4 sm:p-5 rounded-xl shadow-sm border">
+          <div class="flex flex-wrap justify-between items-center gap-3 mb-4">
+            <div>
+              <h3 class="font-extrabold text-base text-gray-800">Portal Accounts, Roles &amp; Handover Manager</h3>
+              <p class="text-xs text-gray-500">Edit any Username, PIN, Name, Role, or Assigned Semester below.</p>
+            </div>
+            <div class="flex gap-2 w-full sm:w-auto">
+              <button onclick="addNewUserRow()" class="flex-1 sm:flex-none bg-emerald-50 text-[#006837] border border-emerald-200 px-3 py-2 rounded-lg text-xs font-bold">
+                + Add Account
+              </button>
+              <button onclick="saveUsersChanges()" class="flex-1 sm:flex-none bg-apdc text-white px-4 py-2 rounded-lg text-xs font-bold shadow">
+                Save Changes
+              </button>
+            </div>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse text-sm">
+              <thead>
+                <tr class="bg-gray-50 border-b text-[11px] font-bold uppercase text-gray-500">
+                  <th class="py-3 px-2">Login ID</th>
+                  <th class="py-3 px-2">PIN</th>
+                  <th class="py-3 px-2">Full Name</th>
+                  <th class="py-3 px-2">Title</th>
+                  <th class="py-3 px-2">Role</th>
+                  <th class="py-3 px-2">Sem</th>
+                  <th class="py-3 px-2 text-right">Del</th>
+                </tr>
+              </thead>
+              <tbody id="usersManagerBody" class="divide-y"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- ADD STUDENT MODAL -->
+  <div id="addStudentModal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl max-w-md w-full overflow-hidden shadow-2xl">
+      <div class="bg-apdc text-white px-4 py-3 flex justify-between items-center">
+        <h4 class="font-bold text-sm">Add Student</h4>
+        <button onclick="document.getElementById('addStudentModal').classList.add('hidden')" class="text-white"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <form onsubmit="handleAddStudent(event)" class="p-5 space-y-3 text-sm">
+        <select id="newStuSem" class="w-full border rounded-lg px-3 py-2.5">
+          <option value="8">Semester 8</option>
+          <option value="7">Semester 7</option>
+          <option value="6">Semester 6</option>
+          <option value="5">Semester 5</option>
+          <option value="4">Semester 4</option>
+          <option value="3">Semester 3</option>
+          <option value="2">Semester 2</option>
+          <option value="1">Semester 1</option>
+        </select>
+        <input type="text" id="newStuRoll" required placeholder="Roll Number (e.g. BBA-S8-03)" class="w-full border rounded-lg px-3 py-2.5" />
+        <input type="text" id="newStuName" required placeholder="Student Full Name" class="w-full border rounded-lg px-3 py-2.5" />
+        <div class="grid grid-cols-2 gap-2">
+          <input type="number" id="newStuPrevHeld" value="20" min="0" placeholder="Prev Held" class="w-full border rounded-lg px-3 py-2.5" />
+          <input type="number" id="newStuPrevAtt" value="16" min="0" placeholder="Prev Attended" class="w-full border rounded-lg px-3 py-2.5" />
+        </div>
+        <button type="submit" class="w-full bg-apdc text-white font-bold py-3 rounded-lg">Save to Server</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const GAS_URL = "https://script.google.com/macros/s/AKfycby2s4ncMkxRINERW3JBlEH4lciB2SR5Ho63Qat7LhmEGfqS6_u1FmshYSs1dP0N-6K0Qw/exec";
+
+    const FALLBACK_USERS = [
+      { username: 'faisal.rabbani', pin: 'apdc123', name: 'Sir Faisal Rabbani', title: 'BBA Coordinator (Head)', role: 'faculty', sem: 'ALL' },
+      { username: 'samiullah', pin: 'apdc123', name: 'Sir Samiullah', title: 'Attendance Incharge', role: 'faculty', sem: 'ALL' },
+      { username: 'jarar.ali', pin: 'president8', name: 'Jarar Ali', title: 'President & CR Sem 8', role: 'president', sem: '8' },
+      { username: 'fakhar', pin: 'council123', name: 'Fakhar', title: 'Vice President', role: 'council', sem: 'ALL' },
+      { username: 'tauqeer', pin: 'council4', name: 'Tauqeer', title: 'Advisor & CR Sem 4', role: 'council', sem: '4' },
+      { username: 'rubab', pin: 'council123', name: 'Rubab', title: 'Secretary', role: 'council', sem: 'ALL' },
+      { username: 'zainab', pin: 'council123', name: 'Zainab', title: 'Joint Secretary', role: 'council', sem: 'ALL' },
+      { username: 'jahanzaib', pin: 'crsem6', name: 'Jahanzaib', title: 'CR - Semester 6', role: 'cr', sem: '6' },
+      { username: 'rao.zaki', pin: 'crsem2', name: 'Rao Zaki', title: 'CR - Semester 2', role: 'cr', sem: '2' }
+    ];
+
+    const FALLBACK_STUDENTS = [
+      { id: 'S1', roll: 'BBA-S8-01', name: 'Student A', sem: '8', prevHeld: 20, prevAttended: 18 },
+      { id: 'S2', roll: 'BBA-S8-02', name: 'Student B', sem: '8', prevHeld: 20, prevAttended: 14 },
+      { id: 'S3', roll: 'BBA-S6-01', 'name': 'Student C', sem: '6', prevHeld: 18, prevAttended: 16 },
+      { id: 'S4', roll: 'BBA-S6-02', 'name': 'Student D', sem: '6', prevHeld: 18, prevAttended: 12 },
+      { id: 'S5', roll: 'BBA-S4-01', 'name': 'Student E', sem: '4', prevHeld: 22, prevAttended: 20 },
+      { id: 'S6', roll: 'BBA-S4-02', 'name': 'Student F', sem: '4', prevHeld: 22, prevAttended: 16 },
+      { id: 'S7', roll: 'BBA-S2-01', 'name': 'Student G', sem: '2', prevHeld: 15, prevAttended: 14 },
+      { id: 'S8', roll: 'BBA-S2-02', 'name': 'Student H', sem: '2', prevHeld: 15, prevAttended: 10 }
+    ];
+
+    let usersList = [...FALLBACK_USERS];
+    let currentUser = null;
+    let students = [...FALLBACK_STUDENTS];
+    let attendanceLogs = {};
+    let leaveRecords = [];
+    let lastPromotionBackup = null;
+
+    function isSuperAdminUser(user) {
+      if (!user) return false;
+      return user.role === 'faculty' || user.role === 'president' || user.username === 'jarar.ali';
+    }
+
+    function showSync(state) {
+      document.getElementById('syncBanner').classList.toggle('hidden', !state);
+    }
+
+    function getTodayStr() {
+      return new Date().toISOString().split('T')[0];
+    }
+
+    function callServer(action, payloadObj, callback) {
+      showSync(true);
+      if (action === 'getData') {
+        fetch(GAS_URL + '?api=1')
+          .then(r => r.json())
+          .then(data => { showSync(false); if (callback) callback(data); })
+          .catch(() => { showSync(false); if (callback) callback(null); });
+      } else {
+        fetch(GAS_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({ action, ...payloadObj })
+        })
+          .then(r => r.json())
+          .then(res => { showSync(false); if (callback) callback(res); })
+          .catch(() => { showSync(false); if (callback) callback({ success: false }); });
+      }
+    }
+
+    function getActiveSemesters() {
+      const sems = [...new Set(students.map(s => String(s.sem)))].sort((a, b) => Number(b) - Number(a));
+      return sems.length > 0 ? sems : ['8', '6', '4', '2'];
+    }
+
+    function syncSemesterDropdowns() {
+      const activeSems = getActiveSemesters();
+      const calSelect = document.getElementById('calSemesterSelect');
+      const leaveSelect = document.getElementById('leaveSemSelect');
+      const promoteFrom = document.getElementById('promoteFromSem');
+
+      const prevCal = calSelect.value;
+      const prevLeave = leaveSelect.value;
+
+      const optionsHtml = activeSems.map(sem => `<option value="${sem}">BBA Semester ${sem}</option>`).join('');
+      calSelect.innerHTML = optionsHtml;
+      leaveSelect.innerHTML = optionsHtml;
+      promoteFrom.innerHTML = activeSems.map(sem => `<option value="${sem}">Semester ${sem} (${students.filter(s => String(s.sem) === String(sem)).length} Students)</option>`).join('');
+
+      if (currentUser && currentUser.sem !== 'ALL' && activeSems.includes(String(currentUser.sem))) {
+        calSelect.value = String(currentUser.sem);
+      } else if (activeSems.includes(prevCal)) {
+        calSelect.value = prevCal;
+      }
+
+      if (activeSems.includes(prevLeave)) {
+        leaveSelect.value = prevLeave;
+      }
+
+      document.getElementById('activeSemestersSubtitle').textContent =
+        `Real-time overview across active BBA Semesters: ${activeSems.join(', ')}.`;
+
+      updatePromoteTargetPreview();
+    }
+
+    function updatePromoteTargetPreview() {
+      const fromSem = Number(document.getElementById('promoteFromSem').value || 6);
+      const toSelect = document.getElementById('promoteToSem');
+      toSelect.value = fromSem >= 8 ? 'GRAD' : String(fromSem + 1);
+    }
+
+    function promoteSelectedSemester() {
+      if (!isSuperAdminUser(currentUser)) return alert('Only the President and Faculty can promote or revert semesters.');
+
+      const fromSem = String(document.getElementById('promoteFromSem').value);
+      const toSem = String(document.getElementById('promoteToSem').value);
+      const resetAtt = document.getElementById('resetAttendanceOnPromote').checked;
+
+      if (!fromSem || fromSem === toSem) return alert('Select a different target semester.');
+
+      const affectedCount = students.filter(s => String(s.sem) === fromSem).length;
+      const isRevert = toSem !== 'GRAD' && Number(toSem) < Number(fromSem);
+      const actionText = toSem === 'GRAD'
+        ? `Graduate and remove all ${affectedCount} students from Semester ${fromSem}?`
+        : `${isRevert ? 'Revert' : 'Promote'} all ${affectedCount} students from Semester ${fromSem} to Semester ${toSem}?`;
+
+      if (!confirm(actionText)) return;
+
+      lastPromotionBackup = {
+        students: JSON.parse(JSON.stringify(students)),
+        usersList: JSON.parse(JSON.stringify(usersList))
+      };
+      document.getElementById('undoPromoBtn').classList.remove('hidden');
+
+      if (toSem === 'GRAD') {
+        students = students.filter(s => String(s.sem) !== fromSem);
+      } else {
+        students.forEach(s => {
+          if (String(s.sem) === fromSem) {
+            s.sem = toSem;
+            s.roll = s.roll.replace(`S${fromSem}`, `S${toSem}`);
+            if (resetAtt) { s.prevHeld = 0; s.prevAttended = 0; }
+          }
+        });
+        usersList.forEach(u => {
+          if (String(u.sem) === fromSem) {
+            u.sem = toSem;
+            u.title = u.title.replace(`Sem ${fromSem}`, `Sem ${toSem}`).replace(`Semester ${fromSem}`, `Semester ${toSem}`);
+          }
+        });
+      }
+
+      syncSemesterDropdowns();
+      renderAllActiveViews();
+      saveStudentsAndUsersToServer(`Success! Semester ${fromSem} moved to Semester ${toSem}.`);
+    }
+
+    function undoLastPromotion() {
+      if (!lastPromotionBackup) return;
+      if (!confirm('Undo the last semester promotion and restore previous batch numbers?')) return;
+      students = JSON.parse(JSON.stringify(lastPromotionBackup.students));
+      usersList = JSON.parse(JSON.stringify(lastPromotionBackup.usersList));
+      lastPromotionBackup = null;
+      document.getElementById('undoPromoBtn').classList.add('hidden');
+      syncSemesterDropdowns();
+      renderAllActiveViews();
+      saveStudentsAndUsersToServer('Last promotion undone!');
+    }
+
+    function saveStudentsAndUsersToServer(msg) {
+      callServer('saveStudents', { payload: students }, () => {
+        callServer('saveUsers', { payload: usersList }, () => {
+          if (msg) alert(msg);
+        });
+      });
+    }
+
+    function autoFixTestSemester7IfPresent() {
+      let fixed = false;
+      const hasSem7 = students.some(s => String(s.sem) === '7');
+      const hasSem6 = students.some(s => String(s.sem) === '6');
+      if (hasSem7 && !hasSem6) {
+        students.forEach(s => {
+          if (String(s.sem) === '7') { s.sem = '6'; s.roll = s.roll.replace('S7', 'S6'); fixed = true; }
+        });
+        usersList.forEach(u => {
+          if (String(u.sem) === '7') { u.sem = '6'; u.title = u.title.replace('Sem 7', 'Sem 6').replace('Semester 7', 'Semester 6'); fixed = true; }
+        });
+      }
+      if (fixed) saveStudentsAndUsersToServer(null);
+    }
+
+    function refreshFromServer(callback) {
+      callServer('getData', {}, data => {
+        if (data) {
+          if (data.users && data.users.length > 0) usersList = data.users;
+          if (data.students && data.students.length > 0) students = data.students;
+          attendanceLogs = data.attendanceLogs || {};
+          leaveRecords = data.leaveRecords || [];
+          if (data.sheetUrl) document.getElementById('rawSheetLink').href = data.sheetUrl;
+          autoFixTestSemester7IfPresent();
+        }
+        syncSemesterDropdowns();
+        if (callback) callback();
+        else renderAllActiveViews();
+      });
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      refreshFromServer();
+    });
+
+    function renderAllActiveViews() {
+      renderSummary();
+      renderCalendarTab();
+      renderLeavesTab();
+      renderRosterTab();
+      renderHandoverTab();
+      populateLeaveStudents();
+    }
+
+    function handleLogin(e) {
+      e.preventDefault();
+      const u = document.getElementById('usernameInput').value.trim().toLowerCase();
+      const p = document.getElementById('passwordInput').value.trim();
+      const found = usersList.find(x => x.username === u && x.pin === p);
+      if (!found) {
+        document.getElementById('loginError').classList.remove('hidden');
+        return;
+      }
+      document.getElementById('loginError').classList.add('hidden');
+      currentUser = found;
+      refreshFromServer(() => initPortalForUser());
+    }
+
+    function logout() {
+      currentUser = null;
+      document.getElementById('appScreen').classList.add('hidden');
+      document.getElementById('loginScreen').classList.remove('hidden');
+    }
+
+    function initPortalForUser() {
+      document.getElementById('loginScreen').classList.add('hidden');
+      document.getElementById('appScreen').classList.remove('hidden');
+      document.getElementById('userNameDisplay').textContent = currentUser.name;
+      document.getElementById('userRoleBadge').textContent = currentUser.title;
+
+      const today = getTodayStr();
+      document.getElementById('summaryDateInput').value = today;
+      document.getElementById('calDateInput').value = today;
+      document.getElementById('calMonthPicker').value = today.slice(0, 7);
+      document.getElementById('leaveStartDate').value = today;
+      document.getElementById('leaveEndDate').value = today;
+
+      syncSemesterDropdowns();
+
+      const semSelect = document.getElementById('calSemesterSelect');
+      const superAdmin = isSuperAdminUser(currentUser);
+
+      document.getElementById('promotionPanel').classList.toggle('hidden', !superAdmin);
+      document.getElementById('tabBtn-handover').classList.toggle('hidden', !superAdmin);
+
+      if (currentUser.role === 'cr') {
+        document.getElementById('tabBtn-summary').classList.add('hidden');
+        document.getElementById('tabBtn-leaves').classList.add('hidden');
+        document.getElementById('tabBtn-students').classList.add('hidden');
+        document.getElementById('crLockNotice').classList.remove('hidden');
+        semSelect.value = currentUser.sem;
+        semSelect.disabled = true;
+        switchTab('calendar');
+      } else {
+        document.getElementById('tabBtn-summary').classList.remove('hidden');
+        document.getElementById('tabBtn-leaves').classList.remove('hidden');
+        document.getElementById('tabBtn-students').classList.remove('hidden');
+        document.getElementById('crLockNotice').classList.add('hidden');
+        semSelect.disabled = false;
+        if (currentUser.sem !== 'ALL') semSelect.value = currentUser.sem;
+        switchTab('summary');
+      }
+      populateLeaveStudents();
+    }
+
+    function switchTab(tabName) {
+      if (tabName === 'handover' && !isSuperAdminUser(currentUser)) return;
+      ['summary', 'calendar', 'leaves', 'students', 'handover'].forEach(t => {
+        document.getElementById('tab-' + t).classList.add('hidden');
+        const btn = document.getElementById('tabBtn-' + t);
+        btn.classList.remove('border-white', 'text-white');
+        btn.classList.add('border-transparent', 'text-emerald-200');
+      });
+      document.getElementById('tab-' + tabName).classList.remove('hidden');
+      const activeBtn = document.getElementById('tabBtn-' + tabName);
+      activeBtn.classList.add('border-white', 'text-white');
+      activeBtn.classList.remove('border-transparent', 'text-emerald-200');
+      renderAllActiveViews();
+    }
+
+    function calcStudentStats(stu) {
+      let portalHeld = 0, portalAttended = 0;
+      Object.keys(attendanceLogs).forEach(d => {
+        const entry = attendanceLogs[d]?.[stu.id];
+        if (entry && entry.status) {
+          portalHeld++;
+          if (entry.status === 'P') portalAttended++;
+        }
+      });
+      const totalHeld = Number(stu.prevHeld) + portalHeld;
+      const totalAtt = Number(stu.prevAttended) + portalAttended;
+      const pct = totalHeld > 0 ? ((totalAtt / totalHeld) * 100).toFixed(1) : '100.0';
+      return { portalHeld, portalAttended, totalHeld, totalAtt, pct: parseFloat(pct) };
+    }
+
+    function findLeaveForStudentOnDate(stuId, dateStr) {
+      return leaveRecords.find(l => l.studentId === stuId && dateStr >= l.startDate && dateStr <= l.endDate);
+    }
+
+    function renderSummary() {
+      const dateStr = document.getElementById('summaryDateInput').value;
+      const dayLog = attendanceLogs[dateStr] || {};
+      let presentCount = 0, absentCount = 0, leaveCount = 0;
+      let redZoneStudents = [], onLeaveStudents = [];
+
+      students.forEach(s => {
+        const st = dayLog[s.id]?.status;
+        const recordedLeave = findLeaveForStudentOnDate(s.id, dateStr);
+        if (st === 'P') presentCount++;
+        else if (st === 'L' || recordedLeave) {
+          leaveCount++;
+          onLeaveStudents.push({ student: s, leave: recordedLeave });
+        } else if (st === 'A') absentCount++;
+
+        const stats = calcStudentStats(s);
+        if (stats.pct < 75) redZoneStudents.push({ student: s, stats });
+      });
+
+      document.getElementById('kpiTotalStudents').textContent = students.length;
+      document.getElementById('kpiPresent').textContent = presentCount;
+      document.getElementById('kpiLeave').textContent = leaveCount;
+      document.getElementById('kpiRedZone').textContent = redZoneStudents.length;
+
+      const leaveNames = onLeaveStudents.map(x => `${x.student.name} (Sem ${x.student.sem})`).join(', ') || 'None';
+      document.getElementById('executiveBriefText').textContent =
+        `📊 APDC BBA Summary (${dateStr}): Total Students: ${students.length} | Present: ${presentCount} | Absent: ${absentCount} | On Leave (Record Attached): ${leaveCount} (${leaveNames}). Below 75% Red-Zone: ${redZoneStudents.length} student(s).`;
+
+      document.getElementById('summaryLeaveList').innerHTML = onLeaveStudents.length === 0
+        ? `<div class="text-gray-400 text-xs py-3 text-center">No leaves recorded for ${dateStr}.</div>`
+        : onLeaveStudents.map(({ student, leave }) => `
+          <div class="py-2.5 flex flex-wrap justify-between items-center gap-2">
+            <div>
+              <div class="font-bold">${student.name} (Sem ${student.sem})</div>
+              <div class="text-xs text-gray-500">${leave ? `${leave.category}:${leave.note}` : 'On Leave (Record Attached)'}</div>
+            </div>
+            ${leave && leave.fileUrl ? `<a href="${leave.fileUrl}" target="_blank" class="bg-amber-50 text-amber-800 border border-amber-200 px-2.5 py-1 rounded text-xs font-bold">Open Record</a>` : ''}
+          </div>`).join('');
+
+      document.getElementById('summaryRedZoneList').innerHTML = redZoneStudents.length === 0
+        ? `<div class="text-emerald-600 text-xs py-3 text-center font-bold">All students are above 75%!</div>`
+        : redZoneStudents.map(({ student, stats }) => `
+          <div class="py-2.5 flex justify-between items-center gap-2">
+            <div>
+              <div class="font-bold">${student.name} (Sem ${student.sem} • ${student.roll})</div>
+              <div class="text-xs text-gray-500">${stats.totalAtt}/${stats.totalHeld} classes attended</div>
+            </div>
+            <span class="bg-red-100 text-red-700 font-extrabold px-2.5 py-1 rounded-full text-xs shrink-0">${stats.pct}%</span>
+          </div>`).join('');
+    }
+
+    function copySummaryBrief() {
+      navigator.clipboard.writeText(document.getElementById('executiveBriefText').textContent);
+      alert('Briefing copied for WhatsApp!');
+    }
+
+    function shiftDate(days) {
+      const input = document.getElementById('calDateInput');
+      const d = new Date(input.value || getTodayStr());
+      d.setDate(d.getDate() + days);
+      input.value = d.toISOString().split('T')[0];
+      renderCalendarTab();
+    }
+
+    function renderCalendarTab() {
+      const sem = document.getElementById('calSemesterSelect').value;
+      const dateStr = document.getElementById('calDateInput').value;
+      const isCRPastLocked = (currentUser?.role === 'cr' && dateStr !== getTodayStr());
+
+      document.getElementById('daySheetTitle').textContent = `Semester ${sem} Attendance — ${dateStr}`;
+      const semStudents = students.filter(s => String(s.sem) === String(sem));
+      const dayLog = attendanceLogs[dateStr] || {};
+
+      const listContainer = document.getElementById('dailyAttendanceList');
+      if (semStudents.length === 0) {
+        listContainer.innerHTML = `<div class="p-6 text-center text-gray-400 text-sm">No students currently in Semester ${sem}.</div>`;
+      } else {
+        listContainer.innerHTML = semStudents.map(s => {
+          const leave = findLeaveForStudentOnDate(s.id, dateStr);
+          const currentStatus = dayLog[s.id]?.status || (leave ? 'L' : '');
+          const stats = calcStudentStats(s);
+          const dis = isCRPastLocked ? 'disabled' : '';
+
+          return `
+            <div class="p-4 flex flex-col md:flex-row md:justify-between md:items-center gap-3 hover:bg-gray-50 transition">
+              <div>
+                <div class="text-base font-extrabold text-gray-900">${s.name}</div>
+                <div class="text-xs text-gray-500 font-semibold mt-0.5">
+                  ${s.roll} • Overall Attendance:
+                  <span class="font-extrabold ${stats.pct < 75 ? 'text-red-600' : 'text-emerald-700'}">${stats.pct}% (${stats.totalAtt}/${stats.totalHeld})</span>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 w-full md:w-auto">
+                <label class="tick-label flex items-center gap-2.5 px-3.5 py-2.5 rounded-lg border text-xs sm:text-sm font-bold ${currentStatus === 'P' ? 'bg-emerald-50 border-emerald-600 text-emerald-800 shadow-sm' : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-100'}">
+                  <input type="checkbox" ${dis} ${currentStatus === 'P' ? 'checked' : ''} onchange="setAttendanceStatus('${dateStr}','${s.id}','P')" class="w-4 h-4 accent-[#006837] rounded cursor-pointer shrink-0" />
+                  <span>Present</span>
+                </label>
+
+                <label class="tick-label flex items-center gap-2.5 px-3.5 py-2.5 rounded-lg border text-xs sm:text-sm font-bold ${currentStatus === 'A' ? 'bg-red-50 border-red-600 text-red-800 shadow-sm' : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-100'}">
+                  <input type="checkbox" ${dis} ${currentStatus === 'A' ? 'checked' : ''} onchange="setAttendanceStatus('${dateStr}','${s.id}','A')" class="w-4 h-4 accent-red-600 rounded cursor-pointer shrink-0" />
+                  <span>Absent</span>
+                </label>
+
+                <label class="tick-label flex items-center gap-2.5 px-3.5 py-2.5 rounded-lg border text-xs sm:text-sm font-bold ${currentStatus === 'L' ? 'bg-amber-50 border-amber-500 text-amber-900 shadow-sm' : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-100'}">
+                  <input type="checkbox" ${dis} ${currentStatus === 'L' ? 'checked' : ''} onchange="setAttendanceStatus('${dateStr}','${s.id}','L')" class="w-4 h-4 accent-amber-600 rounded cursor-pointer shrink-0" />
+                  <span>On Leave (Record Attached)</span>
+                </label>
+              </div>
+
+              ${leave && leave.fileUrl ? `
+                <a href="${leave.fileUrl}" target="_blank" class="text-xs font-bold text-[#006837] underline self-start md:self-center">
+                  <i class="fa-solid fa-paperclip"></i> View Record
+                </a>
+              ` : (currentStatus === 'L' && currentUser?.role !== 'cr' ? `
+                <button onclick="quickAttachLeave('${s.id}','${s.sem}','${dateStr}')" class="text-xs font-bold text-amber-700 underline self-start md:self-center">
+                  + Attach File
+                </button>
+              ` : '')}
+            </div>
+          `;
+        }).join('');
+      }
+      renderMonthlyMatrix();
+    }
+
+    function renderMonthlyMatrix() {
+      const sem = document.getElementById('calSemesterSelect').value;
+      const monthVal = document.getElementById('calMonthPicker').value || getTodayStr().slice(0, 7);
+      const [year, month] = monthVal.split('-').map(Number);
+      const daysInMonth = new Date(year, month, 0).getDate();
+      const semStudents = students.filter(s => String(s.sem) === String(sem));
+      const selectedDate = document.getElementById('calDateInput').value;
+
+      let head = `<th class="p-2 border bg-gray-100 text-left min-w-[130px]">Student (Sem ${sem})</th>`;
+      for (let d = 1; d <= daysInMonth; d++) {
+        const dStr = `${monthVal}-${String(d).padStart(2, '0')}`;
+        const activeHdr = dStr === selectedDate ? 'bg-[#006837] text-white' : 'bg-gray-50 text-gray-600';
+        head += `<th onclick="document.getElementById('calDateInput').value='${dStr}'; renderCalendarTab();" class="p-1.5 border text-center cursor-pointer hover:bg-emerald-100 ${activeHdr}">${d}</th>`;
+      }
+      head += `<th class="p-2 border bg-gray-100 text-center">%</th>`;
+
+      const rows = semStudents.map(s => {
+        const stats = calcStudentStats(s);
+        let cells = '';
+        for (let d = 1; d <= daysInMonth; d++) {
+          const dStr = `${monthVal}-${String(d).padStart(2, '0')}`;
+          const st = attendanceLogs[dStr]?.[s.id]?.status || (findLeaveForStudentOnDate(s.id, dStr) ? 'L' : '');
+          const cls = st === 'P' ? 'bg-emerald-100 text-emerald-800 font-bold' : st === 'A' ? 'bg-red-100 text-red-700 font-bold' : st === 'L' ? 'bg-amber-100 text-amber-800 font-bold' : 'text-gray-300';
+          cells += `<td onclick="cycleMatrixStatus('${dStr}','${s.id}')" class="status-cell p-1 border text-center ${cls}">${st || '·'}</td>`;
+        }
+        return `<tr><td class="p-2 border font-bold whitespace-nowrap">${s.roll} - ${s.name}</td>${cells}<td class="p-2 border text-center font-bold ${stats.pct < 75 ? 'text-red-600' : 'text-emerald-700'}">${stats.pct}%</td></tr>`;
+      }).join('');
+
+      document.getElementById('monthlyMatrixTable').innerHTML = `<thead><tr>${head}</tr></thead><tbody>${rows}</tbody>`;
+    }
+
+    function cycleMatrixStatus(dateStr, studentId) {
+      if (currentUser.role === 'cr' && dateStr !== getTodayStr()) return alert('CRs can only edit today.');
+      document.getElementById('calDateInput').value = dateStr;
+      if (!attendanceLogs[dateStr]) attendanceLogs[dateStr] = {};
+      const curr = attendanceLogs[dateStr][studentId]?.status || '';
+      const order = ['', 'P', 'A', 'L'];
+      const next = order[(order.indexOf(curr) + 1) % order.length];
+      if (!next) delete attendanceLogs[dateStr][studentId];
+      else attendanceLogs[dateStr][studentId] = { status: next, by: currentUser.name };
+      renderCalendarTab();
+      syncAttendanceToServer();
+    }
+
+    function quickAttachLeave(stuId, sem, dateStr) {
+      switchTab('leaves');
+      document.getElementById('leaveSemSelect').value = sem;
+      populateLeaveStudents();
+      document.getElementById('leaveStudentSelect').value = stuId;
+      document.getElementById('leaveStartDate').value = dateStr;
+      document.getElementById('leaveEndDate').value = dateStr;
+    }
+
+    function syncAttendanceToServer() {
+      callServer('saveAttendance', { payload: attendanceLogs });
+    }
+
+    function setAttendanceStatus(dateStr, studentId, status) {
+      if (currentUser.role === 'cr' && dateStr !== getTodayStr()) {
+        alert('CRs can only mark today\'s attendance.');
+        renderCalendarTab();
+        return;
+      }
+      if (!attendanceLogs[dateStr]) attendanceLogs[dateStr] = {};
+      if (attendanceLogs[dateStr][studentId]?.status === status) {
+        delete attendanceLogs[dateStr][studentId];
+      } else {
+        attendanceLogs[dateStr][studentId] = { status, by: currentUser.name };
+      }
+      renderCalendarTab();
+      syncAttendanceToServer();
+    }
+
+    function markAllPresentForDay() {
+      const sem = document.getElementById('calSemesterSelect').value;
+      const dateStr = document.getElementById('calDateInput').value;
+      if (currentUser.role === 'cr' && dateStr !== getTodayStr()) return alert('CRs can only mark today.');
+      if (!attendanceLogs[dateStr]) attendanceLogs[dateStr] = {};
+      students.filter(s => String(s.sem) === String(sem)).forEach(s => {
+        const leave = findLeaveForStudentOnDate(s.id, dateStr);
+        attendanceLogs[dateStr][s.id] = { status: leave ? 'L' : 'P', by: currentUser.name };
+      });
+      renderCalendarTab();
+      syncAttendanceToServer();
+    }
+
+    function populateLeaveStudents() {
+      const sem = document.getElementById('leaveSemSelect').value;
+      document.getElementById('leaveStudentSelect').innerHTML = students.filter(s => String(s.sem) === String(sem))
+        .map(s => `<option value="${s.id}">${s.roll} — ${s.name}</option>`).join('');
+    }
+
+    function handleLeaveSubmit(e) {
+      e.preventDefault();
+      const stu = students.find(s => s.id === document.getElementById('leaveStudentSelect').value);
+      const start = document.getElementById('leaveStartDate').value;
+      const end = document.getElementById('leaveEndDate').value;
+      const category = document.getElementById('leaveCategory').value;
+      const note = document.getElementById('leaveNote').value;
+      const file = document.getElementById('leaveFileInput').files[0];
+
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        const record = {
+          id: 'L' + Date.now(),
+          studentId: stu.id,
+          studentName: stu.name,
+          roll: stu.roll,
+          sem: stu.sem,
+          startDate: start,
+          endDate: end,
+          category,
+          note,
+          fileName: file.name,
+          fileUrl: '',
+          recordedBy: `${currentUser.name}`
+        };
+
+        let cur = new Date(start), last = new Date(end);
+        while (cur <= last) {
+          const dStr = cur.toISOString().split('T')[0];
+          if (!attendanceLogs[dStr]) attendanceLogs[dStr] = {};
+          attendanceLogs[dStr][stu.id] = { status: 'L', by: currentUser.name };
+          cur.setDate(cur.getDate() + 1);
+        }
+
+        callServer('recordLeave', { record, base64Data: evt.target.result }, res => {
+          record.fileUrl = res?.fileUrl || '';
+          leaveRecords.unshift(record);
+          syncAttendanceToServer();
+          renderLeavesTab();
+          alert('Leave recorded & letter uploaded to Google Drive!');
+        });
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function renderLeavesTab() {
+      const tbody = document.getElementById('leaveRecordsBody');
+      tbody.innerHTML = leaveRecords.length === 0
+        ? `<tr><td colspan="5" class="py-6 text-center text-gray-400 text-xs">No leaves recorded yet.</td></tr>`
+        : leaveRecords.map(l => `
+          <tr>
+            <td class="py-3 px-3 font-bold">${l.studentName} <span class="text-xs text-[#006837]">(Sem ${l.sem})</span></td>
+            <td class="py-3 px-3 text-xs">${l.startDate} to ${l.endDate}</td>
+            <td class="py-3 px-3 text-xs"><strong>${l.category}:</strong> ${l.note}</td>
+            <td class="py-3 px-3"><a href="${l.fileUrl}" target="_blank" class="text-xs font-bold text-[#006837] underline">Open File</a></td>
+            <td class="py-3 px-3 text-right"><button onclick="deleteLeave('${l.id}')" class="text-red-500 text-xs font-bold">Del</button></td>
+          </tr>`).join('');
+    }
+
+    function deleteLeave(id) {
+      leaveRecords = leaveRecords.filter(x => x.id !== id);
+      renderLeavesTab();
+      callServer('deleteLeave', { leaveId: id });
+    }
+
+    function renderRosterTab() {
+      const superAdmin = isSuperAdminUser(currentUser);
+      document.getElementById('rosterTableBody').innerHTML = students.map(s => {
+        const stats = calcStudentStats(s);
+        return `
+          <tr>
+            <td class="py-2 px-2">
+              ${superAdmin ? `
+                <select onchange="updateBaseline('${s.id}','sem',this.value)" class="border rounded px-1.5 py-1 text-xs font-bold text-[#006837]">
+                  ${[1,2,3,4,5,6,7,8].map(n => `<option value="${n}" ${String(s.sem) === String(n) ? 'selected' : ''}>Sem ${n}</option>`).join('')}
+                </select>
+              ` : `<span class="font-bold text-[#006837] text-xs">Sem ${s.sem}</span>`}
+            </td>
+            <td class="py-2 px-2 text-xs font-semibold">${s.roll}</td>
+            <td class="py-2 px-2 font-bold">${s.name}</td>
+            <td class="py-2 px-2 text-center"><input type="number" value="${s.prevHeld}" onchange="updateBaseline('${s.id}','prevHeld',this.value)" class="w-14 border rounded text-center text-xs font-bold p-1" /></td>
+            <td class="py-2 px-2 text-center"><input type="number" value="${s.prevAttended}" onchange="updateBaseline('${s.id}','prevAttended',this.value)" class="w-14 border rounded text-center text-xs font-bold p-1" /></td>
+            <td class="py-2 px-2 text-center font-extrabold ${stats.pct < 75 ? 'text-red-600' : 'text-emerald-700'}">${stats.pct}%</td>
+            <td class="py-2 px-2 text-right"><button onclick="removeStudent('${s.id}')" class="text-red-500 text-xs"><i class="fa-solid fa-trash"></i></button></td>
+          </tr>`;
+      }).join('');
+    }
+
+    function updateBaseline(id, field, val) {
+      const stu = students.find(x => x.id === id);
+      if (stu) {
+        stu[field] = field === 'sem' ? String(val) : Number(val);
+        syncSemesterDropdowns();
+        renderRosterTab();
+        callServer('saveStudents', { payload: students });
+      }
+    }
+
+    function handleAddStudent(e) {
+      e.preventDefault();
+      students.push({
+        id: 'S' + Date.now(),
+        sem: document.getElementById('newStuSem').value,
+        roll: document.getElementById('newStuRoll').value.trim(),
+        name: document.getElementById('newStuName').value.trim(),
+        prevHeld: Number(document.getElementById('newStuPrevHeld').value),
+        prevAttended: Number(document.getElementById('newStuPrevAtt').value)
+      });
+      document.getElementById('addStudentModal').classList.add('hidden');
+      syncSemesterDropdowns();
+      renderRosterTab();
+      callServer('saveStudents', { payload: students });
+    }
+
+    function removeStudent(id) {
+      students = students.filter(x => x.id !== id);
+      syncSemesterDropdowns();
+      renderRosterTab();
+      callServer('saveStudents', { payload: students });
+    }
+
+    function renderHandoverTab() {
+      if (!isSuperAdminUser(currentUser)) return;
+      const tbody = document.getElementById('usersManagerBody');
+      tbody.innerHTML = usersList.map((u, idx) => `
+        <tr class="hover:bg-gray-50">
+          <td class="py-2 px-2"><input type="text" value="${u.username}" onchange="editUserField(${idx},'username',this.value)" class="border rounded px-2 py-1 text-xs font-bold w-28" /></td>
+          <td class="py-2 px-2"><input type="text" value="${u.pin}" onchange="editUserField(${idx},'pin',this.value)" class="border rounded px-2 py-1 text-xs w-20" /></td>
+          <td class="py-2 px-2"><input type="text" value="${u.name}" onchange="editUserField(${idx},'name',this.value)" class="border rounded px-2 py-1 text-xs font-semibold w-32" /></td>
+          <td class="py-2 px-2"><input type="text" value="${u.title}" onchange="editUserField(${idx},'title',this.value)" class="border rounded px-2 py-1 text-xs w-36" /></td>
+          <td class="py-2 px-2">
+            <select onchange="editUserField(${idx},'role',this.value)" class="border rounded px-2 py-1 text-xs font-bold text-[#006837]">
+              <option value="faculty" ${u.role === 'faculty' ? 'selected' : ''}>Faculty (Super Admin)</option>
+              <option value="president" ${u.role === 'president' || u.username === 'jarar.ali' ? 'selected' : ''}>President (Super Admin)</option>
+              <option value="council" ${u.role === 'council' && u.username !== 'jarar.ali' ? 'selected' : ''}>Council Member (Limited)</option>
+              <option value="cr" ${u.role === 'cr' ? 'selected' : ''}>CR (Restricted)</option>
+            </select>
+          </td>
+          <td class="py-2 px-2">
+            <select onchange="editUserField(${idx},'sem',this.value)" class="border rounded px-2 py-1 text-xs font-bold">
+              <option value="ALL" ${u.sem === 'ALL' ? 'selected' : ''}>ALL</option>
+              ${[1,2,3,4,5,6,7,8].map(n => `<option value="${n}" ${String(u.sem) === String(n) ? 'selected' : ''}>Sem${n}</option>`).join('')}
+            </select>
+          </td>
+          <td class="py-2 px-2 text-right">
+            <button onclick="removeUserRow(${idx})" class="text-red-500 hover:text-red-700 text-xs font-bold"><i class="fa-solid fa-trash"></i></button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function editUserField(idx, field, val) {
+      usersList[idx][field] = val;
+    }
+
+    function addNewUserRow() {
+      usersList.push({
+        username: 'new.user',
+        pin: 'apdc123',
+        name: 'New Member',
+        title: 'Council / CR',
+        role: 'council',
+        sem: 'ALL'
+      });
+      renderHandoverTab();
+    }
+
+    function removeUserRow(idx) {
+      if (usersList.length <= 1) return alert('Cannot remove the last admin account.');
+      usersList.splice(idx, 1);
+      renderHandoverTab();
+    }
+
+    function saveUsersChanges() {
+      callServer('saveUsers', { payload: usersList }, () => {
+        alert('All User Logins, Roles & Handover settings saved live to the server!');
+      });
+    }
+
+    function handleGrantGoogleAccess(e) {
+      e.preventDefault();
+      const email = document.getElementById('newGoogleAdminEmail').value.trim();
+      if (!email) return;
+      callServer('grantAccess', { email }, res => {
+        if (res && res.success) {
+          document.getElementById('newGoogleAdminEmail').value = '';
+          alert(`Success! ${email} now has full Google Drive & Google Sheet Server Editor permissions.`);
+        } else {
+          alert('Could not add email: Make sure it is a valid Google/Gmail account.');
+        }
+      });
+    }
+  </script>
+</body>
+</html>
