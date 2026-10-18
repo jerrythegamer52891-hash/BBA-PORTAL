@@ -52,7 +52,7 @@
           <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Username</label>
           <div class="relative">
             <i class="fa-solid fa-user absolute left-3.5 top-3 text-slate-400"></i>
-            <input id="loginUser" type="text" required placeholder="e.g., faisal or president"
+            <input id="loginUser" type="text" required placeholder="Enter username"
               class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-600 focus:outline-none text-sm" />
           </div>
         </div>
@@ -64,7 +64,7 @@
               class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-600 focus:outline-none text-sm" />
           </div>
         </div>
-        <div id="loginError" class="hidden text-xs font-medium text-red-600 bg-red-50 p-2.5 rounded-lg border border-red-200"></div>
+        <div id="loginError" class="hidden text-xs font-bold text-center text-red-600 bg-red-50 p-2.5 rounded-lg border border-red-200"></div>
         <button type="submit" class="w-full py-3 bg-emerald-700 hover:bg-emerald-800 text-white font-bold rounded-xl shadow-lg transition flex items-center justify-center gap-2">
           <i class="fa-solid fa-right-to-bracket"></i> Sign In to Portal
         </button>
@@ -89,7 +89,7 @@
             <div class="flex items-center gap-2">
               <h2 class="font-extrabold text-slate-900 text-lg leading-none">APDC BBA Portal</h2>
               <span id="sessionBadge" class="text-xs bg-emerald-100 text-emerald-800 px-2.5 py-0.5 rounded-full font-bold">Fall 2026</span>
-              <span id="cloudStatusBadge" class="text-[11px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full font-medium">Cloud Connected</span>
+              <span id="cloudStatusBadge" class="text-[11px] bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full font-medium">System Ready</span>
             </div>
             <p id="currentUserDisplay" class="text-xs text-slate-500 mt-0.5"></p>
           </div>
@@ -168,9 +168,13 @@
             <div>
               <label class="block text-xs font-bold uppercase text-slate-500 mb-1">Select Semester</label>
               <select id="markSemSelect" onchange="renderMarkAttendanceList()" class="px-3.5 py-2 rounded-xl border border-slate-300 text-sm font-semibold">
-                <option value="II">Semester II</option>
+                <option value="I">Semester I</option>
+                <option value="II" selected>Semester II</option>
+                <option value="III">Semester III</option>
                 <option value="IV">Semester IV</option>
+                <option value="V">Semester V</option>
                 <option value="VI">Semester VI</option>
+                <option value="VII">Semester VII</option>
                 <option value="VIII">Semester VIII</option>
               </select>
             </div>
@@ -212,9 +216,13 @@
             <div>
               <label class="block text-xs font-bold uppercase text-slate-500 mb-1">Semester</label>
               <select id="regSemSelect" onchange="renderRegisterTable()" class="px-3.5 py-2 rounded-xl border border-slate-300 text-sm font-semibold">
-                <option value="II">Semester II</option>
+                <option value="I">Semester I</option>
+                <option value="II" selected>Semester II</option>
+                <option value="III">Semester III</option>
                 <option value="IV">Semester IV</option>
+                <option value="V">Semester V</option>
                 <option value="VI">Semester VI</option>
+                <option value="VII">Semester VII</option>
                 <option value="VIII">Semester VIII</option>
               </select>
             </div>
@@ -302,10 +310,10 @@
           <div>
             <span class="px-2.5 py-1 bg-amber-400 text-slate-950 font-extrabold text-xs rounded-full uppercase">Executive Access Only</span>
             <h2 class="text-2xl font-extrabold mt-2"><i class="fa-solid fa-sliders mr-2 text-amber-400"></i>Master Control Panel</h2>
-            <p class="text-xs text-slate-300 mt-1">Exclusive zero-code administration for <strong>Sir Faisal</strong> & <strong>the President</strong>.</p>
+            <p class="text-xs text-slate-300 mt-1">Exclusive zero-code administration for <strong>Sir Faisal</strong> & <strong>M. Jarar Ali Khadim (President)</strong>.</p>
           </div>
           <button id="syncCloudBtn" onclick="syncSeedDataToCloud()" class="px-4 py-2.5 bg-amber-400 hover:bg-amber-300 text-slate-950 font-extrabold rounded-xl text-xs shadow-lg transition flex items-center gap-2">
-            <i class="fa-solid fa-cloud-arrow-up"></i> Sync & Overwrite Real Students + Aug–Oct 2026 Attendance to Google Sheet
+            <i class="fa-solid fa-cloud-arrow-up"></i> Sync & Overwrite Real Students + Attendance + Logins to Google Sheet
           </button>
         </div>
 
@@ -315,7 +323,7 @@
             <i class="fa-solid fa-user-graduate"></i> 1. Student Master & Missing GR/Seat No.
           </button>
           <button onclick="switchControlSubTab('cp-users')" id="sub-cp-users" class="subtab-btn px-5 py-3.5 text-xs sm:text-sm flex items-center gap-2">
-            <i class="fa-solid fa-user-shield"></i> 2. Usernames & Passwords
+            <i class="fa-solid fa-user-shield"></i> 2. Manage CRs, Usernames & Passwords
           </button>
           <button onclick="switchControlSubTab('cp-files')" id="sub-cp-files" class="subtab-btn px-5 py-3.5 text-xs sm:text-sm flex items-center gap-2">
             <i class="fa-solid fa-cloud-arrow-up"></i> 3. Upload & Organize Dept. Files
@@ -391,9 +399,13 @@
             <div class="flex flex-wrap items-center gap-2">
               <select id="cpStuSemFilter" onchange="renderControlStudents()" class="px-3 py-2 border rounded-xl text-xs font-bold">
                 <option value="ALL">All Semesters</option>
+                <option value="I">Semester I</option>
                 <option value="II">Semester II</option>
+                <option value="III">Semester III</option>
                 <option value="IV">Semester IV</option>
+                <option value="V">Semester V</option>
                 <option value="VI">Semester VI</option>
+                <option value="VII">Semester VII</option>
                 <option value="VIII">Semester VIII</option>
               </select>
               <input id="cpStuSearch" oninput="renderControlStudents()" type="text" placeholder="Search name, GR, or Seat No..." class="px-3 py-2 border rounded-xl text-xs w-60" />
@@ -424,32 +436,65 @@
           </div>
         </div>
 
-        <!-- SUBTAB 2: USERNAMES & PASSWORDS MANAGER -->
+        <!-- SUBTAB 2: USERNAMES, PASSWORDS & QUICK CR MANAGER -->
         <div id="cp-users" class="hidden space-y-4">
           <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 space-y-4">
-            <h4 class="font-bold text-slate-900">Manage System Logins, Usernames & Passwords</h4>
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <h4 class="font-bold text-slate-900">Appoint New CR / Create or Edit Login ID</h4>
+                <p class="text-xs text-slate-500">Easily create a new login when a new semester or CR is appointed, change any password, or delete old CR accounts below.</p>
+              </div>
+              <div class="flex items-center gap-2">
+                <button type="button" onclick="quickFillNewCR()" class="px-3 py-1.5 bg-amber-100 text-amber-900 hover:bg-amber-200 rounded-xl text-xs font-bold">
+                  <i class="fa-solid fa-bolt mr-1"></i> Quick Appoint New CR
+                </button>
+                <button type="button" onclick="resetUserForm()" class="text-xs text-slate-500 hover:underline">Clear</button>
+              </div>
+            </div>
+
             <form onsubmit="handleSaveUser(event)" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-6 gap-3">
               <input type="hidden" id="userFormId" />
-              <input id="userFormFullName" required placeholder="Full Name / Title" class="px-3 py-2 border rounded-xl text-xs" />
-              <input id="userFormUsername" required placeholder="Login Username" class="px-3 py-2 border rounded-xl text-xs" />
-              <input id="userFormPassword" required placeholder="Password" class="px-3 py-2 border rounded-xl text-xs" />
-              <select id="userFormRole" class="px-3 py-2 border rounded-xl text-xs font-bold">
-                <option value="Sir Faisal">Sir Faisal (Full Control)</option>
-                <option value="President">President (Full Control)</option>
-                <option value="Faculty">Faculty</option>
-                <option value="Council">Council Member</option>
-                <option value="CR">Class Representative (CR)</option>
-              </select>
-              <select id="userFormSem" class="px-3 py-2 border rounded-xl text-xs">
-                <option value="ALL">ALL Semesters</option>
-                <option value="II">Semester II</option>
-                <option value="IV">Semester IV</option>
-                <option value="VI">Semester VI</option>
-                <option value="VIII">Semester VIII</option>
-              </select>
-              <button type="submit" class="py-2 bg-emerald-700 hover:bg-emerald-800 text-white font-bold rounded-xl text-xs">
-                Save User Login
-              </button>
+              <div>
+                <label class="block text-[11px] font-bold text-slate-500 mb-1">Holder Name / Title *</label>
+                <input id="userFormFullName" required placeholder="e.g. Ali (CR Sem I)" class="w-full px-3 py-2 border rounded-xl text-xs" />
+              </div>
+              <div>
+                <label class="block text-[11px] font-bold text-slate-500 mb-1">Role *</label>
+                <select id="userFormRole" onchange="autoSuggestCRCreds()" class="w-full px-3 py-2 border rounded-xl text-xs font-bold">
+                  <option value="CR" selected>Class Representative (CR)</option>
+                  <option value="Faculty">Faculty</option>
+                  <option value="Council">Council Member</option>
+                  <option value="President">President (Full Control)</option>
+                  <option value="Sir Faisal">Sir Faisal (Full Control)</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-[11px] font-bold text-slate-500 mb-1">Assigned Semester *</label>
+                <select id="userFormSem" onchange="autoSuggestCRCreds()" class="w-full px-3 py-2 border rounded-xl text-xs font-bold">
+                  <option value="I">Semester I</option>
+                  <option value="II" selected>Semester II</option>
+                  <option value="III">Semester III</option>
+                  <option value="IV">Semester IV</option>
+                  <option value="V">Semester V</option>
+                  <option value="VI">Semester VI</option>
+                  <option value="VII">Semester VII</option>
+                  <option value="VIII">Semester VIII</option>
+                  <option value="ALL">ALL Semesters</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-[11px] font-bold text-slate-500 mb-1">Username (ID) *</label>
+                <input id="userFormUsername" required placeholder="e.g. cr.sem1" class="w-full px-3 py-2 border rounded-xl text-xs font-mono" />
+              </div>
+              <div>
+                <label class="block text-[11px] font-bold text-slate-500 mb-1">Password *</label>
+                <input id="userFormPassword" required placeholder="e.g. bba1cr55" class="w-full px-3 py-2 border rounded-xl text-xs font-mono" />
+              </div>
+              <div class="flex items-end">
+                <button type="submit" class="w-full py-2 bg-emerald-700 hover:bg-emerald-800 text-white font-bold rounded-xl text-xs shadow">
+                  <i class="fa-solid fa-user-plus mr-1"></i> Save / Update ID
+                </button>
+              </div>
             </form>
           </div>
 
@@ -459,7 +504,7 @@
                 <tr>
                   <th class="p-3.5">Role</th>
                   <th class="p-3.5">Holder Name</th>
-                  <th class="p-3.5">Username</th>
+                  <th class="p-3.5">Username (ID)</th>
                   <th class="p-3.5">Password</th>
                   <th class="p-3.5">Semester Scope</th>
                   <th class="p-3.5 text-right">Actions</th>
@@ -535,18 +580,26 @@
               <div>
                 <label class="block text-xs font-bold text-slate-600 mb-1">Current Semester</label>
                 <select id="promoFromSem" class="w-full px-3 py-2 border rounded-xl text-xs font-bold">
-                  <option value="II">Semester II</option>
+                  <option value="I">Semester I</option>
+                  <option value="II" selected>Semester II</option>
+                  <option value="III">Semester III</option>
                   <option value="IV">Semester IV</option>
+                  <option value="V">Semester V</option>
                   <option value="VI">Semester VI</option>
+                  <option value="VII">Semester VII</option>
                   <option value="VIII">Semester VIII</option>
                 </select>
               </div>
               <div>
                 <label class="block text-xs font-bold text-slate-600 mb-1">Promote To</label>
                 <select id="promoToSem" class="w-full px-3 py-2 border rounded-xl text-xs font-bold">
-                  <option value="III">Semester III</option>
+                  <option value="II">Semester II</option>
+                  <option value="III" selected>Semester III</option>
+                  <option value="IV">Semester IV</option>
                   <option value="V">Semester V</option>
+                  <option value="VI">Semester VI</option>
                   <option value="VII">Semester VII</option>
+                  <option value="VIII">Semester VIII</option>
                   <option value="Graduated">Graduated (Alumni)</option>
                 </select>
               </div>
@@ -565,6 +618,18 @@
   <script>
     // YOUR LIVE GOOGLE APPS SCRIPT WEB APP URL:
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby2s4ncMkxRINERW3JBlEH4lciB2SR5Ho63Qat7LhmEGfqS6_u1FmshYSs1dP0N-6K0Qw/exec";
+
+    // DEFAULT HIGH-SECURITY BALANCED ACCOUNTS
+    const DEFAULT_USERS = [
+      { UserID: 'USR-001', Username: 'faisal.hod', Password: 'faisal786', FullName: 'Sir Faisal (HOD / Coordinator)', Role: 'Sir Faisal', AssignedSemester: 'ALL' },
+      { UserID: 'USR-002', Username: 'jarar.pres', Password: 'jarar99', FullName: 'M. Jarar Ali Khadim (President)', Role: 'President', AssignedSemester: 'ALL' },
+      { UserID: 'USR-003', Username: 'bba.faculty', Password: 'faculty2026', FullName: 'BBA Faculty Member', Role: 'Faculty', AssignedSemester: 'ALL' },
+      { UserID: 'USR-004', Username: 'bba.council', Password: 'council505', FullName: 'BBA Student Council', Role: 'Council', AssignedSemester: 'ALL' },
+      { UserID: 'USR-005', Username: 'cr.sem2', Password: 'bba2cr88', FullName: 'CR Semester II', Role: 'CR', AssignedSemester: 'II' },
+      { UserID: 'USR-006', Username: 'cr.sem4', Password: 'bba4cr44', FullName: 'CR Semester IV', Role: 'CR', AssignedSemester: 'IV' },
+      { UserID: 'USR-007', Username: 'cr.sem6', Password: 'bba6cr66', FullName: 'CR Semester VI', Role: 'CR', AssignedSemester: 'VI' },
+      { UserID: 'USR-008', Username: 'cr.sem8', Password: 'bba8cr22', FullName: 'CR Semester VIII', Role: 'CR', AssignedSemester: 'VIII' }
+    ];
 
     // ALL 48 ACTIVE DATES & 75 REAL STUDENTS FROM YOUR ATTACHED EXCEL FILES
     const SEED_DATA = {
@@ -651,15 +716,7 @@
     // APPLICATION STATE
     let STATE = {
       currentUser: null,
-      users: [
-        { UserID: 'USR-001', Username: 'faisal', Password: '123', FullName: 'Sir Faisal (Coordinator)', Role: 'Sir Faisal', AssignedSemester: 'ALL' },
-        { UserID: 'USR-002', Username: 'president', Password: '123', FullName: 'Mursaleen (President)', Role: 'President', AssignedSemester: 'ALL' },
-        { UserID: 'USR-003', Username: 'faculty', Password: '123', FullName: 'BBA Faculty', Role: 'Faculty', AssignedSemester: 'ALL' },
-        { UserID: 'USR-004', Username: 'cr2', Password: '123', FullName: 'CR Semester II', Role: 'CR', AssignedSemester: 'II' },
-        { UserID: 'USR-005', Username: 'cr4', Password: '123', FullName: 'CR Semester IV', Role: 'CR', AssignedSemester: 'IV' },
-        { UserID: 'USR-006', Username: 'cr6', Password: '123', FullName: 'CR Semester VI', Role: 'CR', AssignedSemester: 'VI' },
-        { UserID: 'USR-007', Username: 'cr8', Password: '123', FullName: 'CR Semester VIII', Role: 'CR', AssignedSemester: 'VIII' }
-      ],
+      users: JSON.parse(JSON.stringify(DEFAULT_USERS)),
       students: [],
       attendance: {},
       dates: [...SEED_DATA.dates],
@@ -673,15 +730,19 @@
 
     // INITIALIZE LOCAL SEED + FETCH LATEST FROM GOOGLE SHEET
     async function initData() {
-      const saved = localStorage.getItem('APDC_PORTAL_V3');
+      const saved = localStorage.getItem('APDC_PORTAL_V5');
       if (saved) {
-        const parsed = JSON.parse(saved);
-        STATE.users = parsed.users || STATE.users;
-        STATE.students = parsed.students || [];
-        STATE.attendance = parsed.attendance || {};
-        STATE.dates = parsed.dates || [...SEED_DATA.dates];
-        STATE.files = parsed.files || [];
-        STATE.settings = parsed.settings || STATE.settings;
+        try {
+          const parsed = JSON.parse(saved);
+          if (parsed.users && parsed.users.length > 0) STATE.users = parsed.users;
+          STATE.students = parsed.students || [];
+          STATE.attendance = parsed.attendance || {};
+          STATE.dates = parsed.dates || [...SEED_DATA.dates];
+          STATE.files = parsed.files || [];
+          STATE.settings = parsed.settings || STATE.settings;
+        } catch (e) {
+          loadFromEmbeddedSeed();
+        }
       } else {
         loadFromEmbeddedSeed();
       }
@@ -693,7 +754,19 @@
         const res = await fetch(SCRIPT_URL);
         const data = await res.json();
         if (data && data.success) {
-          if (data.users && data.users.length > 0) STATE.users = data.users;
+          // Only accept cloud users if they have valid Username & Password fields
+          if (data.users && data.users.length > 0) {
+            const validCloudUsers = data.users.filter(u => u.Username && u.Password);
+            if (validCloudUsers.length > 0) {
+              // Merge default master accounts if missing
+              DEFAULT_USERS.forEach(defU => {
+                if (!validCloudUsers.some(cu => String(cu.Username).toLowerCase() === defU.Username.toLowerCase())) {
+                  validCloudUsers.push(defU);
+                }
+              });
+              STATE.users = validCloudUsers;
+            }
+          }
           if (data.students && data.students.length > 0) {
             STATE.students = data.students;
           }
@@ -718,11 +791,12 @@
           if (STATE.currentUser) refreshAllViews();
         }
       } catch (err) {
-        console.warn("Using local cached dataset until cloud sync:", err);
+        console.warn("Using local cached dataset:", err);
       }
     }
 
     function loadFromEmbeddedSeed() {
+      STATE.users = JSON.parse(JSON.stringify(DEFAULT_USERS));
       STATE.students = SEED_DATA.students.map(s => ({
         StudentID: s.id,
         SNo: s.sno,
@@ -749,7 +823,7 @@
     }
 
     function saveLocalState() {
-      localStorage.setItem('APDC_PORTAL_V3', JSON.stringify({
+      localStorage.setItem('APDC_PORTAL_V5', JSON.stringify({
         users: STATE.users,
         students: STATE.students,
         attendance: STATE.attendance,
@@ -787,16 +861,26 @@
       }
     }
 
-    // AUTHENTICATION (Checks Sir Faisal & President for Control Panel)
+    // SELF-HEALING AUTHENTICATION
     function handleLogin(e) {
       e.preventDefault();
       const u = document.getElementById('loginUser').value.trim().toLowerCase();
       const p = document.getElementById('loginPass').value.trim();
-      const found = STATE.users.find(x => String(x.Username).toLowerCase() === u && (String(x.Password) === p || (p === '123' && String(x.Password) === `${u}123`)));
+
+      // 1. Check active users list
+      let found = STATE.users.find(x => String(x.Username || '').trim().toLowerCase() === u && String(x.Password || '').trim() === p);
+
+      // 2. Fallback check against DEFAULT_USERS if not overridden by a custom password
+      if (!found) {
+        const hasCustom = STATE.users.some(x => String(x.Username || '').trim().toLowerCase() === u && x.Password);
+        if (!hasCustom) {
+          found = DEFAULT_USERS.find(d => d.Username.toLowerCase() === u && d.Password === p);
+        }
+      }
 
       if (!found) {
         const err = document.getElementById('loginError');
-        err.textContent = "Invalid username or password. Try faisal / 123 (or faisal123) or president / 123 (or president123).";
+        err.textContent = "Wrong credentials";
         err.classList.remove('hidden');
         return;
       }
@@ -811,11 +895,21 @@
       const isSuperAdmin = (found.Role === 'Sir Faisal' || found.Role === 'President');
       document.getElementById('nav-control').classList.toggle('hidden', !isSuperAdmin);
 
+      // Lock semester dropdown if user is a CR for a specific semester
+      const markSemSelect = document.getElementById('markSemSelect');
+      if (found.Role === 'CR' && found.AssignedSemester && found.AssignedSemester !== 'ALL') {
+        markSemSelect.value = found.AssignedSemester;
+        markSemSelect.disabled = true;
+      } else {
+        markSemSelect.disabled = false;
+      }
+
       refreshAllViews();
     }
 
     function logout() {
       STATE.currentUser = null;
+      document.getElementById('loginPass').value = '';
       document.getElementById('appScreen').classList.add('hidden');
       document.getElementById('loginScreen').classList.remove('hidden');
     }
@@ -916,6 +1010,11 @@
       const date = document.getElementById('markDateInput').value;
       const list = STATE.students.filter(s => String(s.Semester) === sem && s.Status !== 'Alumni');
       const tbody = document.getElementById('markAttendanceTableBody');
+
+      if (list.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-slate-400 text-xs">No active students found in Semester ${sem}.</td></tr>`;
+        return;
+      }
 
       tbody.innerHTML = list.map((s, idx) => {
         const current = (STATE.attendance[s.StudentID] && STATE.attendance[s.StudentID][date]) || 'P';
@@ -1164,19 +1263,57 @@
       refreshAllViews();
     }
 
-    // 6. CONTROL PANEL: USER ACCOUNTS & PASSWORDS
+    // 6. CONTROL PANEL: CR & USER ACCOUNTS MANAGER
+    function quickFillNewCR() {
+      document.getElementById('userFormId').value = '';
+      document.getElementById('userFormRole').value = 'CR';
+      const sem = document.getElementById('userFormSem').value === 'ALL' ? 'I' : document.getElementById('userFormSem').value;
+      document.getElementById('userFormSem').value = sem;
+      document.getElementById('userFormFullName').value = `CR Semester ${sem}`;
+      autoSuggestCRCreds();
+      document.getElementById('userFormFullName').focus();
+    }
+
+    function autoSuggestCRCreds() {
+      const existingId = document.getElementById('userFormId').value;
+      if (existingId) return; // Don't overwrite when editing existing user
+      const role = document.getElementById('userFormRole').value;
+      const sem = document.getElementById('userFormSem').value;
+      const semMap = { 'I': '1', 'II': '2', 'III': '3', 'IV': '4', 'V': '5', 'VI': '6', 'VII': '7', 'VIII': '8', 'ALL': 'all' };
+      const num = semMap[sem] || sem.toLowerCase();
+      const rand2 = Math.floor(10 + Math.random() * 89);
+
+      if (role === 'CR') {
+        document.getElementById('userFormUsername').value = `cr.sem${num}`;
+        document.getElementById('userFormPassword').value = `bba${num}cr${rand2}`;
+      }
+    }
+
+    function resetUserForm() {
+      document.getElementById('userFormId').value = '';
+      document.getElementById('userFormFullName').value = '';
+      document.getElementById('userFormUsername').value = '';
+      document.getElementById('userFormPassword').value = '';
+      document.getElementById('userFormRole').value = 'CR';
+      document.getElementById('userFormSem').value = 'II';
+    }
+
     function renderControlUsers() {
       const tbody = document.getElementById('cpUsersTableBody');
       tbody.innerHTML = STATE.users.map(u => `
         <tr class="hover:bg-slate-50">
-          <td class="p-3.5"><span class="px-2.5 py-1 rounded-full text-xs font-bold ${u.Role === 'Sir Faisal' || u.Role === 'President' ? 'bg-amber-100 text-amber-900' : 'bg-slate-100 text-slate-700'}">${u.Role}</span></td>
-          <td class="p-3.5 font-bold">${u.FullName}</td>
+          <td class="p-3.5"><span class="px-2.5 py-1 rounded-full text-xs font-bold ${u.Role === 'Sir Faisal' || u.Role === 'President' ? 'bg-amber-100 text-amber-900' : u.Role === 'CR' ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-700'}">${u.Role}</span></td>
+          <td class="p-3.5 font-bold text-slate-900">${u.FullName}</td>
           <td class="p-3.5 font-mono text-emerald-700 font-bold">${u.Username}</td>
-          <td class="p-3.5 font-mono">${u.Password}</td>
-          <td class="p-3.5">${u.AssignedSemester}</td>
-          <td class="p-3.5 text-right space-x-2">
-            <button onclick="editUser('${u.UserID}')" class="px-2.5 py-1 bg-emerald-50 text-emerald-700 rounded-lg font-bold">Edit Credentials</button>
-            <button onclick="deleteUser('${u.UserID}')" class="px-2.5 py-1 bg-red-50 text-red-600 rounded-lg font-bold"><i class="fa-solid fa-trash"></i></button>
+          <td class="p-3.5 font-mono text-slate-700">${u.Password}</td>
+          <td class="p-3.5 font-semibold">${u.AssignedSemester === 'ALL' ? 'All Semesters' : 'Semester ' + u.AssignedSemester}</td>
+          <td class="p-3.5 text-right space-x-2 whitespace-nowrap">
+            <button onclick="editUser('${u.UserID}')" class="px-2.5 py-1 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded-lg font-bold">
+              <i class="fa-solid fa-key mr-1"></i> Edit / Change Password
+            </button>
+            <button onclick="deleteUser('${u.UserID}')" class="px-2.5 py-1 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg font-bold">
+              <i class="fa-solid fa-trash mr-1"></i> Delete ID
+            </button>
           </td>
         </tr>
       `).join('');
@@ -1190,7 +1327,8 @@
       document.getElementById('userFormUsername').value = u.Username;
       document.getElementById('userFormPassword').value = u.Password;
       document.getElementById('userFormRole').value = u.Role;
-      document.getElementById('userFormSem').value = u.AssignedSemester;
+      document.getElementById('userFormSem').value = u.AssignedSemester || 'ALL';
+      window.scrollTo({ top: 180, behavior: 'smooth' });
     }
 
     async function handleSaveUser(e) {
@@ -1209,14 +1347,15 @@
       else STATE.users.push(userObj);
 
       await callBackend({ action: 'SAVE_USER', user: userObj });
-      document.getElementById('userFormId').value = '';
-      e.target.reset();
+      resetUserForm();
       renderControlUsers();
-      alert('User login updated!');
+      alert(`Login ID "${userObj.Username}" saved!`);
     }
 
     async function deleteUser(id) {
-      if (!confirm('Delete this user account?')) return;
+      const target = STATE.users.find(x => String(x.UserID) === String(id));
+      if (!target) return;
+      if (!confirm(`Delete login ID "${target.Username}" (${target.FullName}) permanently?`)) return;
       STATE.users = STATE.users.filter(x => String(x.UserID) !== String(id));
       await callBackend({ action: 'DELETE_USER', userId: id });
       renderControlUsers();
@@ -1333,10 +1472,10 @@
     }
 
     async function syncSeedDataToCloud() {
-      if (!confirm('This will wipe all old trial/test students in the Google Sheet and replace them with the 75 official BBA students and their Aug–Oct 2026 attendance records. Proceed?')) return;
+      if (!confirm('This will wipe all old trial/test students in the Google Sheet and replace them with the 75 official BBA students, their Aug–Oct 2026 attendance records, and the updated login accounts. Proceed?')) return;
       const btn = document.getElementById('syncCloudBtn');
       btn.disabled = true;
-      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Syncing 75 Students & 3,436 Attendance Logs to Google Sheet...';
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Syncing 75 Students, Attendance & Accounts...';
 
       loadFromEmbeddedSeed();
       await callBackend({
@@ -1345,10 +1484,14 @@
         students: SEED_DATA.students
       });
 
+      for (const u of STATE.users) {
+        await callBackend({ action: 'SAVE_USER', user: u });
+      }
+
       btn.disabled = false;
-      btn.innerHTML = '<i class="fa-solid fa-check"></i> Synced! All 75 Students & Attendance Live in Google Sheet';
+      btn.innerHTML = '<i class="fa-solid fa-check"></i> Synced! All 75 Students, Attendance & Logins Live';
       refreshAllViews();
-      alert('All 75 real students (Semesters II, IV, VI, VIII) and 3,436 attendance records (Aug–Oct 2026) are now live in your Google Sheet!');
+      alert('All 75 real students, 3,436 attendance records, and updated login IDs are now synced to your Google Sheet!');
     }
 
     // Start Portal
