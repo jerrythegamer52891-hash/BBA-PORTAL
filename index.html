@@ -2,1184 +2,1357 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
-  <title>APDC | BBA DEPARTMENT - Central Attendance System</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>APDC BBA Attendance & Management Portal</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
   <style>
-    :root { --apdc-green: #006837; --apdc-dark: #004d28; }
-    * { box-sizing: border-box; }
-    body {
-      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-      background-color: #f4f7f5;
-      overflow-x: hidden;
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+    body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; }
+    /* 100% Uncropped APDC Logo Container */
+    .apdc-logo-box {
+      width: 140px;
+      height: 140px;
+      background: #ffffff;
+      border-radius: 18px;
+      padding: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+      border: 2px solid #e2e8f0;
+      margin: 0 auto;
     }
-    .bg-apdc { background-color: var(--apdc-green); }
-    .bg-apdc-dark { background-color: var(--apdc-dark); }
-    .text-apdc { color: var(--apdc-green); }
-    .tick-label { cursor: pointer; user-select: none; transition: all 0.15s ease; }
-    .status-cell { cursor: pointer; user-select: none; transition: all 0.15s ease; }
-    .status-cell:hover { transform: scale(1.08); }
-    .no-scrollbar::-webkit-scrollbar { display: none; }
-    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    .apdc-logo-box img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain; /* Guarantees 100% full image with ZERO cropping */
+      object-position: center;
+    }
+    .nav-btn.active { background-color: #065f46; color: #ffffff; font-weight: 600; }
+    .subtab-btn.active { border-bottom: 3px solid #059669; color: #065f46; font-weight: 700; background-color: #ecfdf5; }
   </style>
 </head>
-<body class="min-h-screen flex flex-col w-full">
+<body class="min-h-screen text-slate-800">
 
-  <div id="syncBanner" class="hidden fixed top-0 left-0 right-0 bg-amber-500 text-white text-center py-1.5 px-2 text-xs font-bold z-50 shadow">
-    <i class="fa-solid fa-cloud-arrow-up fa-bounce mr-1"></i> Syncing with APDC Server...
-  </div>
-
-  <!-- LOGIN SCREEN -->
-  <div id="loginScreen" class="flex-grow flex items-center justify-center p-3 sm:p-6 bg-gradient-to-br from-[#004d28] via-[#006837] to-[#008547]">
-    <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 sm:p-8 border-t-8 border-[#004d28]">
+  <!-- ================= LOGIN SCREEN ================= -->
+  <div id="loginScreen" class="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-emerald-950 via-emerald-900 to-slate-900">
+    <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl p-8 border border-emerald-100">
+      <div class="apdc-logo-box mb-4">
+        <img src="apdc-logo.png" alt="APDC Logo" onerror="this.onerror=null; this.src='https://placehold.co/140x140/ffffff/065f46?text=APSACS+APDC';" />
+      </div>
       <div class="text-center mb-6">
-        <div class="w-24 h-24 mx-auto mb-3 rounded-full bg-[#e6f4ed] border-2 border-[#006837] flex flex-col items-center justify-center text-[#006837] shadow-inner">
-          <i class="fa-solid fa-book-open text-3xl"></i>
-          <span class="text-[11px] font-extrabold tracking-widest mt-1">APSACS</span>
-        </div>
-        <p class="text-xs font-bold uppercase tracking-widest text-gray-500">APDC</p>
-        <h1 class="text-2xl sm:text-3xl font-extrabold text-[#006837] tracking-wide mt-0.5 uppercase">BBA DEPARTMENT</h1>
-        <p class="text-sm font-semibold text-gray-600 mt-1">Central Attendance System</p>
+        <span class="px-3 py-1 text-xs font-bold uppercase tracking-wider bg-emerald-100 text-emerald-800 rounded-full">APSACS System</span>
+        <h1 class="text-2xl font-extrabold text-slate-900 mt-2">APDC BBA Portal</h1>
+        <p class="text-xs text-slate-500 mt-1">Department Attendance, Academic & Control System</p>
       </div>
 
       <form onsubmit="handleLogin(event)" class="space-y-4">
         <div>
-          <label class="block text-xs font-bold uppercase text-gray-600 mb-1">Sign-In ID</label>
+          <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Username</label>
           <div class="relative">
-            <i class="fa-solid fa-user absolute left-3.5 top-3.5 text-gray-400"></i>
-            <input id="usernameInput" type="text" required placeholder="Enter Sign-In ID"
-              class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#006837] text-base sm:text-sm" />
+            <i class="fa-solid fa-user absolute left-3.5 top-3 text-slate-400"></i>
+            <input id="loginUser" type="text" required placeholder="e.g., faisal or president"
+              class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-600 focus:outline-none text-sm" />
           </div>
         </div>
         <div>
-          <label class="block text-xs font-bold uppercase text-gray-600 mb-1">Password / PIN</label>
+          <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Password</label>
           <div class="relative">
-            <i class="fa-solid fa-lock absolute left-3.5 top-3.5 text-gray-400"></i>
-            <input id="passwordInput" type="password" required placeholder="Enter PIN"
-              class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#006837] text-base sm:text-sm" />
+            <i class="fa-solid fa-lock absolute left-3.5 top-3 text-slate-400"></i>
+            <input id="loginPass" type="password" required placeholder="Enter password"
+              class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-600 focus:outline-none text-sm" />
           </div>
         </div>
-        <div id="loginError" class="hidden text-xs text-red-600 bg-red-50 border border-red-200 p-2.5 rounded-lg font-medium">
-          Invalid Login ID or PIN.
-        </div>
-        <button type="submit" id="loginBtn" class="w-full bg-apdc hover:bg-apdc-dark text-white font-bold py-3.5 rounded-lg shadow-md transition text-sm sm:text-base">
-          Sign In to Portal
+        <div id="loginError" class="hidden text-xs font-medium text-red-600 bg-red-50 p-2.5 rounded-lg border border-red-200"></div>
+        <button type="submit" class="w-full py-3 bg-emerald-700 hover:bg-emerald-800 text-white font-bold rounded-xl shadow-lg transition flex items-center justify-center gap-2">
+          <i class="fa-solid fa-right-to-bracket"></i> Sign In to Portal
         </button>
       </form>
+
+      <div class="mt-6 pt-4 border-t border-slate-100 text-center text-xs text-slate-400">
+        Army Public Degree College • BBA Department
+      </div>
     </div>
   </div>
 
-  <!-- MAIN APPLICATION -->
-  <div id="appScreen" class="hidden flex-grow flex flex-col w-full">
-    <header class="bg-apdc text-white shadow-md w-full">
-      <div class="max-w-7xl mx-auto px-3 sm:px-4 py-3 flex flex-wrap justify-between items-center gap-2">
-        <div class="flex items-center space-x-3 min-w-0">
-          <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white flex items-center justify-center text-[#006837] shadow shrink-0">
-            <i class="fa-solid fa-building-columns text-lg sm:text-xl"></i>
+  <!-- ================= MAIN APPLICATION ================= -->
+  <div id="appScreen" class="hidden min-h-screen flex flex-col">
+    <!-- Top Header -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-30">
+      <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+        <div class="flex items-center gap-3">
+          <div class="w-12 h-12 rounded-xl border border-slate-200 p-1 bg-white flex items-center justify-center">
+            <img src="apdc-logo.png" alt="Logo" class="w-full h-full object-contain" onerror="this.onerror=null; this.src='https://placehold.co/60x60/ffffff/065f46?text=APDC';" />
           </div>
-          <div class="min-w-0">
-            <div class="text-[11px] uppercase tracking-widest text-emerald-100 font-bold leading-none">APDC</div>
-            <h1 class="text-lg sm:text-xl font-extrabold leading-tight tracking-tight mt-0.5 truncate">BBA Department</h1>
+          <div>
+            <div class="flex items-center gap-2">
+              <h2 class="font-extrabold text-slate-900 text-lg leading-none">APDC BBA Portal</h2>
+              <span id="sessionBadge" class="text-xs bg-emerald-100 text-emerald-800 px-2.5 py-0.5 rounded-full font-bold">Fall 2026</span>
+              <span id="cloudStatusBadge" class="text-[11px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full font-medium">Cloud Connected</span>
+            </div>
+            <p id="currentUserDisplay" class="text-xs text-slate-500 mt-0.5"></p>
           </div>
         </div>
 
-        <div class="flex items-center gap-2.5 ml-auto">
-          <button onclick="refreshFromServer()" class="bg-white/15 hover:bg-white/25 text-white px-2.5 py-1.5 rounded-lg text-xs font-bold">
-            <i class="fa-solid fa-rotate"></i> <span class="hidden sm:inline ml-1">Sync</span>
+        <!-- Navigation Bar -->
+        <nav class="flex flex-wrap items-center gap-1.5">
+          <button onclick="switchMainTab('dashboard')" id="nav-dashboard" class="nav-btn active px-3.5 py-2 rounded-xl text-sm flex items-center gap-2 hover:bg-slate-100 transition">
+            <i class="fa-solid fa-chart-pie"></i> Dashboard
           </button>
-          <div class="text-right leading-tight">
-            <div id="userNameDisplay" class="text-xs sm:text-sm font-bold truncate max-w-[130px] sm:max-w-none"></div>
-            <div id="userRoleBadge" class="text-[10px] bg-emerald-800 px-2 py-0.5 rounded-full inline-block text-emerald-100"></div>
-          </div>
-          <button onclick="logout()" class="bg-white/15 hover:bg-white/25 text-white px-2.5 py-1.5 rounded-lg text-xs font-bold">
-            <i class="fa-solid fa-right-from-bracket"></i> <span class="hidden sm:inline ml-1">Sign Out</span>
+          <button onclick="switchMainTab('mark')" id="nav-mark" class="nav-btn px-3.5 py-2 rounded-xl text-sm flex items-center gap-2 hover:bg-slate-100 transition">
+            <i class="fa-solid fa-clipboard-check"></i> Mark Attendance
           </button>
-        </div>
+          <button onclick="switchMainTab('sheet')" id="nav-sheet" class="nav-btn px-3.5 py-2 rounded-xl text-sm flex items-center gap-2 hover:bg-slate-100 transition">
+            <i class="fa-solid fa-table"></i> Attendance Register
+          </button>
+          <button onclick="switchMainTab('redzone')" id="nav-redzone" class="nav-btn px-3.5 py-2 rounded-xl text-sm flex items-center gap-2 hover:bg-slate-100 transition">
+            <i class="fa-solid fa-triangle-exclamation text-red-500"></i> Red Zone
+          </button>
+          <button onclick="switchMainTab('files')" id="nav-files" class="nav-btn px-3.5 py-2 rounded-xl text-sm flex items-center gap-2 hover:bg-slate-100 transition">
+            <i class="fa-solid fa-folder-open text-amber-500"></i> Dept. Files
+          </button>
+          <!-- RESTRICTED TO SIR FAISAL & PRESIDENT ONLY -->
+          <button onclick="switchMainTab('control')" id="nav-control" class="nav-btn hidden px-3.5 py-2 rounded-xl text-sm flex items-center gap-2 bg-amber-50 text-amber-900 border border-amber-300 hover:bg-amber-100 transition">
+            <i class="fa-solid fa-sliders"></i> Control Panel
+          </button>
+          <button onclick="logout()" class="px-3 py-2 rounded-xl text-sm text-red-600 hover:bg-red-50 font-semibold ml-1" title="Sign Out">
+            <i class="fa-solid fa-power-off"></i>
+          </button>
+        </nav>
       </div>
 
-      <div class="bg-apdc-dark w-full">
-        <div class="max-w-7xl mx-auto px-2 sm:px-4 flex space-x-1 overflow-x-auto no-scrollbar">
-          <button onclick="switchTab('summary')" id="tabBtn-summary" class="px-3 sm:px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-white border-b-4 border-white whitespace-nowrap shrink-0">
-            <i class="fa-solid fa-chart-pie mr-1"></i> Summary
-          </button>
-          <button onclick="switchTab('calendar')" id="tabBtn-calendar" class="px-3 sm:px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-emerald-200 border-b-4 border-transparent whitespace-nowrap shrink-0">
-            <i class="fa-solid fa-calendar-days mr-1"></i> Mark Attendance
-          </button>
-          <button onclick="switchTab('leaves')" id="tabBtn-leaves" class="px-3 sm:px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-emerald-200 border-b-4 border-transparent whitespace-nowrap shrink-0">
-            <i class="fa-solid fa-file-signature mr-1"></i> Leave Records
-          </button>
-          <button onclick="switchTab('students')" id="tabBtn-students" class="px-3 sm:px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-emerald-200 border-b-4 border-transparent whitespace-nowrap shrink-0">
-            <i class="fa-solid fa-users-gear mr-1"></i> Student Roster
-          </button>
-          <button onclick="switchTab('handover')" id="tabBtn-handover" class="px-3 sm:px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-emerald-200 border-b-4 border-transparent whitespace-nowrap shrink-0">
-            <i class="fa-solid fa-crown mr-1 text-amber-300"></i> Access &amp; Handover
-          </button>
-        </div>
+      <!-- Live Department Announcement Banner -->
+      <div id="announcementBar" class="bg-emerald-900 text-emerald-50 text-xs py-2 px-4 text-center font-medium">
+        <i class="fa-solid fa-bullhorn mr-2 text-amber-400"></i>
+        <span id="announcementText">Welcome to the Official APDC BBA Portal.</span>
       </div>
     </header>
 
-    <main class="max-w-7xl w-full mx-auto p-3 sm:p-6 flex-grow space-y-5">
-      <!-- TAB 1: SUMMARY -->
-      <section id="tab-summary" class="space-y-5">
-        <div class="bg-white p-4 rounded-xl shadow-sm border flex flex-col sm:flex-row justify-between sm:items-center gap-3">
-          <div>
-            <h2 class="text-base sm:text-lg font-extrabold text-gray-800">Live Attendance &amp; Leave Summary</h2>
-            <p class="text-xs text-gray-500" id="activeSemestersSubtitle">Real-time overview across all active BBA semesters.</p>
+    <!-- Main Content Container -->
+    <main class="max-w-7xl w-full mx-auto px-4 py-6 flex-1 space-y-6">
+
+      <!-- 1. DASHBOARD TAB -->
+      <section id="tab-dashboard" class="space-y-6">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+            <div class="text-xs font-bold uppercase text-slate-400">Total Active Students</div>
+            <div id="statTotalStudents" class="text-3xl font-extrabold text-slate-900 mt-1">75</div>
+            <div class="text-xs text-emerald-600 mt-1 font-medium">Across Semesters II, IV, VI, VIII</div>
           </div>
-          <input type="date" id="summaryDateInput" onchange="renderSummary()" class="w-full sm:w-auto border rounded-lg px-3 py-2 text-sm font-semibold text-[#006837]" />
+          <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+            <div class="text-xs font-bold uppercase text-slate-400">Department Avg Attendance</div>
+            <div id="statAvgAttendance" class="text-3xl font-extrabold text-emerald-700 mt-1">--%</div>
+            <div class="text-xs text-slate-500 mt-1">Aug – Oct 2026 Recorded Days</div>
+          </div>
+          <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+            <div class="text-xs font-bold uppercase text-red-500">Red Zone Watchlist</div>
+            <div id="statRedZoneCount" class="text-3xl font-extrabold text-red-600 mt-1">0</div>
+            <div id="statRedZoneLabel" class="text-xs text-slate-500 mt-1">Below 75% Threshold</div>
+          </div>
+          <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+            <div class="text-xs font-bold uppercase text-amber-600">Missing Credentials</div>
+            <div id="statMissingCreds" class="text-3xl font-extrabold text-amber-600 mt-1">0</div>
+            <div class="text-xs text-slate-500 mt-1">Missing GR / Seat / Enrolment No.</div>
+          </div>
         </div>
 
-        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-          <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-[#006837]">
-            <div class="text-[11px] font-bold text-gray-500 uppercase">Total Students</div>
-            <div id="kpiTotalStudents" class="text-2xl sm:text-3xl font-extrabold text-gray-800 mt-1">0</div>
+        <!-- Semester Breakdown Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4" id="semesterCardsGrid"></div>
+      </section>
+
+      <!-- 2. MARK ATTENDANCE TAB -->
+      <section id="tab-mark" class="hidden space-y-4">
+        <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-wrap items-end justify-between gap-4">
+          <div class="flex flex-wrap items-center gap-4">
+            <div>
+              <label class="block text-xs font-bold uppercase text-slate-500 mb-1">Select Semester</label>
+              <select id="markSemSelect" onchange="renderMarkAttendanceList()" class="px-3.5 py-2 rounded-xl border border-slate-300 text-sm font-semibold">
+                <option value="II">Semester II</option>
+                <option value="IV">Semester IV</option>
+                <option value="VI">Semester VI</option>
+                <option value="VIII">Semester VIII</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-bold uppercase text-slate-500 mb-1">Attendance Date</label>
+              <input type="date" id="markDateInput" value="2026-10-18" onchange="renderMarkAttendanceList()" class="px-3.5 py-2 rounded-xl border border-slate-300 text-sm font-semibold" />
+            </div>
           </div>
-          <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-emerald-500">
-            <div class="text-[11px] font-bold text-emerald-700 uppercase">Present</div>
-            <div id="kpiPresent" class="text-2xl sm:text-3xl font-extrabold text-emerald-600 mt-1">0</div>
-          </div>
-          <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-amber-500">
-            <div class="text-[11px] font-bold text-amber-700 uppercase">On Leave</div>
-            <div id="kpiLeave" class="text-2xl sm:text-3xl font-extrabold text-amber-600 mt-1">0</div>
-          </div>
-          <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-red-500">
-            <div class="text-[11px] font-bold text-red-700 uppercase">Below 75%</div>
-            <div id="kpiRedZone" class="text-2xl sm:text-3xl font-extrabold text-red-600 mt-1">0</div>
+          <div class="flex items-center gap-2">
+            <button onclick="markAllStatus('P')" class="px-3 py-2 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded-xl text-xs font-bold border border-emerald-200">Mark All Present (P)</button>
+            <button onclick="markAllStatus('NC')" class="px-3 py-2 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-xl text-xs font-bold">No Class (NC)</button>
+            <button id="saveAttBtn" onclick="saveDailyAttendance()" class="px-5 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-sm font-bold shadow">
+              <i class="fa-solid fa-floppy-disk mr-1"></i> Save Attendance
+            </button>
           </div>
         </div>
 
-        <div class="bg-emerald-900 text-white p-4 sm:p-5 rounded-xl shadow-md">
-          <div class="flex flex-wrap justify-between items-center gap-2 mb-2">
-            <span class="text-xs uppercase tracking-widest font-bold text-emerald-300">Quick Executive Briefing</span>
-            <button onclick="copySummaryBrief()" class="bg-white/15 hover:bg-white/25 text-xs px-3 py-1.5 rounded font-semibold">Copy for WhatsApp</button>
-          </div>
-          <p id="executiveBriefText" class="text-xs sm:text-sm leading-relaxed font-medium text-emerald-50 break-words"></p>
-        </div>
-
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-          <div class="bg-white rounded-xl shadow-sm border overflow-hidden">
-            <div class="bg-gray-50 px-4 py-3 border-b font-bold text-sm text-gray-800">Students on Leave (Selected Date)</div>
-            <div id="summaryLeaveList" class="p-4 divide-y text-sm"></div>
-          </div>
-          <div class="bg-white rounded-xl shadow-sm border overflow-hidden">
-            <div class="bg-red-50 px-4 py-3 border-b font-bold text-sm text-red-800">Short Attendance Watchlist (&lt; 75%)</div>
-            <div id="summaryRedZoneList" class="p-4 divide-y text-sm"></div>
-          </div>
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+          <table class="w-full text-left border-collapse text-sm">
+            <thead class="bg-slate-50 border-b border-slate-200 text-xs uppercase text-slate-500">
+              <tr>
+                <th class="p-3.5">#</th>
+                <th class="p-3.5">GR No.</th>
+                <th class="p-3.5">Seat No.</th>
+                <th class="p-3.5">Student Name</th>
+                <th class="p-3.5">Father's Name</th>
+                <th class="p-3.5 text-center">Status (P / A / L / NC)</th>
+              </tr>
+            </thead>
+            <tbody id="markAttendanceTableBody" class="divide-y divide-slate-100"></tbody>
+          </table>
         </div>
       </section>
 
-      <!-- TAB 2: ATTENDANCE -->
-      <section id="tab-calendar" class="hidden space-y-5">
-        <div class="bg-white p-4 rounded-xl shadow-sm border flex flex-col sm:flex-row justify-between sm:items-end gap-3">
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full sm:w-auto">
+      <!-- 3. ATTENDANCE REGISTER (AUG - OCT 2026) -->
+      <section id="tab-sheet" class="hidden space-y-4">
+        <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-wrap items-center justify-between gap-4">
+          <div class="flex flex-wrap items-center gap-3">
             <div>
-              <label class="block text-[10px] font-bold uppercase text-gray-500 mb-1">Select Semester</label>
-              <select id="calSemesterSelect" onchange="renderCalendarTab()" class="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm font-bold text-[#006837]"></select>
+              <label class="block text-xs font-bold uppercase text-slate-500 mb-1">Semester</label>
+              <select id="regSemSelect" onchange="renderRegisterTable()" class="px-3.5 py-2 rounded-xl border border-slate-300 text-sm font-semibold">
+                <option value="II">Semester II</option>
+                <option value="IV">Semester IV</option>
+                <option value="VI">Semester VI</option>
+                <option value="VIII">Semester VIII</option>
+              </select>
             </div>
             <div>
-              <label class="block text-[10px] font-bold uppercase text-gray-500 mb-1">Attendance Date</label>
-              <div class="flex items-center">
-                <button onclick="shiftDate(-1)" class="px-3 py-2.5 border border-gray-300 rounded-l-lg hover:bg-gray-100 text-xs font-bold"><i class="fa-solid fa-chevron-left"></i></button>
-                <input type="date" id="calDateInput" onchange="renderCalendarTab()" class="w-full border-y border-gray-300 px-2 py-2 text-sm font-bold text-gray-800 text-center" />
-                <button onclick="shiftDate(1)" class="px-3 py-2.5 border border-gray-300 rounded-r-lg hover:bg-gray-100 text-xs font-bold"><i class="fa-solid fa-chevron-right"></i></button>
-              </div>
+              <label class="block text-xs font-bold uppercase text-slate-500 mb-1">Month Filter</label>
+              <select id="regMonthSelect" onchange="renderRegisterTable()" class="px-3.5 py-2 rounded-xl border border-slate-300 text-sm font-semibold">
+                <option value="ALL">All Months (Aug - Oct 2026)</option>
+                <option value="2026-08">August 2026</option>
+                <option value="2026-09">September 2026</option>
+                <option value="2026-10">October 2026</option>
+              </select>
             </div>
           </div>
-          <button onclick="markAllPresentForDay()" class="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-lg text-xs font-bold shadow-sm">
-            <i class="fa-solid fa-check-double mr-1"></i> Tick All Present
+          <div class="text-xs text-slate-500">
+            <span class="inline-block w-3 h-3 bg-emerald-100 border border-emerald-400 rounded mr-1 align-middle"></span> P = Present
+            <span class="inline-block w-3 h-3 bg-red-100 border border-red-400 rounded ml-3 mr-1 align-middle"></span> A = Absent
+            <span class="inline-block w-3 h-3 bg-amber-100 border border-amber-400 rounded ml-3 mr-1 align-middle"></span> L = Leave
+          </div>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-x-auto">
+          <table class="w-full text-left border-collapse text-xs">
+            <thead id="regTableHead" class="bg-slate-50 border-b border-slate-200 uppercase text-slate-600"></thead>
+            <tbody id="regTableBody" class="divide-y divide-slate-100"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- 4. RED ZONE WATCHLIST -->
+      <section id="tab-redzone" class="hidden space-y-4">
+        <div class="bg-red-50 border border-red-200 p-4 rounded-2xl flex items-center justify-between">
+          <div>
+            <h3 class="font-bold text-red-900 text-base"><i class="fa-solid fa-triangle-exclamation mr-2"></i>Red Zone Low-Attendance Watchlist</h3>
+            <p class="text-xs text-red-700 mt-0.5">Students whose cumulative attendance from Aug–Oct 2026 is below the required threshold (<span id="rzThresholdSpan">75</span>%).</p>
+          </div>
+          <select id="rzSemFilter" onchange="renderRedZoneTable()" class="px-3 py-2 rounded-xl border border-red-300 bg-white text-xs font-bold">
+            <option value="ALL">All Semesters</option>
+            <option value="II">Semester II</option>
+            <option value="IV">Semester IV</option>
+            <option value="VI">Semester VI</option>
+            <option value="VIII">Semester VIII</option>
+          </select>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+          <table class="w-full text-left border-collapse text-sm">
+            <thead class="bg-slate-50 border-b border-slate-200 text-xs uppercase text-slate-500">
+              <tr>
+                <th class="p-3.5">Semester</th>
+                <th class="p-3.5">GR No.</th>
+                <th class="p-3.5">Seat No.</th>
+                <th class="p-3.5">Student Name</th>
+                <th class="p-3.5">Father's Name</th>
+                <th class="p-3.5 text-center">Present / Total</th>
+                <th class="p-3.5 text-center">Attendance %</th>
+              </tr>
+            </thead>
+            <tbody id="redZoneTableBody" class="divide-y divide-slate-100"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- 5. DEPARTMENT FILES VIEW -->
+      <section id="tab-files" class="hidden space-y-4">
+        <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <h3 class="font-bold text-slate-900 text-base"><i class="fa-solid fa-folder-tree text-amber-500 mr-2"></i>APDC BBA Department Repository</h3>
+            <p class="text-xs text-slate-500">Official timetables, notifications, SBP rosters, and academic documents uploaded by Sir Faisal & President.</p>
+          </div>
+          <select id="publicFileCatFilter" onchange="renderDepartmentFiles()" class="px-3.5 py-2 rounded-xl border border-slate-300 text-xs font-bold">
+            <option value="ALL">All Categories</option>
+            <option value="Timetables">Timetables</option>
+            <option value="Policies & Circulars">Policies & Circulars</option>
+            <option value="Results & Exams">Results & Exams</option>
+            <option value="SBP & Financial">SBP & Financial</option>
+            <option value="General Documents">General Documents</option>
+          </select>
+        </div>
+        <div id="publicFilesGrid" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
+      </section>
+
+      <!-- 6. CONTROL PANEL (SIR FAISAL & PRESIDENT ONLY) -->
+      <section id="tab-control" class="hidden space-y-6">
+        <div class="bg-gradient-to-r from-slate-900 to-emerald-950 text-white p-6 rounded-2xl shadow-lg flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <span class="px-2.5 py-1 bg-amber-400 text-slate-950 font-extrabold text-xs rounded-full uppercase">Executive Access Only</span>
+            <h2 class="text-2xl font-extrabold mt-2"><i class="fa-solid fa-sliders mr-2 text-amber-400"></i>Master Control Panel</h2>
+            <p class="text-xs text-slate-300 mt-1">Exclusive zero-code administration for <strong>Sir Faisal</strong> & <strong>the President</strong>.</p>
+          </div>
+          <button id="syncCloudBtn" onclick="syncSeedDataToCloud()" class="px-4 py-2.5 bg-amber-400 hover:bg-amber-300 text-slate-950 font-extrabold rounded-xl text-xs shadow-lg transition flex items-center gap-2">
+            <i class="fa-solid fa-cloud-arrow-up"></i> Sync & Overwrite Real Students + Aug–Oct 2026 Attendance to Google Sheet
           </button>
         </div>
 
-        <div id="crLockNotice" class="hidden bg-amber-50 border border-amber-200 text-amber-800 px-4 py-2.5 rounded-lg text-xs font-medium">
-          <strong>CR Restricted Mode:</strong> You can tick today's attendance for your semester. Editing past dates is restricted to Council &amp; Faculty.
+        <!-- Control Panel Sub-Navigation -->
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 flex flex-wrap overflow-hidden">
+          <button onclick="switchControlSubTab('cp-students')" id="sub-cp-students" class="subtab-btn active px-5 py-3.5 text-xs sm:text-sm flex items-center gap-2">
+            <i class="fa-solid fa-user-graduate"></i> 1. Student Master & Missing GR/Seat No.
+          </button>
+          <button onclick="switchControlSubTab('cp-users')" id="sub-cp-users" class="subtab-btn px-5 py-3.5 text-xs sm:text-sm flex items-center gap-2">
+            <i class="fa-solid fa-user-shield"></i> 2. Usernames & Passwords
+          </button>
+          <button onclick="switchControlSubTab('cp-files')" id="sub-cp-files" class="subtab-btn px-5 py-3.5 text-xs sm:text-sm flex items-center gap-2">
+            <i class="fa-solid fa-cloud-arrow-up"></i> 3. Upload & Organize Dept. Files
+          </button>
+          <button onclick="switchControlSubTab('cp-settings')" id="sub-cp-settings" class="subtab-btn px-5 py-3.5 text-xs sm:text-sm flex items-center gap-2">
+            <i class="fa-solid fa-gears"></i> 4. System Settings, Promotions & Rules
+          </button>
         </div>
 
-        <div class="bg-white rounded-xl shadow-sm border overflow-hidden">
-          <div class="bg-apdc text-white px-4 py-3 flex flex-wrap justify-between items-center gap-2">
-            <div>
-              <h3 class="font-bold text-sm" id="daySheetTitle">Attendance Sheet</h3>
-              <p class="text-[11px] text-emerald-100">Tick one option in front of each student's name below.</p>
+        <!-- SUBTAB 1: STUDENT MASTER & MISSING CREDENTIALS -->
+        <div id="cp-students" class="space-y-4">
+          <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 space-y-4">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h4 class="font-bold text-slate-900">Add New Student / Edit Existing Student Credentials</h4>
+                <p class="text-xs text-slate-500">Click "Edit / Fill Info" on any student below to fill in missing GR No, Seat No, or Enrolment No, or add a new student.</p>
+              </div>
+              <button onclick="resetStudentForm()" class="text-xs text-emerald-700 font-bold hover:underline">Clear Form</button>
             </div>
-            <span class="text-[11px] bg-white/20 px-2.5 py-1 rounded font-semibold">Auto-Saves</span>
-          </div>
-          <div class="divide-y divide-gray-200" id="dailyAttendanceList"></div>
-        </div>
 
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-          <div class="bg-gray-50 px-4 py-3 border-b border-gray-200 flex flex-wrap justify-between items-center gap-3">
-            <div>
-              <h3 class="font-bold text-sm text-gray-800"><i class="fa-solid fa-table-cells text-[#006837] mr-1.5"></i>Monthly Attendance Calendar Overview</h3>
-              <p class="text-xs text-gray-500">Click any date header to load that date above, or tap any cell to cycle <strong>P → A → L</strong>.</p>
-            </div>
-            <div class="flex items-center gap-2">
-              <label class="text-xs font-bold text-gray-600">Month:</label>
-              <input type="month" id="calMonthPicker" onchange="renderMonthlyMatrix()" class="border border-gray-300 rounded-lg px-2.5 py-1.5 text-xs font-bold text-[#006837]" />
-            </div>
-          </div>
-          <div class="overflow-x-auto p-3">
-            <table class="w-full border-collapse text-xs" id="monthlyMatrixTable"></table>
-          </div>
-        </div>
-      </section>
-
-      <!-- TAB 3: LEAVES -->
-      <section id="tab-leaves" class="hidden space-y-6">
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div class="bg-white p-4 sm:p-5 rounded-xl shadow-sm border lg:col-span-1 h-fit">
-            <h3 class="font-extrabold text-base text-[#006837] mb-1">Attach Official Student Leave</h3>
-            <p class="text-xs text-gray-500 mb-4">Uploads physical leave letter to Google Drive &amp; automatically ticks "On Leave (Record Attached)".</p>
-            <form onsubmit="handleLeaveSubmit(event)" class="space-y-3 text-sm">
+            <form onsubmit="handleSaveStudent(event)" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 pt-2">
+              <input type="hidden" id="stuFormId" />
               <div>
-                <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Semester</label>
-                <select id="leaveSemSelect" onchange="populateLeaveStudents()" class="w-full border rounded-lg px-3 py-2.5 text-sm font-semibold"></select>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">Full Name *</label>
+                <input id="stuFormName" required type="text" placeholder="Student Full Name" class="w-full px-3 py-2 border rounded-xl text-xs" />
               </div>
               <div>
-                <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Student</label>
-                <select id="leaveStudentSelect" required class="w-full border rounded-lg px-3 py-2.5 text-sm"></select>
-              </div>
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                <div>
-                  <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Start Date</label>
-                  <input type="date" id="leaveStartDate" required class="w-full border rounded-lg px-2.5 py-2 text-xs" />
-                </div>
-                <div>
-                  <label class="block text-xs font-bold text-gray-600 uppercase mb-1">End Date</label>
-                  <input type="date" id="leaveEndDate" required class="w-full border rounded-lg px-2.5 py-2 text-xs" />
-                </div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">Father's Name *</label>
+                <input id="stuFormFather" required type="text" placeholder="Father's Name" class="w-full px-3 py-2 border rounded-xl text-xs" />
               </div>
               <div>
-                <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Category</label>
-                <select id="leaveCategory" class="w-full border rounded-lg px-3 py-2.5 text-sm">
-                  <option value="Medical Leave">Medical Leave</option>
-                  <option value="Council/Event Duty">Council/Event Duty</option>
-                  <option value="Personal/Emergency">Personal/Emergency</option>
-                  <option value="Sports/Representation">Sports/Representation</option>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">Semester *</label>
+                <select id="stuFormSem" class="w-full px-3 py-2 border rounded-xl text-xs font-bold">
+                  <option value="I">Semester I</option>
+                  <option value="II" selected>Semester II</option>
+                  <option value="III">Semester III</option>
+                  <option value="IV">Semester IV</option>
+                  <option value="V">Semester V</option>
+                  <option value="VI">Semester VI</option>
+                  <option value="VII">Semester VII</option>
+                  <option value="VIII">Semester VIII</option>
                 </select>
               </div>
               <div>
-                <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Short Note</label>
-                <input type="text" id="leaveNote" required placeholder="Details..." class="w-full border rounded-lg px-3 py-2.5 text-sm" />
+                <label class="block text-xs font-semibold text-slate-600 mb-1">Gender</label>
+                <select id="stuFormGender" class="w-full px-3 py-2 border rounded-xl text-xs">
+                  <option value="M">Male (M)</option>
+                  <option value="F">Female (F)</option>
+                </select>
               </div>
               <div>
-                <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Attach Leave Letter</label>
-                <input type="file" id="leaveFileInput" accept="image/*,.pdf" required class="w-full text-xs" />
+                <label class="block text-xs font-semibold text-amber-700 mb-1">GR No. (Fill when available)</label>
+                <input id="stuFormGR" type="text" placeholder="e.g. 932741" class="w-full px-3 py-2 border border-amber-300 bg-amber-50/40 rounded-xl text-xs" />
               </div>
-              <button type="submit" class="w-full bg-apdc hover:bg-apdc-dark text-white font-bold py-3 rounded-lg shadow text-sm">
-                Record Leave &amp; Attach File
+              <div>
+                <label class="block text-xs font-semibold text-amber-700 mb-1">Seat No. (Fill when available)</label>
+                <input id="stuFormSeat" type="text" placeholder="e.g. A-2510454104019" class="w-full px-3 py-2 border border-amber-300 bg-amber-50/40 rounded-xl text-xs" />
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-amber-700 mb-1">Enrolment No. (Fill when available)</label>
+                <input id="stuFormEnr" type="text" placeholder="e.g. BAC/APCM/12358/2023" class="w-full px-3 py-2 border border-amber-300 bg-amber-50/40 rounded-xl text-xs" />
+              </div>
+              <div class="flex items-end">
+                <button type="submit" class="w-full py-2 bg-emerald-700 hover:bg-emerald-800 text-white font-bold rounded-xl text-xs shadow">
+                  <i class="fa-solid fa-check mr-1"></i> Save Student Record
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Filter Bar for Student Master Table -->
+          <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 flex flex-wrap items-center justify-between gap-3">
+            <div class="flex flex-wrap items-center gap-2">
+              <select id="cpStuSemFilter" onchange="renderControlStudents()" class="px-3 py-2 border rounded-xl text-xs font-bold">
+                <option value="ALL">All Semesters</option>
+                <option value="II">Semester II</option>
+                <option value="IV">Semester IV</option>
+                <option value="VI">Semester VI</option>
+                <option value="VIII">Semester VIII</option>
+              </select>
+              <input id="cpStuSearch" oninput="renderControlStudents()" type="text" placeholder="Search name, GR, or Seat No..." class="px-3 py-2 border rounded-xl text-xs w-60" />
+              <label class="flex items-center gap-2 text-xs font-bold text-amber-800 bg-amber-50 border border-amber-200 px-3 py-2 rounded-xl cursor-pointer">
+                <input type="checkbox" id="cpMissingOnly" onchange="renderControlStudents()" />
+                Show Missing GR / Seat / Enrolment Only
+              </label>
+            </div>
+            <span id="cpStuCountBadge" class="text-xs font-bold text-slate-500"></span>
+          </div>
+
+          <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-x-auto">
+            <table class="w-full text-left border-collapse text-xs">
+              <thead class="bg-slate-50 border-b border-slate-200 uppercase text-slate-500">
+                <tr>
+                  <th class="p-3">Sem</th>
+                  <th class="p-3">GR No.</th>
+                  <th class="p-3">Seat No.</th>
+                  <th class="p-3">Enrolment No.</th>
+                  <th class="p-3">Student Name</th>
+                  <th class="p-3">Father's Name</th>
+                  <th class="p-3">Gender</th>
+                  <th class="p-3 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="cpStudentsTableBody" class="divide-y divide-slate-100"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- SUBTAB 2: USERNAMES & PASSWORDS MANAGER -->
+        <div id="cp-users" class="hidden space-y-4">
+          <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 space-y-4">
+            <h4 class="font-bold text-slate-900">Manage System Logins, Usernames & Passwords</h4>
+            <form onsubmit="handleSaveUser(event)" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-6 gap-3">
+              <input type="hidden" id="userFormId" />
+              <input id="userFormFullName" required placeholder="Full Name / Title" class="px-3 py-2 border rounded-xl text-xs" />
+              <input id="userFormUsername" required placeholder="Login Username" class="px-3 py-2 border rounded-xl text-xs" />
+              <input id="userFormPassword" required placeholder="Password" class="px-3 py-2 border rounded-xl text-xs" />
+              <select id="userFormRole" class="px-3 py-2 border rounded-xl text-xs font-bold">
+                <option value="Sir Faisal">Sir Faisal (Full Control)</option>
+                <option value="President">President (Full Control)</option>
+                <option value="Faculty">Faculty</option>
+                <option value="Council">Council Member</option>
+                <option value="CR">Class Representative (CR)</option>
+              </select>
+              <select id="userFormSem" class="px-3 py-2 border rounded-xl text-xs">
+                <option value="ALL">ALL Semesters</option>
+                <option value="II">Semester II</option>
+                <option value="IV">Semester IV</option>
+                <option value="VI">Semester VI</option>
+                <option value="VIII">Semester VIII</option>
+              </select>
+              <button type="submit" class="py-2 bg-emerald-700 hover:bg-emerald-800 text-white font-bold rounded-xl text-xs">
+                Save User Login
               </button>
             </form>
           </div>
 
-          <div class="bg-white rounded-xl shadow-sm border lg:col-span-2 overflow-hidden">
-            <div class="bg-gray-50 px-4 py-3 border-b font-bold text-sm text-gray-800">Recorded Leave Applications Archive</div>
-            <div class="overflow-x-auto">
-              <table class="w-full text-left border-collapse text-sm">
-                <thead>
-                  <tr class="bg-gray-50 border-b text-[11px] font-bold uppercase text-gray-500">
-                    <th class="py-3 px-3">Student</th>
-                    <th class="py-3 px-3">Dates</th>
-                    <th class="py-3 px-3">Reason</th>
-                    <th class="py-3 px-3">File</th>
-                    <th class="py-3 px-3 text-right">Action</th>
-                  </tr>
-                </thead>
-                <tbody id="leaveRecordsBody" class="divide-y"></tbody>
-              </table>
-            </div>
+          <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+            <table class="w-full text-left border-collapse text-xs">
+              <thead class="bg-slate-50 border-b border-slate-200 uppercase text-slate-500">
+                <tr>
+                  <th class="p-3.5">Role</th>
+                  <th class="p-3.5">Holder Name</th>
+                  <th class="p-3.5">Username</th>
+                  <th class="p-3.5">Password</th>
+                  <th class="p-3.5">Semester Scope</th>
+                  <th class="p-3.5 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="cpUsersTableBody" class="divide-y divide-slate-100"></tbody>
+            </table>
           </div>
         </div>
-      </section>
 
-      <!-- TAB 4: STUDENTS & PROMOTE -->
-      <section id="tab-students" class="hidden space-y-6">
-        <div id="promotionPanel" class="bg-gradient-to-r from-[#004d28] to-[#006837] text-white p-5 rounded-xl shadow-md">
-          <div class="flex flex-wrap justify-between items-start gap-4">
-            <div class="max-w-xl">
-              <span class="bg-amber-400 text-gray-900 text-[10px] font-extrabold uppercase px-2.5 py-0.5 rounded-full">President &amp; Faculty Authority Only</span>
-              <h3 class="text-lg font-extrabold mt-1"><i class="fa-solid fa-graduation-cap mr-1.5"></i>Promote or Revert Semester Batch</h3>
-              <p class="text-xs text-emerald-100 mt-1 leading-relaxed">
-                Select any batch below to upgrade them to the next semester—or select a lower semester to <strong>revert</strong> an accidental promotion.
-              </p>
+        <!-- SUBTAB 3: UPLOAD & ORGANIZE DEPARTMENT FILES -->
+        <div id="cp-files" class="hidden space-y-4">
+          <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 space-y-4">
+            <div>
+              <h4 class="font-bold text-slate-900">Upload Official Department Document</h4>
+              <p class="text-xs text-slate-500">Files are automatically organized into Google Drive folders (`APDC_BBA_Department_Files`) and linked in the portal.</p>
             </div>
-            <div class="bg-white/10 p-4 rounded-xl border border-white/20 w-full lg:w-auto flex flex-col sm:flex-row flex-wrap items-stretch sm:items-end gap-3">
+            <form onsubmit="handleFileUpload(event)" class="grid grid-cols-1 md:grid-cols-4 gap-3">
               <div>
-                <label class="block text-[10px] font-bold uppercase text-emerald-200 mb-1">From Semester</label>
-                <select id="promoteFromSem" onchange="updatePromoteTargetPreview()" class="w-full bg-white text-gray-900 font-bold text-xs rounded-lg px-3 py-2.5"></select>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">Select File *</label>
+                <input type="file" id="uploadFileInput" required class="w-full text-xs border p-1.5 rounded-xl bg-slate-50" />
               </div>
               <div>
-                <label class="block text-[10px] font-bold uppercase text-emerald-200 mb-1">Convert To (Promote / Revert)</label>
-                <select id="promoteToSem" class="w-full bg-white text-[#006837] font-extrabold text-xs rounded-lg px-3 py-2.5">
-                  <option value="1">Semester 1</option>
-                  <option value="2">Semester 2</option>
-                  <option value="3">Semester 3</option>
-                  <option value="4">Semester 4</option>
-                  <option value="5">Semester 5</option>
-                  <option value="6">Semester 6</option>
-                  <option value="7">Semester 7</option>
-                  <option value="8">Semester 8</option>
-                  <option value="GRAD">Graduate (Remove Batch)</option>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">Folder Category *</label>
+                <select id="uploadFileCategory" class="w-full px-3 py-2 border rounded-xl text-xs font-bold">
+                  <option value="Timetables">Timetables</option>
+                  <option value="Policies & Circulars">Policies & Circulars</option>
+                  <option value="Results & Exams">Results & Exams</option>
+                  <option value="SBP & Financial">SBP & Financial</option>
+                  <option value="General Documents">General Documents</option>
                 </select>
               </div>
-              <label class="flex items-center gap-1.5 text-xs text-emerald-100 font-semibold py-2 cursor-pointer">
-                <input type="checkbox" id="resetAttendanceOnPromote" class="w-4 h-4 accent-amber-400 rounded" />
-                <span>Reset Sem Attendance to 0</span>
-              </label>
-              <div class="flex gap-2">
-                <button onclick="promoteSelectedSemester()" class="bg-amber-400 hover:bg-amber-300 text-gray-900 font-extrabold px-4 py-2.5 rounded-lg text-xs shadow transition whitespace-nowrap">
-                  <i class="fa-solid fa-arrows-rotate mr-1"></i> Apply Batch Change
-                </button>
-                <button id="undoPromoBtn" onclick="undoLastPromotion()" class="hidden bg-white/20 hover:bg-white/30 text-white font-bold px-3 py-2.5 rounded-lg text-xs border border-white/30 transition whitespace-nowrap">
-                  <i class="fa-solid fa-rotate-left mr-1"></i> Undo Last
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">Short Description / Note</label>
+                <input type="text" id="uploadFileDesc" placeholder="e.g. Fall 2026 Exam Schedule" class="w-full px-3 py-2 border rounded-xl text-xs" />
+              </div>
+              <div class="flex items-end">
+                <button type="submit" id="uploadBtn" class="w-full py-2 bg-emerald-700 hover:bg-emerald-800 text-white font-bold rounded-xl text-xs shadow">
+                  <i class="fa-solid fa-cloud-arrow-up mr-1"></i> Upload to Google Drive
                 </button>
               </div>
-            </div>
+            </form>
           </div>
+
+          <div id="cpFilesList" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
         </div>
 
-        <div class="bg-white p-4 sm:p-5 rounded-xl shadow-sm border">
-          <div class="flex flex-wrap justify-between items-center gap-3 mb-4">
+        <!-- SUBTAB 4: SYSTEM SETTINGS & BATCH PROMOTIONS -->
+        <div id="cp-settings" class="hidden grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 space-y-4">
+            <h4 class="font-bold text-slate-900"><i class="fa-solid fa-sliders mr-2 text-emerald-700"></i>Global Portal Configuration</h4>
             <div>
-              <h3 class="font-extrabold text-base text-gray-800">Mid-Session Attendance &amp; Student Roster</h3>
-              <p class="text-xs text-gray-500">Edit previous held/attended classes anytime.</p>
+              <label class="block text-xs font-bold text-slate-600 mb-1">Academic Session Title</label>
+              <input id="setSessionInput" type="text" value="Fall 2026" class="w-full px-3 py-2 border rounded-xl text-sm" />
             </div>
-            <button onclick="document.getElementById('addStudentModal').classList.remove('hidden')" class="w-full sm:w-auto bg-apdc text-white px-4 py-2.5 rounded-lg text-xs font-bold">
-              + Add New Student
+            <div>
+              <label class="block text-xs font-bold text-slate-600 mb-1">Red Zone Minimum Attendance Threshold (%)</label>
+              <input id="setThresholdInput" type="number" min="50" max="95" value="75" class="w-full px-3 py-2 border rounded-xl text-sm" />
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-600 mb-1">Department Live Announcement Banner</label>
+              <input id="setAnnouncementInput" type="text" value="Welcome to the Official APDC BBA Portal." class="w-full px-3 py-2 border rounded-xl text-sm" />
+            </div>
+            <button onclick="saveGlobalSettings()" class="w-full py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white font-bold rounded-xl text-xs">
+              Save Global Settings
             </button>
           </div>
-          <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse text-sm">
-              <thead>
-                <tr class="bg-gray-50 border-b text-[11px] font-bold uppercase text-gray-500">
-                  <th class="py-3 px-2">Sem</th>
-                  <th class="py-3 px-2">Roll No</th>
-                  <th class="py-3 px-2">Name</th>
-                  <th class="py-3 px-2 text-center">Prev Held</th>
-                  <th class="py-3 px-2 text-center">Prev Att</th>
-                  <th class="py-3 px-2 text-center">Total %</th>
-                  <th class="py-3 px-2 text-right">Del</th>
-                </tr>
-              </thead>
-              <tbody id="rosterTableBody" class="divide-y"></tbody>
-            </table>
-          </div>
-        </div>
-      </section>
 
-      <!-- TAB 5: HANDOVER -->
-      <section id="tab-handover" class="hidden space-y-6">
-        <div class="bg-gradient-to-r from-[#004d28] to-[#006837] text-white p-5 sm:p-6 rounded-xl shadow-md">
-          <div class="grid grid-cols-1 lg:grid-cols-3 gap-5 items-center">
-            <div class="lg:col-span-2 space-y-2">
-              <span class="bg-amber-400 text-gray-900 text-[10px] font-extrabold uppercase px-2.5 py-0.5 rounded-full">Server Ownership &amp; Graduation Handover</span>
-              <h3 class="text-lg sm:text-xl font-extrabold">Grant Google Cloud Database &amp; Drive Control</h3>
-              <p class="text-xs text-emerald-100 leading-relaxed">
-                When you graduate or pass control to the next President or Faculty Coordinator, enter their Gmail address below to grant them full Google Sheet &amp; Drive Editor ownership.
-              </p>
-              <div class="pt-1">
-                <a id="rawSheetLink" href="#" target="_blank" class="inline-flex items-center gap-1.5 text-xs font-bold text-amber-300 underline hover:text-white">
-                  <i class="fa-solid fa-table"></i> Open Master Google Sheet Database Directly
-                </a>
+          <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 space-y-4">
+            <h4 class="font-bold text-slate-900"><i class="fa-solid fa-graduation-cap mr-2 text-amber-600"></i>Batch Semester Promotion</h4>
+            <p class="text-xs text-slate-500">Promote an entire semester batch to the next semester without touching the spreadsheet.</p>
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-bold text-slate-600 mb-1">Current Semester</label>
+                <select id="promoFromSem" class="w-full px-3 py-2 border rounded-xl text-xs font-bold">
+                  <option value="II">Semester II</option>
+                  <option value="IV">Semester IV</option>
+                  <option value="VI">Semester VI</option>
+                  <option value="VIII">Semester VIII</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-600 mb-1">Promote To</label>
+                <select id="promoToSem" class="w-full px-3 py-2 border rounded-xl text-xs font-bold">
+                  <option value="III">Semester III</option>
+                  <option value="V">Semester V</option>
+                  <option value="VII">Semester VII</option>
+                  <option value="Graduated">Graduated (Alumni)</option>
+                </select>
               </div>
             </div>
-            <form onsubmit="handleGrantGoogleAccess(event)" class="bg-white/10 p-4 rounded-xl border border-white/20 space-y-3">
-              <label class="block text-xs font-bold uppercase text-emerald-100">New Admin's Gmail Address</label>
-              <input type="email" id="newGoogleAdminEmail" required placeholder="Enter Gmail address"
-                class="w-full px-3 py-2.5 rounded-lg text-gray-900 text-sm font-semibold focus:outline-none" />
-              <button type="submit" class="w-full bg-amber-400 hover:bg-amber-300 text-gray-900 font-extrabold py-2.5 rounded-lg text-xs shadow transition">
-                <i class="fa-solid fa-key mr-1"></i> Grant Google Server Control
-              </button>
-            </form>
-          </div>
-        </div>
-
-        <div class="bg-white p-4 sm:p-5 rounded-xl shadow-sm border">
-          <div class="flex flex-wrap justify-between items-center gap-3 mb-4">
-            <div>
-              <h3 class="font-extrabold text-base text-gray-800">Portal Accounts, Roles &amp; Handover Manager</h3>
-              <p class="text-xs text-gray-500">Edit any Username, PIN, Name, Role, or Assigned Semester below.</p>
-            </div>
-            <div class="flex gap-2 w-full sm:w-auto">
-              <button onclick="addNewUserRow()" class="flex-1 sm:flex-none bg-emerald-50 text-[#006837] border border-emerald-200 px-3 py-2 rounded-lg text-xs font-bold">
-                + Add Account
-              </button>
-              <button onclick="saveUsersChanges()" class="flex-1 sm:flex-none bg-apdc text-white px-4 py-2 rounded-lg text-xs font-bold shadow">
-                Save Changes
-              </button>
-            </div>
-          </div>
-
-          <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse text-sm">
-              <thead>
-                <tr class="bg-gray-50 border-b text-[11px] font-bold uppercase text-gray-500">
-                  <th class="py-3 px-2">Login ID</th>
-                  <th class="py-3 px-2">PIN</th>
-                  <th class="py-3 px-2">Full Name</th>
-                  <th class="py-3 px-2">Title</th>
-                  <th class="py-3 px-2">Role</th>
-                  <th class="py-3 px-2">Sem</th>
-                  <th class="py-3 px-2 text-right">Del</th>
-                </tr>
-              </thead>
-              <tbody id="usersManagerBody" class="divide-y"></tbody>
-            </table>
+            <button onclick="promoteSemesterBatch()" class="w-full py-2.5 bg-amber-500 hover:bg-amber-600 text-slate-950 font-extrabold rounded-xl text-xs">
+              Promote Entire Batch Now
+            </button>
           </div>
         </div>
       </section>
+
     </main>
   </div>
 
-  <!-- ADD STUDENT MODAL -->
-  <div id="addStudentModal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-xl max-w-md w-full overflow-hidden shadow-2xl">
-      <div class="bg-apdc text-white px-4 py-3 flex justify-between items-center">
-        <h4 class="font-bold text-sm">Add Student</h4>
-        <button onclick="document.getElementById('addStudentModal').classList.add('hidden')" class="text-white"><i class="fa-solid fa-xmark"></i></button>
-      </div>
-      <form onsubmit="handleAddStudent(event)" class="p-5 space-y-3 text-sm">
-        <select id="newStuSem" class="w-full border rounded-lg px-3 py-2.5">
-          <option value="8">Semester 8</option>
-          <option value="7">Semester 7</option>
-          <option value="6">Semester 6</option>
-          <option value="5">Semester 5</option>
-          <option value="4">Semester 4</option>
-          <option value="3">Semester 3</option>
-          <option value="2">Semester 2</option>
-          <option value="1">Semester 1</option>
-        </select>
-        <input type="text" id="newStuRoll" required placeholder="Roll Number (e.g. BBA-S8-03)" class="w-full border rounded-lg px-3 py-2.5" />
-        <input type="text" id="newStuName" required placeholder="Student Full Name" class="w-full border rounded-lg px-3 py-2.5" />
-        <div class="grid grid-cols-2 gap-2">
-          <input type="number" id="newStuPrevHeld" value="20" min="0" placeholder="Prev Held" class="w-full border rounded-lg px-3 py-2.5" />
-          <input type="number" id="newStuPrevAtt" value="16" min="0" placeholder="Prev Attended" class="w-full border rounded-lg px-3 py-2.5" />
-        </div>
-        <button type="submit" class="w-full bg-apdc text-white font-bold py-3 rounded-lg">Save to Server</button>
-      </form>
-    </div>
-  </div>
-
+  <!-- ================= JAVASCRIPT & PRE-LOADED REAL DATA ================= -->
   <script>
-    const GAS_URL = "https://script.google.com/macros/s/AKfycby2s4ncMkxRINERW3JBlEH4lciB2SR5Ho63Qat7LhmEGfqS6_u1FmshYSs1dP0N-6K0Qw/exec";
+    // YOUR LIVE GOOGLE APPS SCRIPT WEB APP URL:
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby2s4ncMkxRINERW3JBlEH4lciB2SR5Ho63Qat7LhmEGfqS6_u1FmshYSs1dP0N-6K0Qw/exec";
 
-    const FALLBACK_USERS = [
-      { username: 'faisal.rabbani', pin: 'apdc123', name: 'Sir Faisal Rabbani', title: 'BBA Coordinator (Head)', role: 'faculty', sem: 'ALL' },
-      { username: 'samiullah', pin: 'apdc123', name: 'Sir Samiullah', title: 'Attendance Incharge', role: 'faculty', sem: 'ALL' },
-      { username: 'jarar.ali', pin: 'president8', name: 'Jarar Ali', title: 'President & CR Sem 8', role: 'president', sem: '8' },
-      { username: 'fakhar', pin: 'council123', name: 'Fakhar', title: 'Vice President', role: 'council', sem: 'ALL' },
-      { username: 'tauqeer', pin: 'council4', name: 'Tauqeer', title: 'Advisor & CR Sem 4', role: 'council', sem: '4' },
-      { username: 'rubab', pin: 'council123', name: 'Rubab', title: 'Secretary', role: 'council', sem: 'ALL' },
-      { username: 'zainab', pin: 'council123', name: 'Zainab', title: 'Joint Secretary', role: 'council', sem: 'ALL' },
-      { username: 'jahanzaib', pin: 'crsem6', name: 'Jahanzaib', title: 'CR - Semester 6', role: 'cr', sem: '6' },
-      { username: 'rao.zaki', pin: 'crsem2', name: 'Rao Zaki', title: 'CR - Semester 2', role: 'cr', sem: '2' }
-    ];
+    // ALL 48 ACTIVE DATES & 75 REAL STUDENTS FROM YOUR ATTACHED EXCEL FILES
+    const SEED_DATA = {
+      "dates": ["2026-08-11", "2026-08-12", "2026-08-13", "2026-08-15", "2026-08-18", "2026-08-19", "2026-08-20", "2026-08-21", "2026-08-22", "2026-08-25", "2026-08-26", "2026-08-27", "2026-08-28", "2026-09-01", "2026-09-02", "2026-09-03", "2026-09-04", "2026-09-05", "2026-09-08", "2026-09-09", "2026-09-10", "2026-09-11", "2026-09-12", "2026-09-15", "2026-09-16", "2026-09-17", "2026-09-18", "2026-09-19", "2026-09-22", "2026-09-23", "2026-09-24", "2026-09-25", "2026-09-26", "2026-09-29", "2026-09-30", "2026-10-01", "2026-10-02", "2026-10-03", "2026-10-06", "2026-10-07", "2026-10-08", "2026-10-09", "2026-10-10", "2026-10-13", "2026-10-14", "2026-10-15", "2026-10-16", "2026-10-17"],
+      "students": [
+        {"id": "STU-001", "sno": 1, "gr": "925149", "seat": "AI-2165001", "enr": "BAC/APCM/11298/2021", "name": "Abdul Aziz", "fname": "Mola Bakhsh", "gen": "M", "sem": "VIII", "att": "LLLLAAAAAA-AAAAAAAAAAAAPPAAAAAAAAAAAAPAAAAAAAAAA"},
+        {"id": "STU-002", "sno": 2, "gr": "927344", "seat": "AI-22165010", "enr": "BAC/APCM/11885/2022", "name": "M. Jarar Ali Khadim", "fname": "Mazhar Abbas Khadim", "gen": "M", "sem": "VIII", "att": "PPPPPPPPPP-PPPPPPAPPPPPPPPPPPPPPPPPPPPPPPPPPPPPA"},
+        {"id": "STU-003", "sno": 3, "gr": "927345", "seat": "AI-22165008", "enr": "BAC/APCM/11883/2022", "name": "Mahnoor Fatima", "fname": "Nadeem Haider", "gen": "F", "sem": "VIII", "att": "PPPPPPPPPP-PPPAPPPPPPAAPPPPPPPPPPPPPPPPPPPPPPPPP"},
+        {"id": "STU-004", "sno": 4, "gr": "927346", "seat": "AI-22165011", "enr": "BAC/APCM/11886/2022", "name": "Raffey Ali Khan", "fname": "Mazhar Ali Khan", "gen": "M", "sem": "VIII", "att": "PPPPPPPPPP-PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP"},
+        {"id": "STU-005", "sno": 5, "gr": "927390", "seat": "AI-22165006", "enr": "BAC/APCM/11881/2022", "name": "Hina Rao", "fname": "Muhammad Akram", "gen": "F", "sem": "VIII", "att": "PP----APPP-PPPPPPPAPAPPPPPPPPPPPPPPPPAPPPPAAPPPP"},
+        {"id": "STU-006", "sno": 6, "gr": "927391", "seat": "AI-22165013", "enr": "BAC/APCM/ /2022", "name": "Taha Mohammad Afzal", "fname": "Muhammad Afzal", "gen": "M", "sem": "VIII", "att": "PPPPPPPPPP-PPAAPPAAPPPPPPPPPPPPPPPPPPPPPPPPPPPPP"},
+        {"id": "STU-007", "sno": 7, "gr": "927392", "seat": "AI-22165003", "enr": "BAC/APCM/11878/2022", "name": "Barira Ali", "fname": "Rashid Saleem", "gen": "F", "sem": "VIII", "att": "AP----AP-P-PPPPPPPPAAAAPAPPAPPAAPPAPPPPAPPPPPAPA"},
+        {"id": "STU-008", "sno": 8, "gr": "927394", "seat": "AI-22165012", "enr": "BAC/APCM/11887/2022", "name": "Saman Zehra", "fname": "Zillay Husnain", "gen": "F", "sem": "VIII", "att": "PPPPPPP-PP-PAPPPPPAPPPAPPPPPPPPPAAPPPPPPPPPPPAAP"},
+        {"id": "STU-009", "sno": 9, "gr": "927395", "seat": "AI-22165005", "enr": "BAC/APCM/11880/2022", "name": "Ghazala Shaheen", "fname": "Zafar Abbas", "gen": "F", "sem": "VIII", "att": "PP----LLLP-PPPPPPPAPPPPLLLPPPPPPPPPPAPPPPPPPPPPP"},
+        {"id": "STU-010", "sno": 10, "gr": "927440", "seat": "AI-22165002", "enr": "BAC/APCM/11877/2022", "name": "Aqsa Noreen", "fname": "Javed Iqbal", "gen": "F", "sem": "VIII", "att": "PPPPPPP--A-PPPPPPAPPPPPPPPPAPPPPPPPAPPAPPPPPAPPP"},
+        {"id": "STU-011", "sno": 11, "gr": "927441", "seat": "AI-22165004", "enr": "BAC/APCM/11879/2022", "name": "Faizan Sabir", "fname": "Sabir Ali", "gen": "M", "sem": "VIII", "att": "LLLLAAAAAA-AAPAAAAAAAAAAALAAAAAAAAAAAAAAAAAAAAAP"},
+        {"id": "STU-012", "sno": 12, "gr": "927442", "seat": "AI-22165007", "enr": "BAC/APCM/11882/2022", "name": "Insha Sheikh", "fname": "Muhammad Nawaz", "gen": "F", "sem": "VIII", "att": "PP-----PAP-PAAPPAPPPPAAAAPPPPPPPAPPPPPPPPPPPAAAP"},
+        {"id": "STU-013", "sno": 13, "gr": "927497", "seat": "A1-23165022", "enr": "BAC/APCM/12358/2023", "name": "Taimoor Hussain", "fname": "Shahnawaz Hussain", "gen": "M", "sem": "VI", "att": "AANAPPPAAA-APPAAAAAPPAAAAAAAAAAAAPPPPAAAAAAPPPAA"},
+        {"id": "STU-014", "sno": 14, "gr": "930130", "seat": "A1-23165024", "enr": "BAC/APCM/12350/2023", "name": "Zanobia Khokhar", "fname": "Muhammad Tariq Khokhar", "gen": "F", "sem": "VI", "att": "PPNPPPPPPP-PPPPPPPPPPPPPPPPPPPPPPPPPPPAPPPPPPPPP"},
+        {"id": "STU-015", "sno": 15, "gr": "930131", "seat": "A1-23165013", "enr": "BAC/APCM/12364/2023", "name": "Javeria Ahmed", "fname": "Nazeer Ahmed", "gen": "F", "sem": "VI", "att": "PANAAPPAAP-AAAAAAPAPPPAAPPPPAAAPAPPPAAAPAAAAPAAA"},
+        {"id": "STU-016", "sno": 16, "gr": "930132", "seat": "A1-23165016", "enr": "BAC/APCM/12354/2023", "name": "Mubashera Nehal", "fname": "Muhammad Nehal", "gen": "F", "sem": "VI", "att": "PPNAPPPPPA-PPPPAPPPPAPPAPPPPPPAAPPPPPPPPAPPPPAPP"},
+        {"id": "STU-017", "sno": 17, "gr": "930133", "seat": "A1-23165019", "enr": "BAC/APCM/12374/2023", "name": "Rabiya Asif", "fname": "Asif Saleem Siddiqui", "gen": "F", "sem": "VI", "att": "AANAPPAPPA-APAPPPPPPAAPAAPAPPAPAAAPPAAAAPAPAPPAA"},
+        {"id": "STU-018", "sno": 18, "gr": "930134", "seat": "A1-23165005", "enr": "BAC/APCM/12351/2023", "name": "Areeba Batool", "fname": "Malik Muhammad Azam", "gen": "F", "sem": "VI", "att": "APNAPPPPPP-PPPPAAPPPPPAAPPAPPAPPAAPPPPPPPPPPPPPP"},
+        {"id": "STU-019", "sno": 19, "gr": "930136", "seat": "A1-23165023", "enr": "BAC/APCM/12359/2023", "name": "Zain Abbas", "fname": "Zawar Hussain", "gen": "F", "sem": "VI", "att": "AANAAAPAAA-AAPAPPPAAAAAPAPAAAAAPAPAAAAAAAAAAAAPA"},
+        {"id": "STU-020", "sno": 20, "gr": "930137", "seat": "A1-23165009", "enr": "BAC/APCM/12360/2023", "name": "Fakhar-E-Alam", "fname": "Muhammad Tahir", "gen": "M", "sem": "VI", "att": "PPNPPPPPPA-PPPPPPPPPPPPPPPPPPAPAAPPPPPPPPAPPPPPP"},
+        {"id": "STU-021", "sno": 21, "gr": "930138", "seat": "A1-23165018", "enr": "BAC/APCM/12355/2023", "name": "Muhammad Jahanzeb Saqib", "fname": "Muhammad Hussain", "gen": "M", "sem": "VI", "att": "PANPPPPPPP-PPPPPPAPPPPAPPPPPPPPAPPPPPPAPPPPPPAPP"},
+        {"id": "STU-022", "sno": 22, "gr": "930139", "seat": "A1-23165020", "enr": "BAC/APCM/12356/2023", "name": "Syed Abdul Rehman Ali Zaidi", "fname": "Syed Mukhtar Ali Zaidi", "gen": "M", "sem": "VI", "att": "AANAAAAAAA-PPPAPAAAAPAAAPPAAAAAAAAAAAAAAAAAAAAAA"},
+        {"id": "STU-023", "sno": 23, "gr": "930185", "seat": "A1-23165010", "enr": "BAC/APCM/12361/2023", "name": "Fatima Kanwal", "fname": "Muhammad Farooq Ahmed", "gen": "F", "sem": "VI", "att": "PPNAPPPAAA-APPPAPPAAAAAPPPAAAAAAPPPPAPAAAAAAPAAA"},
+        {"id": "STU-024", "sno": 24, "gr": "930186", "seat": "A1-23165012", "enr": "BAC/APCM/12363/2023", "name": "Hasnain Hassan Khan", "fname": "Muhammad Furqan", "gen": "M", "sem": "VI", "att": "PPNAPPPPPP-AAPPPPPAAPPAAPPAAPPPPAAPPPPPAAAPPPPPP"},
+        {"id": "STU-025", "sno": 25, "gr": "930187", "seat": "A1-23165004", "enr": "BAC/APCM/12378/2023", "name": "Ali Mazhar", "fname": "Mazhar Jameel", "gen": "M", "sem": "VI", "att": "PANAAPPAAP-PAPPAAPAAAAAAAAPPAAAAPPPAPAAAAPPPPPPP"},
+        {"id": "STU-026", "sno": 26, "gr": "930222", "seat": "A1-23165006", "enr": "BAC/APCM/12352/2023", "name": "Atif Hassan", "fname": "Ali Hassan", "gen": "M", "sem": "VI", "att": "APNAAAAAAA-AAAAAAPAAAAAAAAAAAAAAAAAPPAAAAAAAPAAA"},
+        {"id": "STU-027", "sno": 27, "gr": "930224", "seat": "A1-23165008", "enr": "BAC/APCM/12388/2023", "name": "Eman Iqbal", "fname": "Muhammad Iqbal", "gen": "F", "sem": "VI", "att": "PPNAPPAPPP-PPPAPPAAAPPPPPAAAPPPPPPPPPPPPPPAPPPPP"},
+        {"id": "STU-028", "sno": 28, "gr": "930225", "seat": "A1-23165003", "enr": "BAC/APCM/12375/2023", "name": "Aiza Khlaid", "fname": "Khalid Mehmood", "gen": "F", "sem": "VI", "att": "PANPPPAPPP-PPPPPAPPPPPPPPPPPAAAAAPPPAPAPPPAPPAPP"},
+        {"id": "STU-029", "sno": 29, "gr": "930226", "seat": "A1-23165007", "enr": "BAC/APCM/12380/2023", "name": "Beevargh", "fname": "Hazrat Khan", "gen": "F", "sem": "VI", "att": "APNPAAAAAA-AAPAAAAAAAAAAPAAPAAPAAAAAAPPPAAAPAAAA"},
+        {"id": "STU-030", "sno": 30, "gr": "930228", "seat": "A1-23165017", "enr": "BAC/APCM/12379/2023", "name": "Muhammad Ayub", "fname": "Murad Ali", "gen": "F", "sem": "VI", "att": "AANAAAAAAA-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"},
+        {"id": "STU-031", "sno": 31, "gr": "931131", "seat": "A1-23165011", "enr": "BAC/APCM/12362/2023", "name": "Fiza", "fname": "Zulfiqar Ali", "gen": "F", "sem": "VI", "att": "PPNPPPPPPP-AAAAPPPPPPPPPPPAAPPAPPPPPPPPPPPPPPPPP"},
+        {"id": "STU-032", "sno": 32, "gr": "931132", "seat": "A1-23165021", "enr": "BAC/APCM/12357/2023", "name": "Syed Muhammad Natiq Ali", "fname": "Syed Mutahir Hussain", "gen": "M", "sem": "VI", "att": "AANAAAAAAA-AAAAAAAAAAAAAAAAAAAAAAPPPAAAAAAAAAAAA"},
+        {"id": "STU-033", "sno": 33, "gr": "930282", "seat": "A1-240454006003", "enr": "", "name": "Amir Rafique", "fname": "Muhammad Rafique", "gen": "M", "sem": "IV", "att": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"},
+        {"id": "STU-034", "sno": 34, "gr": "930291", "seat": "A1-240454006026", "enr": "", "name": "Touqeer Ahmed Khan", "fname": "Siraj Ahmed Khan", "gen": "M", "sem": "IV", "att": "PPPPPPPPPA-PPPPPPPPPPAPPPPPPPPPPPAAAPPPPPPPPPPPP"},
+        {"id": "STU-035", "sno": 35, "gr": "932741", "seat": "A1-240454006023", "enr": "", "name": "Rubab Haider", "fname": "Hafiz Ghulam Haider", "gen": "F", "sem": "IV", "att": "PPPPPPPPPP-PPPPPPPPAPPPPPPPPPAAAPPPPPAPPPPPPPPPP"},
+        {"id": "STU-036", "sno": 36, "gr": "932742", "seat": "A1-240454006017", "enr": "", "name": "Mustafa Raza", "fname": "Farhan Raza", "gen": "M", "sem": "IV", "att": "PPAAPPAPAP-APPPPPAPAPAAAAPPPAAAPPPPPPPAPPPPPAPPA"},
+        {"id": "STU-037", "sno": 37, "gr": "932743", "seat": "A1-240454006007", "enr": "", "name": "Hasan Mazhar", "fname": "Mazhar Jamil", "gen": "M", "sem": "IV", "att": "AAPAAAAPAA-AAAAAAAAAAAAAPPPPAAAAAPAAAAAAAAAAAAAA"},
+        {"id": "STU-038", "sno": 38, "gr": "932744", "seat": "A1-240454006013", "enr": "", "name": "Manahil Zafar", "fname": "Shahid Zafar", "gen": "F", "sem": "IV", "att": "PPAAPPPPPP-PPPPPPPPAPPPPPPPPPPPPPPAPPPPPPPPAPPPP"},
+        {"id": "STU-039", "sno": 39, "gr": "932746", "seat": "A1-240454006011", "enr": "", "name": "Muhammad Anas Umer", "fname": "Muhammad Umer", "gen": "M", "sem": "IV", "att": "AAAAPAAAAA-A-AAAAAPPAPAPAAAAAAAAAAAPPAAAAPAAAAAA"},
+        {"id": "STU-040", "sno": 40, "gr": "932747", "seat": "A1-240454006004", "enr": "", "name": "Arooba Shabir", "fname": "Shabir Ahmed Arain", "gen": "F", "sem": "IV", "att": "AAAAPAPPAA-APAAAPAAPAAAAAAAAAAPPAPAAAAAAAPAAAAPP"},
+        {"id": "STU-041", "sno": 41, "gr": "932749", "seat": "A1-240454006020", "enr": "", "name": "Noor Muhammad Shahid", "fname": "Muhammad Shahid", "gen": "F", "sem": "IV", "att": "PPAAPAPAPP-APPPAAPPPPPPPPAAPPAPPPAAAPAPPPPPPPAAP"},
+        {"id": "STU-042", "sno": 42, "gr": "932750", "seat": "A1-240454006025", "enr": "", "name": "Tayyeba  Muhammad Shahid", "fname": "Muhammad Shahid", "gen": "F", "sem": "IV", "att": "PPPAPAPPPP-PPPPPPPPAAAPPPPAAPPPPAPPAPAPPPPPPPPPP"},
+        {"id": "STU-043", "sno": 43, "gr": "932751", "seat": "A1-240454006010", "enr": "", "name": "Kiran Sheikh", "fname": "Muhammad Javaid Sheikh", "gen": "F", "sem": "IV", "att": "AAAAAAAAPP-PPPPPPPAAAAAAAAPPAAAAAAAAPAPPAAAAAAAA"},
+        {"id": "STU-044", "sno": 44, "gr": "932752", "seat": "A1-240454006019", "enr": "", "name": "Nazia Khatoon Jakhro", "fname": "Ashique Hussain", "gen": "F", "sem": "IV", "att": "AAAAPPAPPA-PPPAPPPPPAAAAAAAAAPPAAAPPPAAAPAPPPPAP"},
+        {"id": "STU-045", "sno": 45, "gr": "932753", "seat": "A1-240454006008", "enr": "", "name": "Huda Adnan", "fname": "Adnan Qadir", "gen": "F", "sem": "IV", "att": "APAAPPPPAA-PPPAAAAPPPPPPAPAPAPPPPPAAAAPPPPPPAPPP"},
+        {"id": "STU-046", "sno": 46, "gr": "932754", "seat": "A1-240454006016", "enr": "", "name": "Muniba Jamil", "fname": "Muhammad Jamil", "gen": "F", "sem": "IV", "att": "PPPPPPPPPA-PPAPPPPPPPPPAPPPPPPPPPPAPPAPPPPPAAPPP"},
+        {"id": "STU-047", "sno": 47, "gr": "932755", "seat": "A1-240454006006", "enr": "", "name": "Hafsa Shah", "fname": "Abdul Rahim Shah", "gen": "F", "sem": "IV", "att": "AAAAPAPPAA-APAAAAAAAAAAAAALAAAAAAAAAAAAAPPPPPAPA"},
+        {"id": "STU-048", "sno": 48, "gr": "932781", "seat": "A1-240454006015", "enr": "", "name": "Muhammad Fakhir", "fname": "Muhammad Rafiq", "gen": "M", "sem": "IV", "att": "AAAAAAAAAA-A-AAAAAAAAPAAAAAAPAAAAAAAAAAAAAAAAAAA"},
+        {"id": "STU-049", "sno": 49, "gr": "932782", "seat": "A1-240454006009", "enr": "", "name": "Janeeta", "fname": "Muhammad Naseem", "gen": "F", "sem": "IV", "att": "PPPPPPPPPA-PPPPPPPPPPPPAPPPPPPPPPPPAPPPPPPPPPPPP"},
+        {"id": "STU-050", "sno": 50, "gr": "932800", "seat": "A1-240454006005", "enr": "", "name": "Fatima Mazhar", "fname": "Mazhar Jamil", "gen": "F", "sem": "IV", "att": "PPPAPPPPPP-PPPPPPPPPPPPPAPPPPPPPPPPPPPPPPPPPPPPP"},
+        {"id": "STU-051", "sno": 51, "gr": "932801", "seat": "A1-240454006001", "enr": "", "name": "Aazan Ahmed Malik", "fname": "Saeed Ahmed", "gen": "M", "sem": "IV", "att": "AAAAAAAAAA-AAAAAAAAAAAAAAAAAAAAAAPAAAAAAAAAAAAAA"},
+        {"id": "STU-052", "sno": 52, "gr": "934310", "seat": "A1-240454006012", "enr": "", "name": "Malik Muhammad Asghar", "fname": "Muhammad Zaffar", "gen": "M", "sem": "IV", "att": "AAAAPAAAAA-AAPAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"},
+        {"id": "STU-053", "sno": 53, "gr": "934312", "seat": "A1-240454006014", "enr": "", "name": "Muhammad Anas", "fname": "Muhammad Azam", "gen": "M", "sem": "IV", "att": "AAAAAAAAAA-AAAAAAAAAAAAAAPAAAAAAAAAAAAAAAAAAAAAA"},
+        {"id": "STU-054", "sno": 54, "gr": "934313", "seat": "A1-240454006018", "enr": "", "name": "Nawaz Sharif", "fname": "Bazu Khan", "gen": "M", "sem": "IV", "att": "AAAAAAAAAA-AAAAPPAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"},
+        {"id": "STU-055", "sno": 55, "gr": "", "seat": "A1-240454006022", "enr": "", "name": "Qirat Iqbal", "fname": "Muhammad Iqbal", "gen": "F", "sem": "IV", "att": "APAAPPPPAA-PPAPPPPPAAAPAPPPAAAPAAPAAAPAAPPPPPAPA"},
+        {"id": "STU-056", "sno": 56, "gr": "", "seat": "A-2510454104019", "enr": "", "name": "Yumna Rizwan", "fname": "Sheikh Muhammad Rizwan Ashraf", "gen": "F", "sem": "II", "att": "PPPPPPP--P-PPPPPPPPPPPPPPPPAPPPPPPPPPPPPPPPPPPPP"},
+        {"id": "STU-057", "sno": 57, "gr": "", "seat": "A-2510454104007", "enr": "", "name": "Jawad Qasim", "fname": "Javed Qasim", "gen": "M", "sem": "II", "att": "PPPPPPP-PP-PAPPPPPPPPPPPPPPPAAPPPPPPPPPPPPPPPPPP"},
+        {"id": "STU-058", "sno": 58, "gr": "", "seat": "A-2510454104012", "enr": "", "name": "Muhammad Salman Azam", "fname": "Raja Muhammad Nasarullah Khan", "gen": "M", "sem": "II", "att": "PPPPPPP-PA-PPPPPPAPAAAPPPPPPPPPPPPPPPPPPPPPPPAAP"},
+        {"id": "STU-059", "sno": 59, "gr": "", "seat": "A-2510454104001", "enr": "", "name": "Abdullah Asif", "fname": "Muhammad Asif", "gen": "M", "sem": "II", "att": "PPPPPPP-AP-PPAAPPAPPPPPAAAAPPPPPPPPPPPPPPPPPPAPP"},
+        {"id": "STU-060", "sno": 60, "gr": "", "seat": "A-2510454104010", "enr": "", "name": "Muhammad Junaid", "fname": "Muhammad Ikram", "gen": "M", "sem": "II", "att": "PAAAPPP-PP-PPPAPAAAPPAAPAAPAPPAAAAAAAAAPPPPAPPPP"},
+        {"id": "STU-061", "sno": 61, "gr": "", "seat": "A-2510454104003", "enr": "", "name": "Alisha", "fname": "Zain Ul Abdin", "gen": "F", "sem": "II", "att": "APPPAPP-PA-PPPLLLLAAAPPPPPAPAPPPPPPPPPPAPPPAPPPA"},
+        {"id": "STU-062", "sno": 62, "gr": "", "seat": "A-2510454104011", "enr": "", "name": "Muhammad Raza", "fname": "Ali Raza", "gen": "M", "sem": "II", "att": "PAPAPPP-AP-PPPAAAAPPPPPAAPPPAAPPPPPAAPPPPPPAPPPA"},
+        {"id": "STU-063", "sno": 63, "gr": "", "seat": "A-2510454104009", "enr": "", "name": "Hassan Cheema", "fname": "Muhammad Abbas Cheema", "gen": "M", "sem": "II", "att": "------------------------------------------------"},
+        {"id": "STU-064", "sno": 64, "gr": "", "seat": "A-2510454104020", "enr": "", "name": "Zainab Fatima", "fname": "Irfan Ahmed", "gen": "F", "sem": "II", "att": "PPPAPPP-PP-PPPPPPPPPPAPPPPPPPPAAPAPPPAPPPAPPPPPP"},
+        {"id": "STU-065", "sno": 65, "gr": "", "seat": "A-2510454104013", "enr": "", "name": "Muhammad Shahid", "fname": "Muhammad Ashfaque", "gen": "M", "sem": "II", "att": "AAAPPPP-PP-PPPPPAAAAPPPPAPAPPPPPAAAAPAAAPPPAPPPA"},
+        {"id": "STU-066", "sno": 66, "gr": "", "seat": "A-2510454104017", "enr": "", "name": "Sundas Nawaz", "fname": "Muhammad Nawaz", "gen": "F", "sem": "II", "att": "PPPPPPP-PL-LPPPPPPPPPPAPPPLPPAPPPPPPPPPPPPPPPPPP"},
+        {"id": "STU-067", "sno": 67, "gr": "", "seat": "A-2510454104008", "enr": "", "name": "Malik Sarim Abbas", "fname": "Fazal Hussain", "gen": "M", "sem": "II", "att": "PAPPPPP-PP-PPPAPPPPPAPPPPAAPPPPPPPPPAPPAAAPPPPPP"},
+        {"id": "STU-068", "sno": 68, "gr": "", "seat": "A-2510454104004", "enr": "", "name": "Amna Tariq", "fname": "Rao Tariq Nadeem", "gen": "F", "sem": "II", "att": "AAAPPAA-PA-AAAAPPAPPPAAAAAAAAAAAPPAAAAAAAAAAAAAA"},
+        {"id": "STU-069", "sno": 69, "gr": "", "seat": "", "enr": "", "name": "Javira Tariq", "fname": "Rao Tariq Nadeem", "gen": "F", "sem": "II", "att": "AAAPAAA-PA-PAAAAAAAAAAPPPAAAAAAPPAAAAPAAAPPAAAAA"},
+        {"id": "STU-070", "sno": 70, "gr": "", "seat": "", "enr": "", "name": "Rabia Bibi", "fname": "Ourangzeb", "gen": "F", "sem": "II", "att": "PPPPPPP-PP-PAPPPPPPAPPPPPPPAPAPAPPPPAAPPPPPPPPPP"},
+        {"id": "STU-071", "sno": 71, "gr": "", "seat": "", "enr": "", "name": "Muhammad Umar", "fname": "Malik Farhan Imran / Hm Rabia Farhan", "gen": "M", "sem": "II", "att": "AAAAPPA-AA-PPPAAAAPAAPAPPPPPPAPPPPAAPAAPPAAAPAAA"},
+        {"id": "STU-072", "sno": 72, "gr": "", "seat": "", "enr": "", "name": "Ali Abdullah", "fname": "Saeed Ur Rehman", "gen": "M", "sem": "II", "att": "PPAAPAP-AP-LPPAPPPAAAPAPAPPPPAAAAPPPPPPAPPPAALLP"},
+        {"id": "STU-073", "sno": 73, "gr": "", "seat": "", "enr": "", "name": "Syed Basit Raza", "fname": "Syed Ali Raza", "gen": "M", "sem": "II", "att": "AAAAPPA-AP-APAAPPPPAAPAPPPPAAAAAPAPAAAAAAPAAAAAA"},
+        {"id": "STU-074", "sno": 74, "gr": "", "seat": "", "enr": "", "name": "Hamna Khan", "fname": "Shabbir Ahmed", "gen": "F", "sem": "II", "att": "PAPPPAP-AP-AAPPAPAAPPPPPPPPAAAAAAAAAAAPPPPPPPPPP"},
+        {"id": "STU-075", "sno": 75, "gr": "", "seat": "", "enr": "", "name": "Rao Muhammad Zaki Ur Rehman", "fname": "Abdul Hayee", "gen": "M", "sem": "II", "att": "PPPPPPP-PP-PPPPPPPPPAPPPPPPPPPPPPPPPPPPPPPPPPPPP"}
+      ]
+    };
 
-    const FALLBACK_STUDENTS = [
-      { id: 'S1', roll: 'BBA-S8-01', name: 'Student A', sem: '8', prevHeld: 20, prevAttended: 18 },
-      { id: 'S2', roll: 'BBA-S8-02', name: 'Student B', sem: '8', prevHeld: 20, prevAttended: 14 },
-      { id: 'S3', roll: 'BBA-S6-01', 'name': 'Student C', sem: '6', prevHeld: 18, prevAttended: 16 },
-      { id: 'S4', roll: 'BBA-S6-02', 'name': 'Student D', sem: '6', prevHeld: 18, prevAttended: 12 },
-      { id: 'S5', roll: 'BBA-S4-01', 'name': 'Student E', sem: '4', prevHeld: 22, prevAttended: 20 },
-      { id: 'S6', roll: 'BBA-S4-02', 'name': 'Student F', sem: '4', prevHeld: 22, prevAttended: 16 },
-      { id: 'S7', roll: 'BBA-S2-01', 'name': 'Student G', sem: '2', prevHeld: 15, prevAttended: 14 },
-      { id: 'S8', roll: 'BBA-S2-02', 'name': 'Student H', sem: '2', prevHeld: 15, prevAttended: 10 }
-    ];
+    // APPLICATION STATE
+    let STATE = {
+      currentUser: null,
+      users: [
+        { UserID: 'USR-001', Username: 'faisal', Password: '123', FullName: 'Sir Faisal (Coordinator)', Role: 'Sir Faisal', AssignedSemester: 'ALL' },
+        { UserID: 'USR-002', Username: 'president', Password: '123', FullName: 'Mursaleen (President)', Role: 'President', AssignedSemester: 'ALL' },
+        { UserID: 'USR-003', Username: 'faculty', Password: '123', FullName: 'BBA Faculty', Role: 'Faculty', AssignedSemester: 'ALL' },
+        { UserID: 'USR-004', Username: 'cr2', Password: '123', FullName: 'CR Semester II', Role: 'CR', AssignedSemester: 'II' },
+        { UserID: 'USR-005', Username: 'cr4', Password: '123', FullName: 'CR Semester IV', Role: 'CR', AssignedSemester: 'IV' },
+        { UserID: 'USR-006', Username: 'cr6', Password: '123', FullName: 'CR Semester VI', Role: 'CR', AssignedSemester: 'VI' },
+        { UserID: 'USR-007', Username: 'cr8', Password: '123', FullName: 'CR Semester VIII', Role: 'CR', AssignedSemester: 'VIII' }
+      ],
+      students: [],
+      attendance: {},
+      dates: [...SEED_DATA.dates],
+      files: [],
+      settings: {
+        redZoneThreshold: 75,
+        academicSession: 'Fall 2026',
+        announcement: 'Welcome to the Official APDC BBA Portal — Updated Roster & Aug–Oct 2026 Attendance Loaded.'
+      }
+    };
 
-    let usersList = [...FALLBACK_USERS];
-    let currentUser = null;
-    let students = [...FALLBACK_STUDENTS];
-    let attendanceLogs = {};
-    let leaveRecords = [];
-    let lastPromotionBackup = null;
-
-    function isSuperAdminUser(user) {
-      if (!user) return false;
-      return user.role === 'faculty' || user.role === 'president' || user.username === 'jarar.ali';
-    }
-
-    function showSync(state) {
-      document.getElementById('syncBanner').classList.toggle('hidden', !state);
-    }
-
-    function getTodayStr() {
-      return new Date().toISOString().split('T')[0];
-    }
-
-    function callServer(action, payloadObj, callback) {
-      showSync(true);
-      if (action === 'getData') {
-        fetch(GAS_URL + '?api=1')
-          .then(r => r.json())
-          .then(data => { showSync(false); if (callback) callback(data); })
-          .catch(() => { showSync(false); if (callback) callback(null); });
+    // INITIALIZE LOCAL SEED + FETCH LATEST FROM GOOGLE SHEET
+    async function initData() {
+      const saved = localStorage.getItem('APDC_PORTAL_V3');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        STATE.users = parsed.users || STATE.users;
+        STATE.students = parsed.students || [];
+        STATE.attendance = parsed.attendance || {};
+        STATE.dates = parsed.dates || [...SEED_DATA.dates];
+        STATE.files = parsed.files || [];
+        STATE.settings = parsed.settings || STATE.settings;
       } else {
-        fetch(GAS_URL, {
+        loadFromEmbeddedSeed();
+      }
+      await fetchCloudData();
+    }
+
+    async function fetchCloudData() {
+      try {
+        const res = await fetch(SCRIPT_URL);
+        const data = await res.json();
+        if (data && data.success) {
+          if (data.users && data.users.length > 0) STATE.users = data.users;
+          if (data.students && data.students.length > 0) {
+            STATE.students = data.students;
+          }
+          if (data.attendance && data.attendance.length > 0) {
+            const attMap = {};
+            const dateSet = new Set(STATE.dates);
+            data.attendance.forEach(row => {
+              const d = String(row.Date).substring(0, 10);
+              const sid = row.StudentID;
+              if (!attMap[sid]) attMap[sid] = {};
+              attMap[sid][d] = row.Status;
+              if (d) dateSet.add(d);
+            });
+            STATE.attendance = attMap;
+            STATE.dates = Array.from(dateSet).sort();
+          }
+          if (data.files) STATE.files = data.files;
+          if (data.settings && Object.keys(data.settings).length > 0) {
+            STATE.settings = { ...STATE.settings, ...data.settings };
+          }
+          saveLocalState();
+          if (STATE.currentUser) refreshAllViews();
+        }
+      } catch (err) {
+        console.warn("Using local cached dataset until cloud sync:", err);
+      }
+    }
+
+    function loadFromEmbeddedSeed() {
+      STATE.students = SEED_DATA.students.map(s => ({
+        StudentID: s.id,
+        SNo: s.sno,
+        GRNO: s.gr,
+        SeatNo: s.seat,
+        EnrolmentNo: s.enr,
+        Name: s.name,
+        FatherName: s.fname,
+        Gender: s.gen,
+        Semester: s.sem,
+        Status: 'Active'
+      }));
+      STATE.attendance = {};
+      SEED_DATA.students.forEach(s => {
+        STATE.attendance[s.id] = {};
+        for (let i = 0; i < SEED_DATA.dates.length; i++) {
+          const ch = s.att[i];
+          if (ch && ch !== '-') {
+            STATE.attendance[s.id][SEED_DATA.dates[i]] = (ch === 'N') ? 'NC' : ch;
+          }
+        }
+      });
+      saveLocalState();
+    }
+
+    function saveLocalState() {
+      localStorage.setItem('APDC_PORTAL_V3', JSON.stringify({
+        users: STATE.users,
+        students: STATE.students,
+        attendance: STATE.attendance,
+        dates: STATE.dates,
+        files: STATE.files,
+        settings: STATE.settings
+      }));
+    }
+
+    async function callBackend(payload) {
+      saveLocalState();
+      const badge = document.getElementById('cloudStatusBadge');
+      if (badge) {
+        badge.textContent = 'Syncing...';
+        badge.className = 'text-[11px] bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full font-medium';
+      }
+      try {
+        const res = await fetch(SCRIPT_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-          body: JSON.stringify({ action, ...payloadObj })
-        })
-          .then(r => r.json())
-          .then(res => { showSync(false); if (callback) callback(res); })
-          .catch(() => { showSync(false); if (callback) callback({ success: false }); });
-      }
-    }
-
-    function getActiveSemesters() {
-      const sems = [...new Set(students.map(s => String(s.sem)))].sort((a, b) => Number(b) - Number(a));
-      return sems.length > 0 ? sems : ['8', '6', '4', '2'];
-    }
-
-    function syncSemesterDropdowns() {
-      const activeSems = getActiveSemesters();
-      const calSelect = document.getElementById('calSemesterSelect');
-      const leaveSelect = document.getElementById('leaveSemSelect');
-      const promoteFrom = document.getElementById('promoteFromSem');
-
-      const prevCal = calSelect.value;
-      const prevLeave = leaveSelect.value;
-
-      const optionsHtml = activeSems.map(sem => `<option value="${sem}">BBA Semester ${sem}</option>`).join('');
-      calSelect.innerHTML = optionsHtml;
-      leaveSelect.innerHTML = optionsHtml;
-      promoteFrom.innerHTML = activeSems.map(sem => `<option value="${sem}">Semester ${sem} (${students.filter(s => String(s.sem) === String(sem)).length} Students)</option>`).join('');
-
-      if (currentUser && currentUser.sem !== 'ALL' && activeSems.includes(String(currentUser.sem))) {
-        calSelect.value = String(currentUser.sem);
-      } else if (activeSems.includes(prevCal)) {
-        calSelect.value = prevCal;
-      }
-
-      if (activeSems.includes(prevLeave)) {
-        leaveSelect.value = prevLeave;
-      }
-
-      document.getElementById('activeSemestersSubtitle').textContent =
-        `Real-time overview across active BBA Semesters: ${activeSems.join(', ')}.`;
-
-      updatePromoteTargetPreview();
-    }
-
-    function updatePromoteTargetPreview() {
-      const fromSem = Number(document.getElementById('promoteFromSem').value || 6);
-      const toSelect = document.getElementById('promoteToSem');
-      toSelect.value = fromSem >= 8 ? 'GRAD' : String(fromSem + 1);
-    }
-
-    function promoteSelectedSemester() {
-      if (!isSuperAdminUser(currentUser)) return alert('Only the President and Faculty can promote or revert semesters.');
-
-      const fromSem = String(document.getElementById('promoteFromSem').value);
-      const toSem = String(document.getElementById('promoteToSem').value);
-      const resetAtt = document.getElementById('resetAttendanceOnPromote').checked;
-
-      if (!fromSem || fromSem === toSem) return alert('Select a different target semester.');
-
-      const affectedCount = students.filter(s => String(s.sem) === fromSem).length;
-      const isRevert = toSem !== 'GRAD' && Number(toSem) < Number(fromSem);
-      const actionText = toSem === 'GRAD'
-        ? `Graduate and remove all ${affectedCount} students from Semester ${fromSem}?`
-        : `${isRevert ? 'Revert' : 'Promote'} all ${affectedCount} students from Semester ${fromSem} to Semester ${toSem}?`;
-
-      if (!confirm(actionText)) return;
-
-      lastPromotionBackup = {
-        students: JSON.parse(JSON.stringify(students)),
-        usersList: JSON.parse(JSON.stringify(usersList))
-      };
-      document.getElementById('undoPromoBtn').classList.remove('hidden');
-
-      if (toSem === 'GRAD') {
-        students = students.filter(s => String(s.sem) !== fromSem);
-      } else {
-        students.forEach(s => {
-          if (String(s.sem) === fromSem) {
-            s.sem = toSem;
-            s.roll = s.roll.replace(`S${fromSem}`, `S${toSem}`);
-            if (resetAtt) { s.prevHeld = 0; s.prevAttended = 0; }
-          }
+          body: JSON.stringify(payload)
         });
-        usersList.forEach(u => {
-          if (String(u.sem) === fromSem) {
-            u.sem = toSem;
-            u.title = u.title.replace(`Sem ${fromSem}`, `Sem ${toSem}`).replace(`Semester ${fromSem}`, `Semester ${toSem}`);
-          }
-        });
-      }
-
-      syncSemesterDropdowns();
-      renderAllActiveViews();
-      saveStudentsAndUsersToServer(`Success! Semester ${fromSem} moved to Semester ${toSem}.`);
-    }
-
-    function undoLastPromotion() {
-      if (!lastPromotionBackup) return;
-      if (!confirm('Undo the last semester promotion and restore previous batch numbers?')) return;
-      students = JSON.parse(JSON.stringify(lastPromotionBackup.students));
-      usersList = JSON.parse(JSON.stringify(lastPromotionBackup.usersList));
-      lastPromotionBackup = null;
-      document.getElementById('undoPromoBtn').classList.add('hidden');
-      syncSemesterDropdowns();
-      renderAllActiveViews();
-      saveStudentsAndUsersToServer('Last promotion undone!');
-    }
-
-    function saveStudentsAndUsersToServer(msg) {
-      callServer('saveStudents', { payload: students }, () => {
-        callServer('saveUsers', { payload: usersList }, () => {
-          if (msg) alert(msg);
-        });
-      });
-    }
-
-    function autoFixTestSemester7IfPresent() {
-      let fixed = false;
-      const hasSem7 = students.some(s => String(s.sem) === '7');
-      const hasSem6 = students.some(s => String(s.sem) === '6');
-      if (hasSem7 && !hasSem6) {
-        students.forEach(s => {
-          if (String(s.sem) === '7') { s.sem = '6'; s.roll = s.roll.replace('S7', 'S6'); fixed = true; }
-        });
-        usersList.forEach(u => {
-          if (String(u.sem) === '7') { u.sem = '6'; u.title = u.title.replace('Sem 7', 'Sem 6').replace('Semester 7', 'Semester 6'); fixed = true; }
-        });
-      }
-      if (fixed) saveStudentsAndUsersToServer(null);
-    }
-
-    function refreshFromServer(callback) {
-      callServer('getData', {}, data => {
-        if (data) {
-          if (data.users && data.users.length > 0) usersList = data.users;
-          if (data.students && data.students.length > 0) students = data.students;
-          attendanceLogs = data.attendanceLogs || {};
-          leaveRecords = data.leaveRecords || [];
-          if (data.sheetUrl) document.getElementById('rawSheetLink').href = data.sheetUrl;
-          autoFixTestSemester7IfPresent();
+        const result = await res.json();
+        if (badge) {
+          badge.textContent = 'Cloud Synced';
+          badge.className = 'text-[11px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full font-medium';
         }
-        syncSemesterDropdowns();
-        if (callback) callback();
-        else renderAllActiveViews();
-      });
+        return result;
+      } catch (e) {
+        if (badge) {
+          badge.textContent = 'Saved Locally';
+          badge.className = 'text-[11px] bg-slate-200 text-slate-700 px-2 py-0.5 rounded-full font-medium';
+        }
+        return null;
+      }
     }
 
-    window.addEventListener('DOMContentLoaded', () => {
-      refreshFromServer();
-    });
-
-    function renderAllActiveViews() {
-      renderSummary();
-      renderCalendarTab();
-      renderLeavesTab();
-      renderRosterTab();
-      renderHandoverTab();
-      populateLeaveStudents();
-    }
-
+    // AUTHENTICATION (Checks Sir Faisal & President for Control Panel)
     function handleLogin(e) {
       e.preventDefault();
-      const u = document.getElementById('usernameInput').value.trim().toLowerCase();
-      const p = document.getElementById('passwordInput').value.trim();
-      const found = usersList.find(x => x.username === u && x.pin === p);
+      const u = document.getElementById('loginUser').value.trim().toLowerCase();
+      const p = document.getElementById('loginPass').value.trim();
+      const found = STATE.users.find(x => String(x.Username).toLowerCase() === u && (String(x.Password) === p || (p === '123' && String(x.Password) === `${u}123`)));
+
       if (!found) {
-        document.getElementById('loginError').classList.remove('hidden');
+        const err = document.getElementById('loginError');
+        err.textContent = "Invalid username or password. Try faisal / 123 (or faisal123) or president / 123 (or president123).";
+        err.classList.remove('hidden');
         return;
       }
+
+      STATE.currentUser = found;
       document.getElementById('loginError').classList.add('hidden');
-      currentUser = found;
-      refreshFromServer(() => initPortalForUser());
+      document.getElementById('loginScreen').classList.add('hidden');
+      document.getElementById('appScreen').classList.remove('hidden');
+      document.getElementById('currentUserDisplay').textContent = `${found.FullName} • Role: ${found.Role}`;
+
+      // Show Control Panel ONLY to Sir Faisal and President
+      const isSuperAdmin = (found.Role === 'Sir Faisal' || found.Role === 'President');
+      document.getElementById('nav-control').classList.toggle('hidden', !isSuperAdmin);
+
+      refreshAllViews();
     }
 
     function logout() {
-      currentUser = null;
+      STATE.currentUser = null;
       document.getElementById('appScreen').classList.add('hidden');
       document.getElementById('loginScreen').classList.remove('hidden');
     }
 
-    function initPortalForUser() {
-      document.getElementById('loginScreen').classList.add('hidden');
-      document.getElementById('appScreen').classList.remove('hidden');
-      document.getElementById('userNameDisplay').textContent = currentUser.name;
-      document.getElementById('userRoleBadge').textContent = currentUser.title;
-
-      const today = getTodayStr();
-      document.getElementById('summaryDateInput').value = today;
-      document.getElementById('calDateInput').value = today;
-      document.getElementById('calMonthPicker').value = today.slice(0, 7);
-      document.getElementById('leaveStartDate').value = today;
-      document.getElementById('leaveEndDate').value = today;
-
-      syncSemesterDropdowns();
-
-      const semSelect = document.getElementById('calSemesterSelect');
-      const superAdmin = isSuperAdminUser(currentUser);
-
-      document.getElementById('promotionPanel').classList.toggle('hidden', !superAdmin);
-      document.getElementById('tabBtn-handover').classList.toggle('hidden', !superAdmin);
-
-      if (currentUser.role === 'cr') {
-        document.getElementById('tabBtn-summary').classList.add('hidden');
-        document.getElementById('tabBtn-leaves').classList.add('hidden');
-        document.getElementById('tabBtn-students').classList.add('hidden');
-        document.getElementById('crLockNotice').classList.remove('hidden');
-        semSelect.value = currentUser.sem;
-        semSelect.disabled = true;
-        switchTab('calendar');
-      } else {
-        document.getElementById('tabBtn-summary').classList.remove('hidden');
-        document.getElementById('tabBtn-leaves').classList.remove('hidden');
-        document.getElementById('tabBtn-students').classList.remove('hidden');
-        document.getElementById('crLockNotice').classList.add('hidden');
-        semSelect.disabled = false;
-        if (currentUser.sem !== 'ALL') semSelect.value = currentUser.sem;
-        switchTab('summary');
-      }
-      populateLeaveStudents();
-    }
-
-    function switchTab(tabName) {
-      if (tabName === 'handover' && !isSuperAdminUser(currentUser)) return;
-      ['summary', 'calendar', 'leaves', 'students', 'handover'].forEach(t => {
-        document.getElementById('tab-' + t).classList.add('hidden');
-        const btn = document.getElementById('tabBtn-' + t);
-        btn.classList.remove('border-white', 'text-white');
-        btn.classList.add('border-transparent', 'text-emerald-200');
+    function switchMainTab(tab) {
+      ['dashboard', 'mark', 'sheet', 'redzone', 'files', 'control'].forEach(t => {
+        document.getElementById('tab-' + t).classList.toggle('hidden', t !== tab);
+        const btn = document.getElementById('nav-' + t);
+        if (btn) btn.classList.toggle('active', t === tab);
       });
-      document.getElementById('tab-' + tabName).classList.remove('hidden');
-      const activeBtn = document.getElementById('tabBtn-' + tabName);
-      activeBtn.classList.add('border-white', 'text-white');
-      activeBtn.classList.remove('border-transparent', 'text-emerald-200');
-      renderAllActiveViews();
+      refreshAllViews();
     }
 
-    function calcStudentStats(stu) {
-      let portalHeld = 0, portalAttended = 0;
-      Object.keys(attendanceLogs).forEach(d => {
-        const entry = attendanceLogs[d]?.[stu.id];
-        if (entry && entry.status) {
-          portalHeld++;
-          if (entry.status === 'P') portalAttended++;
+    function switchControlSubTab(subId) {
+      ['cp-students', 'cp-users', 'cp-files', 'cp-settings'].forEach(id => {
+        document.getElementById(id).classList.toggle('hidden', id !== subId);
+        document.getElementById('sub-' + id).classList.toggle('active', id === subId);
+      });
+    }
+
+    // ATTENDANCE STATS HELPER
+    function getStudentAttendanceStats(studentId) {
+      const rec = STATE.attendance[studentId] || {};
+      let present = 0, total = 0;
+      Object.values(rec).forEach(st => {
+        if (st === 'P' || st === 'A' || st === 'L') {
+          total++;
+          if (st === 'P' || st === 'L') present++;
         }
       });
-      const totalHeld = Number(stu.prevHeld) + portalHeld;
-      const totalAtt = Number(stu.prevAttended) + portalAttended;
-      const pct = totalHeld > 0 ? ((totalAtt / totalHeld) * 100).toFixed(1) : '100.0';
-      return { portalHeld, portalAttended, totalHeld, totalAtt, pct: parseFloat(pct) };
+      const pct = total > 0 ? Math.round((present / total) * 100) : 100;
+      return { present, total, pct };
     }
 
-    function findLeaveForStudentOnDate(stuId, dateStr) {
-      return leaveRecords.find(l => l.studentId === stuId && dateStr >= l.startDate && dateStr <= l.endDate);
+    function refreshAllViews() {
+      document.getElementById('sessionBadge').textContent = STATE.settings.academicSession || 'Fall 2026';
+      document.getElementById('announcementText').textContent = STATE.settings.announcement || '';
+      document.getElementById('rzThresholdSpan').textContent = STATE.settings.redZoneThreshold || 75;
+      document.getElementById('statRedZoneLabel').textContent = `Below ${STATE.settings.redZoneThreshold || 75}% Threshold`;
+
+      document.getElementById('setSessionInput').value = STATE.settings.academicSession || 'Fall 2026';
+      document.getElementById('setThresholdInput').value = STATE.settings.redZoneThreshold || 75;
+      document.getElementById('setAnnouncementInput').value = STATE.settings.announcement || '';
+
+      renderDashboard();
+      renderMarkAttendanceList();
+      renderRegisterTable();
+      renderRedZoneTable();
+      renderDepartmentFiles();
+      renderControlStudents();
+      renderControlUsers();
     }
 
-    function renderSummary() {
-      const dateStr = document.getElementById('summaryDateInput').value;
-      const dayLog = attendanceLogs[dateStr] || {};
-      let presentCount = 0, absentCount = 0, leaveCount = 0;
-      let redZoneStudents = [], onLeaveStudents = [];
+    // 1. RENDER DASHBOARD
+    function renderDashboard() {
+      const activeStudents = STATE.students.filter(s => s.Status !== 'Alumni');
+      document.getElementById('statTotalStudents').textContent = activeStudents.length;
 
-      students.forEach(s => {
-        const st = dayLog[s.id]?.status;
-        const recordedLeave = findLeaveForStudentOnDate(s.id, dateStr);
-        if (st === 'P') presentCount++;
-        else if (st === 'L' || recordedLeave) {
-          leaveCount++;
-          onLeaveStudents.push({ student: s, leave: recordedLeave });
-        } else if (st === 'A') absentCount++;
+      let sumPct = 0, redCount = 0, missingCreds = 0;
+      const threshold = Number(STATE.settings.redZoneThreshold || 75);
 
-        const stats = calcStudentStats(s);
-        if (stats.pct < 75) redZoneStudents.push({ student: s, stats });
+      activeStudents.forEach(s => {
+        const st = getStudentAttendanceStats(s.StudentID);
+        sumPct += st.pct;
+        if (st.total > 0 && st.pct < threshold) redCount++;
+        if (!s.GRNO || !s.SeatNo || !s.EnrolmentNo) missingCreds++;
       });
 
-      document.getElementById('kpiTotalStudents').textContent = students.length;
-      document.getElementById('kpiPresent').textContent = presentCount;
-      document.getElementById('kpiLeave').textContent = leaveCount;
-      document.getElementById('kpiRedZone').textContent = redZoneStudents.length;
+      document.getElementById('statAvgAttendance').textContent = activeStudents.length ? Math.round(sumPct / activeStudents.length) + '%' : '0%';
+      document.getElementById('statRedZoneCount').textContent = redCount;
+      document.getElementById('statMissingCreds').textContent = missingCreds;
 
-      const leaveNames = onLeaveStudents.map(x => `${x.student.name} (Sem ${x.student.sem})`).join(', ') || 'None';
-      document.getElementById('executiveBriefText').textContent =
-        `📊 APDC BBA Summary (${dateStr}): Total Students: ${students.length} | Present: ${presentCount} | Absent: ${absentCount} | On Leave (Record Attached): ${leaveCount} (${leaveNames}). Below 75% Red-Zone: ${redZoneStudents.length} student(s).`;
-
-      document.getElementById('summaryLeaveList').innerHTML = onLeaveStudents.length === 0
-        ? `<div class="text-gray-400 text-xs py-3 text-center">No leaves recorded for ${dateStr}.</div>`
-        : onLeaveStudents.map(({ student, leave }) => `
-          <div class="py-2.5 flex flex-wrap justify-between items-center gap-2">
-            <div>
-              <div class="font-bold">${student.name} (Sem ${student.sem})</div>
-              <div class="text-xs text-gray-500">${leave ? `${leave.category}:${leave.note}` : 'On Leave (Record Attached)'}</div>
+      const sems = ['II', 'IV', 'VI', 'VIII'];
+      const grid = document.getElementById('semesterCardsGrid');
+      grid.innerHTML = sems.map(sem => {
+        const list = activeStudents.filter(s => String(s.Semester) === sem);
+        const missing = list.filter(s => !s.GRNO || !s.SeatNo || !s.EnrolmentNo).length;
+        return `
+          <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+            <div class="flex items-center justify-between">
+              <span class="px-2.5 py-1 bg-emerald-100 text-emerald-800 font-extrabold text-xs rounded-lg">Semester ${sem}</span>
+              <span class="text-xs text-slate-400 font-semibold">${list.length} Students</span>
             </div>
-            ${leave && leave.fileUrl ? `<a href="${leave.fileUrl}" target="_blank" class="bg-amber-50 text-amber-800 border border-amber-200 px-2.5 py-1 rounded text-xs font-bold">Open Record</a>` : ''}
-          </div>`).join('');
-
-      document.getElementById('summaryRedZoneList').innerHTML = redZoneStudents.length === 0
-        ? `<div class="text-emerald-600 text-xs py-3 text-center font-bold">All students are above 75%!</div>`
-        : redZoneStudents.map(({ student, stats }) => `
-          <div class="py-2.5 flex justify-between items-center gap-2">
-            <div>
-              <div class="font-bold">${student.name} (Sem ${student.sem} • ${student.roll})</div>
-              <div class="text-xs text-gray-500">${stats.totalAtt}/${stats.totalHeld} classes attended</div>
-            </div>
-            <span class="bg-red-100 text-red-700 font-extrabold px-2.5 py-1 rounded-full text-xs shrink-0">${stats.pct}%</span>
-          </div>`).join('');
-    }
-
-    function copySummaryBrief() {
-      navigator.clipboard.writeText(document.getElementById('executiveBriefText').textContent);
-      alert('Briefing copied for WhatsApp!');
-    }
-
-    function shiftDate(days) {
-      const input = document.getElementById('calDateInput');
-      const d = new Date(input.value || getTodayStr());
-      d.setDate(d.getDate() + days);
-      input.value = d.toISOString().split('T')[0];
-      renderCalendarTab();
-    }
-
-    function renderCalendarTab() {
-      const sem = document.getElementById('calSemesterSelect').value;
-      const dateStr = document.getElementById('calDateInput').value;
-      const isCRPastLocked = (currentUser?.role === 'cr' && dateStr !== getTodayStr());
-
-      document.getElementById('daySheetTitle').textContent = `Semester ${sem} Attendance — ${dateStr}`;
-      const semStudents = students.filter(s => String(s.sem) === String(sem));
-      const dayLog = attendanceLogs[dateStr] || {};
-
-      const listContainer = document.getElementById('dailyAttendanceList');
-      if (semStudents.length === 0) {
-        listContainer.innerHTML = `<div class="p-6 text-center text-gray-400 text-sm">No students currently in Semester ${sem}.</div>`;
-      } else {
-        listContainer.innerHTML = semStudents.map(s => {
-          const leave = findLeaveForStudentOnDate(s.id, dateStr);
-          const currentStatus = dayLog[s.id]?.status || (leave ? 'L' : '');
-          const stats = calcStudentStats(s);
-          const dis = isCRPastLocked ? 'disabled' : '';
-
-          return `
-            <div class="p-4 flex flex-col md:flex-row md:justify-between md:items-center gap-3 hover:bg-gray-50 transition">
-              <div>
-                <div class="text-base font-extrabold text-gray-900">${s.name}</div>
-                <div class="text-xs text-gray-500 font-semibold mt-0.5">
-                  ${s.roll} • Overall Attendance:
-                  <span class="font-extrabold ${stats.pct < 75 ? 'text-red-600' : 'text-emerald-700'}">${stats.pct}% (${stats.totalAtt}/${stats.totalHeld})</span>
-                </div>
+            <div class="mt-4 space-y-1 text-xs text-slate-600">
+              <div>Male: <strong>${list.filter(x => x.Gender === 'M').length}</strong> • Female: <strong>${list.filter(x => x.Gender === 'F').length}</strong></div>
+              <div class="${missing > 0 ? 'text-amber-600 font-semibold' : 'text-emerald-600'}">
+                ${missing > 0 ? `<i class="fa-solid fa-circle-exclamation mr-1"></i>${missing} Missing GR/Seat/Enr` : `<i class="fa-solid fa-circle-check mr-1"></i>All Credentials Complete`}
               </div>
-
-              <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 w-full md:w-auto">
-                <label class="tick-label flex items-center gap-2.5 px-3.5 py-2.5 rounded-lg border text-xs sm:text-sm font-bold ${currentStatus === 'P' ? 'bg-emerald-50 border-emerald-600 text-emerald-800 shadow-sm' : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-100'}">
-                  <input type="checkbox" ${dis} ${currentStatus === 'P' ? 'checked' : ''} onchange="setAttendanceStatus('${dateStr}','${s.id}','P')" class="w-4 h-4 accent-[#006837] rounded cursor-pointer shrink-0" />
-                  <span>Present</span>
-                </label>
-
-                <label class="tick-label flex items-center gap-2.5 px-3.5 py-2.5 rounded-lg border text-xs sm:text-sm font-bold ${currentStatus === 'A' ? 'bg-red-50 border-red-600 text-red-800 shadow-sm' : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-100'}">
-                  <input type="checkbox" ${dis} ${currentStatus === 'A' ? 'checked' : ''} onchange="setAttendanceStatus('${dateStr}','${s.id}','A')" class="w-4 h-4 accent-red-600 rounded cursor-pointer shrink-0" />
-                  <span>Absent</span>
-                </label>
-
-                <label class="tick-label flex items-center gap-2.5 px-3.5 py-2.5 rounded-lg border text-xs sm:text-sm font-bold ${currentStatus === 'L' ? 'bg-amber-50 border-amber-500 text-amber-900 shadow-sm' : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-100'}">
-                  <input type="checkbox" ${dis} ${currentStatus === 'L' ? 'checked' : ''} onchange="setAttendanceStatus('${dateStr}','${s.id}','L')" class="w-4 h-4 accent-amber-600 rounded cursor-pointer shrink-0" />
-                  <span>On Leave (Record Attached)</span>
-                </label>
-              </div>
-
-              ${leave && leave.fileUrl ? `
-                <a href="${leave.fileUrl}" target="_blank" class="text-xs font-bold text-[#006837] underline self-start md:self-center">
-                  <i class="fa-solid fa-paperclip"></i> View Record
-                </a>
-              ` : (currentStatus === 'L' && currentUser?.role !== 'cr' ? `
-                <button onclick="quickAttachLeave('${s.id}','${s.sem}','${dateStr}')" class="text-xs font-bold text-amber-700 underline self-start md:self-center">
-                  + Attach File
-                </button>
-              ` : '')}
             </div>
-          `;
-        }).join('');
-      }
-      renderMonthlyMatrix();
-    }
-
-    function renderMonthlyMatrix() {
-      const sem = document.getElementById('calSemesterSelect').value;
-      const monthVal = document.getElementById('calMonthPicker').value || getTodayStr().slice(0, 7);
-      const [year, month] = monthVal.split('-').map(Number);
-      const daysInMonth = new Date(year, month, 0).getDate();
-      const semStudents = students.filter(s => String(s.sem) === String(sem));
-      const selectedDate = document.getElementById('calDateInput').value;
-
-      let head = `<th class="p-2 border bg-gray-100 text-left min-w-[130px]">Student (Sem ${sem})</th>`;
-      for (let d = 1; d <= daysInMonth; d++) {
-        const dStr = `${monthVal}-${String(d).padStart(2, '0')}`;
-        const activeHdr = dStr === selectedDate ? 'bg-[#006837] text-white' : 'bg-gray-50 text-gray-600';
-        head += `<th onclick="document.getElementById('calDateInput').value='${dStr}'; renderCalendarTab();" class="p-1.5 border text-center cursor-pointer hover:bg-emerald-100 ${activeHdr}">${d}</th>`;
-      }
-      head += `<th class="p-2 border bg-gray-100 text-center">%</th>`;
-
-      const rows = semStudents.map(s => {
-        const stats = calcStudentStats(s);
-        let cells = '';
-        for (let d = 1; d <= daysInMonth; d++) {
-          const dStr = `${monthVal}-${String(d).padStart(2, '0')}`;
-          const st = attendanceLogs[dStr]?.[s.id]?.status || (findLeaveForStudentOnDate(s.id, dStr) ? 'L' : '');
-          const cls = st === 'P' ? 'bg-emerald-100 text-emerald-800 font-bold' : st === 'A' ? 'bg-red-100 text-red-700 font-bold' : st === 'L' ? 'bg-amber-100 text-amber-800 font-bold' : 'text-gray-300';
-          cells += `<td onclick="cycleMatrixStatus('${dStr}','${s.id}')" class="status-cell p-1 border text-center ${cls}">${st || '·'}</td>`;
-        }
-        return `<tr><td class="p-2 border font-bold whitespace-nowrap">${s.roll} - ${s.name}</td>${cells}<td class="p-2 border text-center font-bold ${stats.pct < 75 ? 'text-red-600' : 'text-emerald-700'}">${stats.pct}%</td></tr>`;
+          </div>
+        `;
       }).join('');
-
-      document.getElementById('monthlyMatrixTable').innerHTML = `<thead><tr>${head}</tr></thead><tbody>${rows}</tbody>`;
     }
 
-    function cycleMatrixStatus(dateStr, studentId) {
-      if (currentUser.role === 'cr' && dateStr !== getTodayStr()) return alert('CRs can only edit today.');
-      document.getElementById('calDateInput').value = dateStr;
-      if (!attendanceLogs[dateStr]) attendanceLogs[dateStr] = {};
-      const curr = attendanceLogs[dateStr][studentId]?.status || '';
-      const order = ['', 'P', 'A', 'L'];
-      const next = order[(order.indexOf(curr) + 1) % order.length];
-      if (!next) delete attendanceLogs[dateStr][studentId];
-      else attendanceLogs[dateStr][studentId] = { status: next, by: currentUser.name };
-      renderCalendarTab();
-      syncAttendanceToServer();
+    // 2. RENDER MARK ATTENDANCE
+    function renderMarkAttendanceList() {
+      const sem = document.getElementById('markSemSelect').value;
+      const date = document.getElementById('markDateInput').value;
+      const list = STATE.students.filter(s => String(s.Semester) === sem && s.Status !== 'Alumni');
+      const tbody = document.getElementById('markAttendanceTableBody');
+
+      tbody.innerHTML = list.map((s, idx) => {
+        const current = (STATE.attendance[s.StudentID] && STATE.attendance[s.StudentID][date]) || 'P';
+        return `
+          <tr class="hover:bg-slate-50">
+            <td class="p-3.5 font-semibold text-slate-400">${idx + 1}</td>
+            <td class="p-3.5 font-mono text-xs">${s.GRNO || '<span class="text-amber-500 italic">Pending</span>'}</td>
+            <td class="p-3.5 font-mono text-xs">${s.SeatNo || '<span class="text-amber-500 italic">Pending</span>'}</td>
+            <td class="p-3.5 font-bold text-slate-900">${s.Name}</td>
+            <td class="p-3.5 text-slate-600">${s.FatherName}</td>
+            <td class="p-3.5 text-center">
+              <div class="inline-flex rounded-xl border border-slate-200 p-1 bg-slate-50 gap-1" data-stu="${s.StudentID}">
+                ${['P', 'A', 'L', 'NC'].map(code => `
+                  <button type="button" onclick="setRowStatus('${s.StudentID}', '${code}')"
+                    id="attbtn-${s.StudentID}-${code}"
+                    class="px-3 py-1 rounded-lg text-xs font-bold transition ${current === code ? getStatusActiveClass(code) : 'text-slate-500 hover:bg-white'}">
+                    ${code}
+                  </button>
+                `).join('')}
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
     }
 
-    function quickAttachLeave(stuId, sem, dateStr) {
-      switchTab('leaves');
-      document.getElementById('leaveSemSelect').value = sem;
-      populateLeaveStudents();
-      document.getElementById('leaveStudentSelect').value = stuId;
-      document.getElementById('leaveStartDate').value = dateStr;
-      document.getElementById('leaveEndDate').value = dateStr;
+    function getStatusActiveClass(code) {
+      if (code === 'P') return 'bg-emerald-600 text-white shadow';
+      if (code === 'A') return 'bg-red-600 text-white shadow';
+      if (code === 'L') return 'bg-amber-500 text-white shadow';
+      return 'bg-slate-700 text-white shadow';
     }
 
-    function syncAttendanceToServer() {
-      callServer('saveAttendance', { payload: attendanceLogs });
+    function setRowStatus(studentId, code) {
+      ['P', 'A', 'L', 'NC'].forEach(c => {
+        const btn = document.getElementById(`attbtn-${studentId}-${c}`);
+        if (btn) btn.className = `px-3 py-1 rounded-lg text-xs font-bold transition ${c === code ? getStatusActiveClass(c) : 'text-slate-500 hover:bg-white'}`;
+      });
     }
 
-    function setAttendanceStatus(dateStr, studentId, status) {
-      if (currentUser.role === 'cr' && dateStr !== getTodayStr()) {
-        alert('CRs can only mark today\'s attendance.');
-        renderCalendarTab();
+    function markAllStatus(code) {
+      const sem = document.getElementById('markSemSelect').value;
+      STATE.students.filter(s => String(s.Semester) === sem).forEach(s => setRowStatus(s.StudentID, code));
+    }
+
+    async function saveDailyAttendance() {
+      const sem = document.getElementById('markSemSelect').value;
+      const date = document.getElementById('markDateInput').value;
+      const btn = document.getElementById('saveAttBtn');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> Saving...';
+
+      if (!STATE.dates.includes(date)) {
+        STATE.dates.push(date);
+        STATE.dates.sort();
+      }
+
+      const list = STATE.students.filter(s => String(s.Semester) === sem);
+      const records = [];
+      list.forEach(s => {
+        let chosen = 'P';
+        ['P', 'A', 'L', 'NC'].forEach(c => {
+          const b = document.getElementById(`attbtn-${s.StudentID}-${c}`);
+          if (b && b.className.includes('text-white')) chosen = c;
+        });
+        if (!STATE.attendance[s.StudentID]) STATE.attendance[s.StudentID] = {};
+        STATE.attendance[s.StudentID][date] = chosen;
+        records.push({ studentId: s.StudentID, status: chosen });
+      });
+
+      await callBackend({
+        action: 'SAVE_ATTENDANCE',
+        date,
+        semester: sem,
+        records,
+        markedBy: STATE.currentUser ? STATE.currentUser.FullName : 'Admin'
+      });
+
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-floppy-disk mr-1"></i> Save Attendance';
+      refreshAllViews();
+      alert(`Attendance saved for Semester ${sem} on ${date}!`);
+    }
+
+    // 3. RENDER ATTENDANCE REGISTER (AUG - OCT 2026)
+    function renderRegisterTable() {
+      const sem = document.getElementById('regSemSelect').value;
+      const month = document.getElementById('regMonthSelect').value;
+      const filteredDates = STATE.dates.filter(d => month === 'ALL' ? true : d.startsWith(month));
+      const list = STATE.students.filter(s => String(s.Semester) === sem);
+
+      const thead = document.getElementById('regTableHead');
+      thead.innerHTML = `
+        <tr>
+          <th class="p-3 sticky left-0 bg-slate-50 z-10 border-r">Student Name</th>
+          <th class="p-3">GR No.</th>
+          <th class="p-3 text-center">%</th>
+          ${filteredDates.map(d => `<th class="p-2 text-center font-mono">${d.slice(5)}</th>`).join('')}
+        </tr>
+      `;
+
+      const tbody = document.getElementById('regTableBody');
+      tbody.innerHTML = list.map(s => {
+        const st = getStudentAttendanceStats(s.StudentID);
+        return `
+          <tr class="hover:bg-slate-50">
+            <td class="p-3 font-bold text-slate-900 sticky left-0 bg-white border-r whitespace-nowrap">${s.Name}</td>
+            <td class="p-3 font-mono text-slate-500">${s.GRNO || '-'}</td>
+            <td class="p-3 text-center font-extrabold ${st.pct < Number(STATE.settings.redZoneThreshold || 75) ? 'text-red-600' : 'text-emerald-700'}">${st.pct}%</td>
+            ${filteredDates.map(d => {
+              const val = (STATE.attendance[s.StudentID] && STATE.attendance[s.StudentID][d]) || '-';
+              let badge = 'text-slate-300';
+              if (val === 'P') badge = 'bg-emerald-100 text-emerald-800 font-bold';
+              if (val === 'A') badge = 'bg-red-100 text-red-700 font-bold';
+              if (val === 'L') badge = 'bg-amber-100 text-amber-800 font-bold';
+              return `<td class="p-1.5 text-center"><span class="inline-block w-6 py-0.5 rounded ${badge}">${val}</span></td>`;
+            }).join('')}
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // 4. RENDER RED ZONE
+    function renderRedZoneTable() {
+      const semFilter = document.getElementById('rzSemFilter').value;
+      const threshold = Number(STATE.settings.redZoneThreshold || 75);
+      const rows = [];
+
+      STATE.students.forEach(s => {
+        if (semFilter !== 'ALL' && String(s.Semester) !== semFilter) return;
+        const st = getStudentAttendanceStats(s.StudentID);
+        if (st.total > 0 && st.pct < threshold) {
+          rows.push({ s, st });
+        }
+      });
+
+      const tbody = document.getElementById('redZoneTableBody');
+      if (rows.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-slate-400 font-medium">No students are currently below ${threshold}% attendance in this view.</td></tr>`;
         return;
       }
-      if (!attendanceLogs[dateStr]) attendanceLogs[dateStr] = {};
-      if (attendanceLogs[dateStr][studentId]?.status === status) {
-        delete attendanceLogs[dateStr][studentId];
-      } else {
-        attendanceLogs[dateStr][studentId] = { status, by: currentUser.name };
-      }
-      renderCalendarTab();
-      syncAttendanceToServer();
+
+      tbody.innerHTML = rows.map(({ s, st }) => `
+        <tr class="hover:bg-red-50/40">
+          <td class="p-3.5 font-bold">Semester ${s.Semester}</td>
+          <td class="p-3.5 font-mono text-xs">${s.GRNO || 'Pending'}</td>
+          <td class="p-3.5 font-mono text-xs">${s.SeatNo || 'Pending'}</td>
+          <td class="p-3.5 font-bold text-slate-900">${s.Name}</td>
+          <td class="p-3.5 text-slate-600">${s.FatherName}</td>
+          <td class="p-3.5 text-center font-mono">${st.present} / ${st.total}</td>
+          <td class="p-3.5 text-center"><span class="px-2.5 py-1 bg-red-100 text-red-800 font-extrabold rounded-full text-xs">${st.pct}%</span></td>
+        </tr>
+      `).join('');
     }
 
-    function markAllPresentForDay() {
-      const sem = document.getElementById('calSemesterSelect').value;
-      const dateStr = document.getElementById('calDateInput').value;
-      if (currentUser.role === 'cr' && dateStr !== getTodayStr()) return alert('CRs can only mark today.');
-      if (!attendanceLogs[dateStr]) attendanceLogs[dateStr] = {};
-      students.filter(s => String(s.sem) === String(sem)).forEach(s => {
-        const leave = findLeaveForStudentOnDate(s.id, dateStr);
-        attendanceLogs[dateStr][s.id] = { status: leave ? 'L' : 'P', by: currentUser.name };
+    // 5. CONTROL PANEL: STUDENT MASTER (ADD / EDIT / FILL MISSING GR & SEAT NO)
+    function renderControlStudents() {
+      const sem = document.getElementById('cpStuSemFilter').value;
+      const q = document.getElementById('cpStuSearch').value.trim().toLowerCase();
+      const missingOnly = document.getElementById('cpMissingOnly').checked;
+
+      const filtered = STATE.students.filter(s => {
+        if (sem !== 'ALL' && String(s.Semester) !== sem) return false;
+        if (missingOnly && s.GRNO && s.SeatNo && s.EnrolmentNo) return false;
+        if (q && !(`${s.Name} ${s.FatherName} ${s.GRNO} ${s.SeatNo} ${s.EnrolmentNo}`.toLowerCase().includes(q))) return false;
+        return true;
       });
-      renderCalendarTab();
-      syncAttendanceToServer();
-    }
 
-    function populateLeaveStudents() {
-      const sem = document.getElementById('leaveSemSelect').value;
-      document.getElementById('leaveStudentSelect').innerHTML = students.filter(s => String(s.sem) === String(sem))
-        .map(s => `<option value="${s.id}">${s.roll} — ${s.name}</option>`).join('');
-    }
+      document.getElementById('cpStuCountBadge').textContent = `Showing ${filtered.length} of ${STATE.students.length} students`;
 
-    function handleLeaveSubmit(e) {
-      e.preventDefault();
-      const stu = students.find(s => s.id === document.getElementById('leaveStudentSelect').value);
-      const start = document.getElementById('leaveStartDate').value;
-      const end = document.getElementById('leaveEndDate').value;
-      const category = document.getElementById('leaveCategory').value;
-      const note = document.getElementById('leaveNote').value;
-      const file = document.getElementById('leaveFileInput').files[0];
-
-      const reader = new FileReader();
-      reader.onload = function(evt) {
-        const record = {
-          id: 'L' + Date.now(),
-          studentId: stu.id,
-          studentName: stu.name,
-          roll: stu.roll,
-          sem: stu.sem,
-          startDate: start,
-          endDate: end,
-          category,
-          note,
-          fileName: file.name,
-          fileUrl: '',
-          recordedBy: `${currentUser.name}`
-        };
-
-        let cur = new Date(start), last = new Date(end);
-        while (cur <= last) {
-          const dStr = cur.toISOString().split('T')[0];
-          if (!attendanceLogs[dStr]) attendanceLogs[dStr] = {};
-          attendanceLogs[dStr][stu.id] = { status: 'L', by: currentUser.name };
-          cur.setDate(cur.getDate() + 1);
-        }
-
-        callServer('recordLeave', { record, base64Data: evt.target.result }, res => {
-          record.fileUrl = res?.fileUrl || '';
-          leaveRecords.unshift(record);
-          syncAttendanceToServer();
-          renderLeavesTab();
-          alert('Leave recorded & letter uploaded to Google Drive!');
-        });
-      };
-      reader.readAsDataURL(file);
-    }
-
-    function renderLeavesTab() {
-      const tbody = document.getElementById('leaveRecordsBody');
-      tbody.innerHTML = leaveRecords.length === 0
-        ? `<tr><td colspan="5" class="py-6 text-center text-gray-400 text-xs">No leaves recorded yet.</td></tr>`
-        : leaveRecords.map(l => `
-          <tr>
-            <td class="py-3 px-3 font-bold">${l.studentName} <span class="text-xs text-[#006837]">(Sem ${l.sem})</span></td>
-            <td class="py-3 px-3 text-xs">${l.startDate} to ${l.endDate}</td>
-            <td class="py-3 px-3 text-xs"><strong>${l.category}:</strong> ${l.note}</td>
-            <td class="py-3 px-3"><a href="${l.fileUrl}" target="_blank" class="text-xs font-bold text-[#006837] underline">Open File</a></td>
-            <td class="py-3 px-3 text-right"><button onclick="deleteLeave('${l.id}')" class="text-red-500 text-xs font-bold">Del</button></td>
-          </tr>`).join('');
-    }
-
-    function deleteLeave(id) {
-      leaveRecords = leaveRecords.filter(x => x.id !== id);
-      renderLeavesTab();
-      callServer('deleteLeave', { leaveId: id });
-    }
-
-    function renderRosterTab() {
-      const superAdmin = isSuperAdminUser(currentUser);
-      document.getElementById('rosterTableBody').innerHTML = students.map(s => {
-        const stats = calcStudentStats(s);
-        return `
-          <tr>
-            <td class="py-2 px-2">
-              ${superAdmin ? `
-                <select onchange="updateBaseline('${s.id}','sem',this.value)" class="border rounded px-1.5 py-1 text-xs font-bold text-[#006837]">
-                  ${[1,2,3,4,5,6,7,8].map(n => `<option value="${n}" ${String(s.sem) === String(n) ? 'selected' : ''}>Sem ${n}</option>`).join('')}
-                </select>
-              ` : `<span class="font-bold text-[#006837] text-xs">Sem ${s.sem}</span>`}
-            </td>
-            <td class="py-2 px-2 text-xs font-semibold">${s.roll}</td>
-            <td class="py-2 px-2 font-bold">${s.name}</td>
-            <td class="py-2 px-2 text-center"><input type="number" value="${s.prevHeld}" onchange="updateBaseline('${s.id}','prevHeld',this.value)" class="w-14 border rounded text-center text-xs font-bold p-1" /></td>
-            <td class="py-2 px-2 text-center"><input type="number" value="${s.prevAttended}" onchange="updateBaseline('${s.id}','prevAttended',this.value)" class="w-14 border rounded text-center text-xs font-bold p-1" /></td>
-            <td class="py-2 px-2 text-center font-extrabold ${stats.pct < 75 ? 'text-red-600' : 'text-emerald-700'}">${stats.pct}%</td>
-            <td class="py-2 px-2 text-right"><button onclick="removeStudent('${s.id}')" class="text-red-500 text-xs"><i class="fa-solid fa-trash"></i></button></td>
-          </tr>`;
-      }).join('');
-    }
-
-    function updateBaseline(id, field, val) {
-      const stu = students.find(x => x.id === id);
-      if (stu) {
-        stu[field] = field === 'sem' ? String(val) : Number(val);
-        syncSemesterDropdowns();
-        renderRosterTab();
-        callServer('saveStudents', { payload: students });
-      }
-    }
-
-    function handleAddStudent(e) {
-      e.preventDefault();
-      students.push({
-        id: 'S' + Date.now(),
-        sem: document.getElementById('newStuSem').value,
-        roll: document.getElementById('newStuRoll').value.trim(),
-        name: document.getElementById('newStuName').value.trim(),
-        prevHeld: Number(document.getElementById('newStuPrevHeld').value),
-        prevAttended: Number(document.getElementById('newStuPrevAtt').value)
-      });
-      document.getElementById('addStudentModal').classList.add('hidden');
-      syncSemesterDropdowns();
-      renderRosterTab();
-      callServer('saveStudents', { payload: students });
-    }
-
-    function removeStudent(id) {
-      students = students.filter(x => x.id !== id);
-      syncSemesterDropdowns();
-      renderRosterTab();
-      callServer('saveStudents', { payload: students });
-    }
-
-    function renderHandoverTab() {
-      if (!isSuperAdminUser(currentUser)) return;
-      const tbody = document.getElementById('usersManagerBody');
-      tbody.innerHTML = usersList.map((u, idx) => `
-        <tr class="hover:bg-gray-50">
-          <td class="py-2 px-2"><input type="text" value="${u.username}" onchange="editUserField(${idx},'username',this.value)" class="border rounded px-2 py-1 text-xs font-bold w-28" /></td>
-          <td class="py-2 px-2"><input type="text" value="${u.pin}" onchange="editUserField(${idx},'pin',this.value)" class="border rounded px-2 py-1 text-xs w-20" /></td>
-          <td class="py-2 px-2"><input type="text" value="${u.name}" onchange="editUserField(${idx},'name',this.value)" class="border rounded px-2 py-1 text-xs font-semibold w-32" /></td>
-          <td class="py-2 px-2"><input type="text" value="${u.title}" onchange="editUserField(${idx},'title',this.value)" class="border rounded px-2 py-1 text-xs w-36" /></td>
-          <td class="py-2 px-2">
-            <select onchange="editUserField(${idx},'role',this.value)" class="border rounded px-2 py-1 text-xs font-bold text-[#006837]">
-              <option value="faculty" ${u.role === 'faculty' ? 'selected' : ''}>Faculty (Super Admin)</option>
-              <option value="president" ${u.role === 'president' || u.username === 'jarar.ali' ? 'selected' : ''}>President (Super Admin)</option>
-              <option value="council" ${u.role === 'council' && u.username !== 'jarar.ali' ? 'selected' : ''}>Council Member (Limited)</option>
-              <option value="cr" ${u.role === 'cr' ? 'selected' : ''}>CR (Restricted)</option>
-            </select>
-          </td>
-          <td class="py-2 px-2">
-            <select onchange="editUserField(${idx},'sem',this.value)" class="border rounded px-2 py-1 text-xs font-bold">
-              <option value="ALL" ${u.sem === 'ALL' ? 'selected' : ''}>ALL</option>
-              ${[1,2,3,4,5,6,7,8].map(n => `<option value="${n}" ${String(u.sem) === String(n) ? 'selected' : ''}>Sem${n}</option>`).join('')}
-            </select>
-          </td>
-          <td class="py-2 px-2 text-right">
-            <button onclick="removeUserRow(${idx})" class="text-red-500 hover:text-red-700 text-xs font-bold"><i class="fa-solid fa-trash"></i></button>
+      const tbody = document.getElementById('cpStudentsTableBody');
+      tbody.innerHTML = filtered.map(s => `
+        <tr class="hover:bg-slate-50">
+          <td class="p-3 font-bold">${s.Semester}</td>
+          <td class="p-3 font-mono">${s.GRNO || '<span class="px-2 py-0.5 bg-amber-100 text-amber-800 rounded font-sans text-[11px]">Missing GR</span>'}</td>
+          <td class="p-3 font-mono">${s.SeatNo || '<span class="px-2 py-0.5 bg-amber-100 text-amber-800 rounded font-sans text-[11px]">Missing Seat</span>'}</td>
+          <td class="p-3 font-mono">${s.EnrolmentNo || '<span class="px-2 py-0.5 bg-amber-100 text-amber-800 rounded font-sans text-[11px]">Missing Enr</span>'}</td>
+          <td class="p-3 font-bold text-slate-900">${s.Name}</td>
+          <td class="p-3 text-slate-600">${s.FatherName}</td>
+          <td class="p-3">${s.Gender}</td>
+          <td class="p-3 text-right space-x-2 whitespace-nowrap">
+            <button onclick="editStudent('${s.StudentID}')" class="px-2.5 py-1 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded-lg font-bold">
+              <i class="fa-solid fa-pen-to-square"></i> Edit / Fill Info
+            </button>
+            <button onclick="deleteStudent('${s.StudentID}')" class="px-2.5 py-1 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg font-bold">
+              <i class="fa-solid fa-trash"></i>
+            </button>
           </td>
         </tr>
       `).join('');
     }
 
-    function editUserField(idx, field, val) {
-      usersList[idx][field] = val;
+    function editStudent(id) {
+      const s = STATE.students.find(x => String(x.StudentID) === String(id));
+      if (!s) return;
+      document.getElementById('stuFormId').value = s.StudentID;
+      document.getElementById('stuFormName').value = s.Name;
+      document.getElementById('stuFormFather').value = s.FatherName;
+      document.getElementById('stuFormSem').value = s.Semester;
+      document.getElementById('stuFormGender').value = s.Gender;
+      document.getElementById('stuFormGR').value = s.GRNO || '';
+      document.getElementById('stuFormSeat').value = s.SeatNo || '';
+      document.getElementById('stuFormEnr').value = s.EnrolmentNo || '';
+      window.scrollTo({ top: 180, behavior: 'smooth' });
     }
 
-    function addNewUserRow() {
-      usersList.push({
-        username: 'new.user',
-        pin: 'apdc123',
-        name: 'New Member',
-        title: 'Council / CR',
-        role: 'council',
-        sem: 'ALL'
-      });
-      renderHandoverTab();
+    function resetStudentForm() {
+      document.getElementById('stuFormId').value = '';
+      document.getElementById('stuFormName').value = '';
+      document.getElementById('stuFormFather').value = '';
+      document.getElementById('stuFormGR').value = '';
+      document.getElementById('stuFormSeat').value = '';
+      document.getElementById('stuFormEnr').value = '';
     }
 
-    function removeUserRow(idx) {
-      if (usersList.length <= 1) return alert('Cannot remove the last admin account.');
-      usersList.splice(idx, 1);
-      renderHandoverTab();
-    }
-
-    function saveUsersChanges() {
-      callServer('saveUsers', { payload: usersList }, () => {
-        alert('All User Logins, Roles & Handover settings saved live to the server!');
-      });
-    }
-
-    function handleGrantGoogleAccess(e) {
+    async function handleSaveStudent(e) {
       e.preventDefault();
-      const email = document.getElementById('newGoogleAdminEmail').value.trim();
-      if (!email) return;
-      callServer('grantAccess', { email }, res => {
-        if (res && res.success) {
-          document.getElementById('newGoogleAdminEmail').value = '';
-          alert(`Success! ${email} now has full Google Drive & Google Sheet Server Editor permissions.`);
-        } else {
-          alert('Could not add email: Make sure it is a valid Google/Gmail account.');
+      const existingId = document.getElementById('stuFormId').value;
+      const studentObj = {
+        StudentID: existingId || ('STU-' + String(STATE.students.length + 1).padStart(3, '0') + '-' + Date.now().toString().slice(-3)),
+        SNo: STATE.students.length + 1,
+        Name: document.getElementById('stuFormName').value.trim(),
+        FatherName: document.getElementById('stuFormFather').value.trim(),
+        Semester: document.getElementById('stuFormSem').value,
+        Gender: document.getElementById('stuFormGender').value,
+        GRNO: document.getElementById('stuFormGR').value.trim(),
+        SeatNo: document.getElementById('stuFormSeat').value.trim(),
+        EnrolmentNo: document.getElementById('stuFormEnr').value.trim(),
+        Status: 'Active'
+      };
+
+      const idx = STATE.students.findIndex(x => String(x.StudentID) === String(existingId));
+      if (idx >= 0) STATE.students[idx] = studentObj;
+      else STATE.students.push(studentObj);
+
+      await callBackend({ action: 'SAVE_STUDENT', student: studentObj });
+      resetStudentForm();
+      refreshAllViews();
+      alert('Student record saved to Portal & Google Sheet!');
+    }
+
+    async function deleteStudent(id) {
+      if (!confirm('Remove this student permanently from the roster?')) return;
+      STATE.students = STATE.students.filter(x => String(x.StudentID) !== String(id));
+      await callBackend({ action: 'DELETE_STUDENT', studentId: id });
+      refreshAllViews();
+    }
+
+    // 6. CONTROL PANEL: USER ACCOUNTS & PASSWORDS
+    function renderControlUsers() {
+      const tbody = document.getElementById('cpUsersTableBody');
+      tbody.innerHTML = STATE.users.map(u => `
+        <tr class="hover:bg-slate-50">
+          <td class="p-3.5"><span class="px-2.5 py-1 rounded-full text-xs font-bold ${u.Role === 'Sir Faisal' || u.Role === 'President' ? 'bg-amber-100 text-amber-900' : 'bg-slate-100 text-slate-700'}">${u.Role}</span></td>
+          <td class="p-3.5 font-bold">${u.FullName}</td>
+          <td class="p-3.5 font-mono text-emerald-700 font-bold">${u.Username}</td>
+          <td class="p-3.5 font-mono">${u.Password}</td>
+          <td class="p-3.5">${u.AssignedSemester}</td>
+          <td class="p-3.5 text-right space-x-2">
+            <button onclick="editUser('${u.UserID}')" class="px-2.5 py-1 bg-emerald-50 text-emerald-700 rounded-lg font-bold">Edit Credentials</button>
+            <button onclick="deleteUser('${u.UserID}')" class="px-2.5 py-1 bg-red-50 text-red-600 rounded-lg font-bold"><i class="fa-solid fa-trash"></i></button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function editUser(id) {
+      const u = STATE.users.find(x => String(x.UserID) === String(id));
+      if (!u) return;
+      document.getElementById('userFormId').value = u.UserID;
+      document.getElementById('userFormFullName').value = u.FullName;
+      document.getElementById('userFormUsername').value = u.Username;
+      document.getElementById('userFormPassword').value = u.Password;
+      document.getElementById('userFormRole').value = u.Role;
+      document.getElementById('userFormSem').value = u.AssignedSemester;
+    }
+
+    async function handleSaveUser(e) {
+      e.preventDefault();
+      const id = document.getElementById('userFormId').value || ('USR-' + Date.now());
+      const userObj = {
+        UserID: id,
+        FullName: document.getElementById('userFormFullName').value.trim(),
+        Username: document.getElementById('userFormUsername').value.trim(),
+        Password: document.getElementById('userFormPassword').value.trim(),
+        Role: document.getElementById('userFormRole').value,
+        AssignedSemester: document.getElementById('userFormSem').value
+      };
+      const idx = STATE.users.findIndex(x => String(x.UserID) === String(id));
+      if (idx >= 0) STATE.users[idx] = userObj;
+      else STATE.users.push(userObj);
+
+      await callBackend({ action: 'SAVE_USER', user: userObj });
+      document.getElementById('userFormId').value = '';
+      e.target.reset();
+      renderControlUsers();
+      alert('User login updated!');
+    }
+
+    async function deleteUser(id) {
+      if (!confirm('Delete this user account?')) return;
+      STATE.users = STATE.users.filter(x => String(x.UserID) !== String(id));
+      await callBackend({ action: 'DELETE_USER', userId: id });
+      renderControlUsers();
+    }
+
+    // 7. CONTROL PANEL: GOOGLE DRIVE DEPARTMENT FILE SYSTEM
+    async function handleFileUpload(e) {
+      e.preventDefault();
+      const fileInput = document.getElementById('uploadFileInput');
+      const file = fileInput.files[0];
+      if (!file) return;
+
+      const btn = document.getElementById('uploadBtn');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> Uploading to Drive...';
+
+      const reader = new FileReader();
+      reader.onload = async function() {
+        const base64Data = reader.result.split(',')[1];
+        const category = document.getElementById('uploadFileCategory').value;
+        const description = document.getElementById('uploadFileDesc').value.trim();
+        const uploadedBy = STATE.currentUser ? STATE.currentUser.FullName : 'Admin';
+
+        const resp = await callBackend({
+          action: 'UPLOAD_FILE',
+          fileName: file.name,
+          mimeType: file.type,
+          base64Data,
+          category,
+          description,
+          uploadedBy
+        });
+
+        const newFile = {
+          FileID: (resp && resp.fileId) || ('FILE-' + Date.now()),
+          FileName: file.name,
+          Category: category,
+          Description: description,
+          ViewUrl: (resp && resp.viewUrl) || reader.result,
+          DownloadUrl: (resp && resp.downloadUrl) || reader.result,
+          UploadedBy: uploadedBy,
+          UploadedAt: new Date().toISOString().split('T')[0]
+        };
+
+        STATE.files.unshift(newFile);
+        saveLocalState();
+        renderDepartmentFiles();
+        fileInput.value = '';
+        document.getElementById('uploadFileDesc').value = '';
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up mr-1"></i> Upload to Google Drive';
+        alert('File uploaded to Google Drive and organized under ' + category + '!');
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function renderDepartmentFiles() {
+      const cat = document.getElementById('publicFileCatFilter').value;
+      const list = STATE.files.filter(f => cat === 'ALL' || f.Category === cat);
+
+      const renderCard = (f, allowDelete) => `
+        <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 flex flex-col justify-between">
+          <div>
+            <span class="px-2.5 py-0.5 bg-amber-100 text-amber-800 rounded-full text-[11px] font-bold">${f.Category}</span>
+            <h4 class="font-bold text-slate-900 text-sm mt-2 break-all">${f.FileName}</h4>
+            <p class="text-xs text-slate-500 mt-1">${f.Description || 'Official APDC BBA Document'}</p>
+          </div>
+          <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
+            <span class="text-slate-400">${f.UploadedAt} • ${f.UploadedBy}</span>
+            <div class="space-x-2">
+              <a href="${f.ViewUrl}" target="_blank" class="px-2.5 py-1 bg-emerald-50 text-emerald-700 font-bold rounded-lg">Open</a>
+              ${allowDelete ? `<button onclick="deleteDeptFile('${f.FileID}')" class="px-2 py-1 bg-red-50 text-red-600 rounded-lg"><i class="fa-solid fa-trash"></i></button>` : ''}
+            </div>
+          </div>
+        </div>
+      `;
+
+      const emptyMsg = `<div class="col-span-3 bg-white p-8 rounded-2xl border border-dashed border-slate-300 text-center text-xs text-slate-400">No department files uploaded yet. Use the Control Panel to upload PDFs, Excel sheets, or circulars.</div>`;
+      document.getElementById('publicFilesGrid').innerHTML = list.length ? list.map(f => renderCard(f, false)).join('') : emptyMsg;
+      document.getElementById('cpFilesList').innerHTML = STATE.files.length ? STATE.files.map(f => renderCard(f, true)).join('') : emptyMsg;
+    }
+
+    async function deleteDeptFile(id) {
+      if (!confirm('Delete this file from the portal and Google Drive?')) return;
+      STATE.files = STATE.files.filter(x => String(x.FileID) !== String(id));
+      await callBackend({ action: 'DELETE_FILE', fileId: id });
+      renderDepartmentFiles();
+    }
+
+    // 8. CONTROL PANEL: SETTINGS, PROMOTIONS & CLOUD OVERWRITE
+    async function saveGlobalSettings() {
+      STATE.settings.academicSession = document.getElementById('setSessionInput').value.trim();
+      STATE.settings.redZoneThreshold = Number(document.getElementById('setThresholdInput').value || 75);
+      STATE.settings.announcement = document.getElementById('setAnnouncementInput').value.trim();
+      await callBackend({ action: 'SAVE_SETTINGS', settings: STATE.settings });
+      refreshAllViews();
+      alert('Global portal settings updated!');
+    }
+
+    async function promoteSemesterBatch() {
+      const fromSem = document.getElementById('promoFromSem').value;
+      const toSem = document.getElementById('promoToSem').value;
+      if (!confirm(`Are you sure you want to promote all Semester ${fromSem} students to ${toSem}?`)) return;
+
+      STATE.students.forEach(s => {
+        if (String(s.Semester) === fromSem) {
+          s.Semester = toSem;
+          if (toSem === 'Graduated') s.Status = 'Alumni';
         }
       });
+      await callBackend({ action: 'PROMOTE_SEMESTER', fromSem, toSem });
+      refreshAllViews();
+      alert(`Batch promoted from ${fromSem} to ${toSem}!`);
     }
+
+    async function syncSeedDataToCloud() {
+      if (!confirm('This will wipe all old trial/test students in the Google Sheet and replace them with the 75 official BBA students and their Aug–Oct 2026 attendance records. Proceed?')) return;
+      const btn = document.getElementById('syncCloudBtn');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Syncing 75 Students & 3,436 Attendance Logs to Google Sheet...';
+
+      loadFromEmbeddedSeed();
+      await callBackend({
+        action: 'SEED_MASTER_DATA',
+        dates: SEED_DATA.dates,
+        students: SEED_DATA.students
+      });
+
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-check"></i> Synced! All 75 Students & Attendance Live in Google Sheet';
+      refreshAllViews();
+      alert('All 75 real students (Semesters II, IV, VI, VIII) and 3,436 attendance records (Aug–Oct 2026) are now live in your Google Sheet!');
+    }
+
+    // Start Portal
+    initData();
   </script>
 </body>
 </html>
