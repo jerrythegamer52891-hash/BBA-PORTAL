@@ -162,8 +162,8 @@
             <label class="block text-xs font-bold text-slate-600 mb-1">Enter Tracking Code or Your Full Name</label>
             <input id="lvTrackInput" type="text" required placeholder="e.g. APDC-LV-4829 or Full Name" class="w-full px-3.5 py-2.5 border rounded-xl text-xs font-semibold" />
           </div>
-          <button type="submit" class="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl text-xs">
-            Check Status Now
+          <button type="submit" id="trackSubmitBtn" class="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl text-xs">
+            <i class="fa-solid fa-rotate mr-1"></i> Check Live Status
           </button>
         </form>
 
@@ -409,16 +409,22 @@
       <section id="tab-leaves" class="hidden space-y-4">
         <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-wrap items-center justify-between gap-4">
           <div>
-            <h3 class="font-extrabold text-slate-900 text-base"><i class="fa-solid fa-envelope-open-text text-emerald-700 mr-2"></i>Student Leave Applications & Council Approval</h3>
-            <p class="text-xs text-slate-500 mt-0.5">Approving a leave automatically marks the student as <strong>L (Leave)</strong> in advance for those dates. Declining requires a remark for the student.</p>
+            <h3 class="font-extrabold text-slate-900 text-base"><i class="fa-solid fa-envelope-open-text text-emerald-700 mr-2"></i>Student Leave Applications & History</h3>
+            <p class="text-xs text-slate-500 mt-0.5">All Pending, Approved, and Rejected records are permanently saved below. You can filter or delete old records anytime.</p>
           </div>
-          <div class="flex items-center gap-2">
+          <div class="flex flex-wrap items-center gap-2">
             <select id="leaveStatusFilter" onchange="renderLeavesManagementTable()" class="px-3.5 py-2 rounded-xl border border-slate-300 text-xs font-bold">
-              <option value="ALL">All Applications</option>
+              <option value="ALL">All Records (Pending + History)</option>
               <option value="Pending">Pending Only</option>
-              <option value="Approved">Approved</option>
-              <option value="Rejected">Rejected</option>
+              <option value="Approved">Approved History</option>
+              <option value="Rejected">Rejected History</option>
             </select>
+            <button onclick="refreshCloudLeavesNow()" id="refreshLeavesBtn" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold">
+              <i class="fa-solid fa-rotate mr-1"></i> Sync Now
+            </button>
+            <button onclick="clearDecidedLeavesHistory()" class="px-3 py-2 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 rounded-xl text-xs font-bold">
+              <i class="fa-solid fa-trash-can mr-1"></i> Clear Approved/Rejected History
+            </button>
           </div>
         </div>
 
@@ -432,7 +438,7 @@
                 <th class="p-3.5">Reason & Attachment</th>
                 <th class="p-3.5">Status & Remarks</th>
                 <th class="p-3.5">Reviewed By (Internal)</th>
-                <th class="p-3.5 text-right">Council / HOD Action</th>
+                <th class="p-3.5 text-right">Actions & Delete</th>
               </tr>
             </thead>
             <tbody id="leavesTableBody" class="divide-y divide-slate-100"></tbody>
@@ -919,7 +925,7 @@
       document.getElementById('lvApplyStart').value = today;
       document.getElementById('lvApplyEnd').value = today;
 
-      const saved = localStorage.getItem('APDC_PORTAL_V7');
+      const saved = localStorage.getItem('APDC_PORTAL_V8') || localStorage.getItem('APDC_PORTAL_V7');
       if (saved) {
         try {
           const parsed = JSON.parse(saved);
@@ -947,9 +953,58 @@
       await fetchCloudData();
     }
 
+    // NORMALIZE LEAVE OBJECT & MERGE LOCAL + CLOUD LEAVES SO HISTORY NEVER DISAPPEARS
+    function normalizeLeaveRecord(lv) {
+      let status = lv.Status;
+      let attUrl = lv.AttachmentUrl || '';
+      if (!status && (attUrl === 'Pending' || attUrl === 'Approved' || attUrl === 'Rejected')) {
+        status = attUrl;
+        attUrl = '';
+      }
+      if (!status || !['Pending', 'Approved', 'Rejected'].includes(status)) {
+        status = 'Pending';
+      }
+      return {
+        LeaveID: String(lv.LeaveID || ''),
+        StudentID: String(lv.StudentID || ''),
+        StudentName: String(lv.StudentName || ''),
+        Semester: String(lv.Semester || ''),
+        StartDate: String(lv.StartDate || '').substring(0, 10),
+        EndDate: String(lv.EndDate || '').substring(0, 10),
+        Reason: String(lv.Reason || ''),
+        AttachmentUrl: attUrl,
+        Status: status,
+        Remarks: String(lv.Remarks || ''),
+        ActionBy: String(lv.ActionBy || lv.ApprovedBy || ''),
+        SubmittedAt: String(lv.SubmittedAt || getTodayDateString()).substring(0, 10)
+      };
+    }
+
+    function mergeLeavesHistory(localLeaves, cloudLeaves) {
+      const map = new Map();
+      // 1. Put local leaves first
+      (localLeaves || []).forEach(raw => {
+        if (!raw || !raw.LeaveID) return;
+        const clean = normalizeLeaveRecord(raw);
+        map.set(clean.LeaveID, clean);
+      });
+      // 2. Merge cloud leaves, preserving local Approved/Rejected decision if cloud was still Pending or missing headers
+      (cloudLeaves || []).forEach(raw => {
+        if (!raw || !raw.LeaveID) return;
+        const cleanCloud = normalizeLeaveRecord(raw);
+        const existingLocal = map.get(cleanCloud.LeaveID);
+        if (existingLocal && existingLocal.Status !== 'Pending' && cleanCloud.Status === 'Pending') {
+          map.set(cleanCloud.LeaveID, existingLocal);
+        } else {
+          map.set(cleanCloud.LeaveID, cleanCloud);
+        }
+      });
+      return Array.from(map.values());
+    }
+
     async function fetchCloudData() {
       try {
-        const res = await fetch(SCRIPT_URL);
+        const res = await fetch(SCRIPT_URL + '?t=' + Date.now());
         const data = await res.json();
         if (data && data.success) {
           if (data.users && data.users.length > 0) {
@@ -979,8 +1034,8 @@
             STATE.attendance = attMap;
             STATE.dates = Array.from(dateSet).sort();
           }
-          if (data.leaves) {
-            STATE.leaves = data.leaves;
+          if (Array.isArray(data.leaves)) {
+            STATE.leaves = mergeLeavesHistory(STATE.leaves, data.leaves);
             applyAllApprovedLeavesToAttendance();
           }
           if (data.files) STATE.files = data.files;
@@ -994,6 +1049,20 @@
       } catch (err) {
         console.warn("Using local cached dataset:", err);
       }
+    }
+
+    async function refreshCloudLeavesNow() {
+      const btn = document.getElementById('refreshLeavesBtn');
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> Syncing...';
+      }
+      await fetchCloudData();
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-rotate mr-1"></i> Sync Now';
+      }
+      renderLeavesManagementTable();
     }
 
     // ENSURE ALL APPROVED LEAVES ARE AUTOMATICALLY MARKED 'L' IN ADVANCE
@@ -1018,7 +1087,6 @@
       STATE.dates = Array.from(dateSet).sort();
     }
 
-    // CHECK IF A STUDENT HAS AN APPROVED LEAVE ON A SPECIFIC DATE
     function hasApprovedLeaveOnDate(student, dateStr) {
       return STATE.leaves.some(lv => {
         if (lv.Status !== 'Approved') return false;
@@ -1059,7 +1127,7 @@
     }
 
     function saveLocalState() {
-      localStorage.setItem('APDC_PORTAL_V7', JSON.stringify({
+      localStorage.setItem('APDC_PORTAL_V8', JSON.stringify({
         users: STATE.users,
         students: STATE.students,
         attendance: STATE.attendance,
@@ -1157,14 +1225,17 @@
           mimeType: mimeType || ''
         };
 
+        // Add locally right away for instant speed
+        const localCopy = { ...leaveObj };
+        delete localCopy.base64Data;
+        STATE.leaves.unshift(localCopy);
+        saveLocalState();
+
         const resp = await callBackend({ action: 'SUBMIT_LEAVE', leave: leaveObj });
         if (resp && resp.attachmentUrl) {
-          leaveObj.AttachmentUrl = resp.attachmentUrl;
+          localCopy.AttachmentUrl = resp.attachmentUrl;
+          saveLocalState();
         }
-        delete leaveObj.base64Data;
-
-        STATE.leaves.unshift(leaveObj);
-        saveLocalState();
 
         btn.disabled = false;
         btn.innerHTML = '<i class="fa-solid fa-check-circle mr-1"></i> Submit Leave Request';
@@ -1190,9 +1261,18 @@
       }
     }
 
-    // PUBLIC STATUS CHECKER (DOES NOT SHOW WHO APPROVED OR REJECTED)
-    function handleTrackLeave(e) {
+    // PUBLIC STATUS CHECKER (FETCHES LIVE CLOUD DATA FIRST SO IT IS ALWAYS REAL-TIME)
+    async function handleTrackLeave(e) {
       e.preventDefault();
+      const btn = document.getElementById('trackSubmitBtn');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> Checking Live Server...';
+
+      await fetchCloudData();
+
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-rotate mr-1"></i> Check Live Status';
+
       const q = document.getElementById('lvTrackInput').value.trim().toLowerCase();
       const box = document.getElementById('lvTrackResultBox');
 
@@ -1208,7 +1288,7 @@
 
       box.innerHTML = matches.map(lv => {
         let badgeClass = 'bg-amber-100 text-amber-800 border-amber-300';
-        let statusLabel = 'Status: Pending Review';
+        let statusLabel = 'Status: Pending';
         if (lv.Status === 'Approved') {
           badgeClass = 'bg-emerald-100 text-emerald-900 border-emerald-400';
           statusLabel = 'Status: Approved';
@@ -1232,7 +1312,6 @@
       }).join('');
     }
 
-    // CHECK IF A SEMESTER'S ATTENDANCE IS ALREADY MARKED BY CR FOR A GIVEN DATE
     function isSemesterDateMarked(semester, dateStr) {
       return STATE.settings && STATE.settings[`locked_${semester}_${dateStr}`] === 'true';
     }
@@ -1269,15 +1348,12 @@
       const canApproveLeaves = (found.Role === 'Sir Faisal' || found.Role === 'President' || found.Role === 'Council');
       const isCR = (found.Role === 'CR');
 
-      // 1. Hide/Show navigation buttons based on role
-      // CR ONLY sees "Mark Attendance" and "Attendance Register"
       document.getElementById('nav-dashboard').classList.toggle('hidden', isCR);
       document.getElementById('nav-redzone').classList.toggle('hidden', isCR);
       document.getElementById('nav-files').classList.toggle('hidden', isCR);
       document.getElementById('nav-leaves').classList.toggle('hidden', !canApproveLeaves);
       document.getElementById('nav-control').classList.toggle('hidden', !isSuperAdmin);
 
-      // 2. Configure semester & date locks for CR
       const todayStr = getTodayDateString();
       const markSemSelect = document.getElementById('markSemSelect');
       const regSemSelect = document.getElementById('regSemSelect');
@@ -1642,21 +1718,21 @@
       `).join('');
     }
 
-    // 5. RENDER LEAVE REQUESTS TAB (COUNCIL & SIR FAISAL INTERNAL VIEW)
+    // 5. RENDER LEAVE REQUESTS & PERMANENT HISTORY TAB (WITH DELETE OPTIONS)
     function renderLeavesManagementTable() {
       const filter = document.getElementById('leaveStatusFilter').value;
       const list = STATE.leaves.filter(lv => filter === 'ALL' || lv.Status === filter);
       const tbody = document.getElementById('leavesTableBody');
 
       if (list.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-slate-400 font-medium">No leave requests found in this view.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-slate-400 font-medium">No leave records found in "${filter}".</td></tr>`;
         return;
       }
 
       tbody.innerHTML = list.map(lv => {
-        let badge = 'bg-amber-100 text-amber-800';
-        if (lv.Status === 'Approved') badge = 'bg-emerald-100 text-emerald-800';
-        if (lv.Status === 'Rejected') badge = 'bg-red-100 text-red-800';
+        let badge = 'bg-amber-100 text-amber-800 border border-amber-300';
+        if (lv.Status === 'Approved') badge = 'bg-emerald-100 text-emerald-900 border border-emerald-400';
+        if (lv.Status === 'Rejected') badge = 'bg-red-100 text-red-800 border border-red-300';
 
         return `
           <tr class="hover:bg-slate-50">
@@ -1675,17 +1751,20 @@
             </td>
             <td class="p-3.5">
               <span class="px-2.5 py-1 rounded-full font-extrabold text-[11px] ${badge}">${lv.Status}</span>
-              ${lv.Remarks ? `<div class="mt-1 text-slate-600 italic">Remarks: "${lv.Remarks}"</div>` : ''}
+              ${lv.Remarks ? `<div class="mt-1.5 text-red-700 font-medium">Remarks: "${lv.Remarks}"</div>` : ''}
             </td>
             <td class="p-3.5 font-semibold text-slate-700">
-              ${lv.ActionBy ? `<span class="px-2 py-1 bg-slate-100 rounded-lg border text-slate-800">${lv.ActionBy}</span>` : '<span class="text-slate-400 italic">Awaiting Action</span>'}
+              ${lv.ActionBy ? `<span class="px-2 py-1 bg-slate-100 rounded-lg border text-slate-800">${lv.ActionBy}</span>` : '<span class="text-slate-400 italic">Pending Review</span>'}
             </td>
             <td class="p-3.5 text-right whitespace-nowrap space-x-1.5">
-              <button onclick="decideLeaveRequest('${lv.LeaveID}', 'Approved')" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold shadow-sm">
+              <button onclick="decideLeaveRequest('${lv.LeaveID}', 'Approved')" class="px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold shadow-sm" title="Approve Leave">
                 <i class="fa-solid fa-check mr-1"></i> Approve
               </button>
-              <button onclick="decideLeaveRequest('${lv.LeaveID}', 'Rejected')" class="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold shadow-sm">
+              <button onclick="decideLeaveRequest('${lv.LeaveID}', 'Rejected')" class="px-2.5 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl font-bold shadow-sm" title="Reject Leave">
                 <i class="fa-solid fa-xmark mr-1"></i> Decline
+              </button>
+              <button onclick="deleteSingleLeaveRecord('${lv.LeaveID}')" class="px-2.5 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-xl font-bold" title="Delete Record Permanently">
+                <i class="fa-solid fa-trash"></i>
               </button>
             </td>
           </tr>
@@ -1699,8 +1778,8 @@
 
       let remarks = '';
       if (newStatus === 'Rejected') {
-        remarks = prompt(`Enter mandatory remarks / reason for declining ${lv.StudentName}'s leave request (This remark will be visible to the student):`);
-        if (remarks === null) return; // Cancelled
+        remarks = prompt(`Enter mandatory remarks / reason for declining ${lv.StudentName}'s leave request (This remark will be visible to the student):`, lv.Remarks || '');
+        if (remarks === null) return;
         if (!remarks.trim()) {
           alert("A remark is required when declining a leave application.");
           return;
@@ -1732,6 +1811,10 @@
         STATE.dates.sort();
       }
 
+      // Immediately update UI & localStorage before cloud finishes so it feels instant
+      saveLocalState();
+      refreshAllViews();
+
       await callBackend({
         action: 'DECIDE_LEAVE',
         leaveId: lv.LeaveID,
@@ -1740,11 +1823,32 @@
         actionBy: reviewerName,
         datesList: datesList,
         studentId: stu ? stu.StudentID : lv.StudentID,
-        semester: lv.Semester
+        semester: lv.Semester,
+        fullLeaveObj: lv
       });
+    }
 
+    async function deleteSingleLeaveRecord(leaveId) {
+      if (!confirm(`Delete leave record ${leaveId} permanently?`)) return;
+      STATE.leaves = STATE.leaves.filter(x => String(x.LeaveID) !== String(leaveId));
+      saveLocalState();
       refreshAllViews();
-      alert(`Leave application ${lv.LeaveID} marked as ${newStatus}!`);
+      await callBackend({ action: 'DELETE_LEAVE', leaveIds: [leaveId] });
+    }
+
+    async function clearDecidedLeavesHistory() {
+      const decided = STATE.leaves.filter(x => x.Status === 'Approved' || x.Status === 'Rejected');
+      if (decided.length === 0) {
+        alert("There are no Approved or Rejected history records to clear.");
+        return;
+      }
+      if (!confirm(`Delete all ${decided.length} Approved & Rejected leave records from history? (Pending requests will NOT be deleted).`)) return;
+      const idsToDelete = decided.map(x => x.LeaveID);
+      STATE.leaves = STATE.leaves.filter(x => x.Status === 'Pending');
+      saveLocalState();
+      refreshAllViews();
+      await callBackend({ action: 'DELETE_LEAVE', leaveIds: idsToDelete });
+      alert("Approved and Rejected leave history cleared!");
     }
 
     // 6. CONTROL PANEL: STUDENT MASTER (ADD / EDIT / FILL MISSING GR & SEAT NO)
