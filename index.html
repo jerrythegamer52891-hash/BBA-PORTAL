@@ -410,7 +410,7 @@
         <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-wrap items-center justify-between gap-4">
           <div>
             <h3 class="font-extrabold text-slate-900 text-base"><i class="fa-solid fa-envelope-open-text text-emerald-700 mr-2"></i>Student Leave Applications & History</h3>
-            <p class="text-xs text-slate-500 mt-0.5">All Pending, Approved, and Rejected records are permanently saved below. You can filter or delete old records anytime.</p>
+            <p class="text-xs text-slate-500 mt-0.5">All Pending, Approved, and Rejected records are permanently saved below. Once decided, a request is locked and can only be deleted.</p>
           </div>
           <div class="flex flex-wrap items-center gap-2">
             <select id="leaveStatusFilter" onchange="renderLeavesManagementTable()" class="px-3.5 py-2 rounded-xl border border-slate-300 text-xs font-bold">
@@ -982,13 +982,11 @@
 
     function mergeLeavesHistory(localLeaves, cloudLeaves) {
       const map = new Map();
-      // 1. Put local leaves first
       (localLeaves || []).forEach(raw => {
         if (!raw || !raw.LeaveID) return;
         const clean = normalizeLeaveRecord(raw);
         map.set(clean.LeaveID, clean);
       });
-      // 2. Merge cloud leaves, preserving local Approved/Rejected decision if cloud was still Pending or missing headers
       (cloudLeaves || []).forEach(raw => {
         if (!raw || !raw.LeaveID) return;
         const cleanCloud = normalizeLeaveRecord(raw);
@@ -1225,7 +1223,6 @@
           mimeType: mimeType || ''
         };
 
-        // Add locally right away for instant speed
         const localCopy = { ...leaveObj };
         delete localCopy.base64Data;
         STATE.leaves.unshift(localCopy);
@@ -1718,7 +1715,7 @@
       `).join('');
     }
 
-    // 5. RENDER LEAVE REQUESTS & PERMANENT HISTORY TAB (WITH DELETE OPTIONS)
+    // 5. RENDER LEAVE REQUESTS & PERMANENT HISTORY TAB (HIDES APPROVE/DECLINE ONCE DECIDED)
     function renderLeavesManagementTable() {
       const filter = document.getElementById('leaveStatusFilter').value;
       const list = STATE.leaves.filter(lv => filter === 'ALL' || lv.Status === filter);
@@ -1733,6 +1730,8 @@
         let badge = 'bg-amber-100 text-amber-800 border border-amber-300';
         if (lv.Status === 'Approved') badge = 'bg-emerald-100 text-emerald-900 border border-emerald-400';
         if (lv.Status === 'Rejected') badge = 'bg-red-100 text-red-800 border border-red-300';
+
+        const isPending = (lv.Status === 'Pending');
 
         return `
           <tr class="hover:bg-slate-50">
@@ -1757,12 +1756,18 @@
               ${lv.ActionBy ? `<span class="px-2 py-1 bg-slate-100 rounded-lg border text-slate-800">${lv.ActionBy}</span>` : '<span class="text-slate-400 italic">Pending Review</span>'}
             </td>
             <td class="p-3.5 text-right whitespace-nowrap space-x-1.5">
-              <button onclick="decideLeaveRequest('${lv.LeaveID}', 'Approved')" class="px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold shadow-sm" title="Approve Leave">
-                <i class="fa-solid fa-check mr-1"></i> Approve
-              </button>
-              <button onclick="decideLeaveRequest('${lv.LeaveID}', 'Rejected')" class="px-2.5 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl font-bold shadow-sm" title="Reject Leave">
-                <i class="fa-solid fa-xmark mr-1"></i> Decline
-              </button>
+              ${isPending ? `
+                <button onclick="decideLeaveRequest('${lv.LeaveID}', 'Approved')" class="px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold shadow-sm" title="Approve Leave">
+                  <i class="fa-solid fa-check mr-1"></i> Approve
+                </button>
+                <button onclick="decideLeaveRequest('${lv.LeaveID}', 'Rejected')" class="px-2.5 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl font-bold shadow-sm" title="Reject Leave">
+                  <i class="fa-solid fa-xmark mr-1"></i> Decline
+                </button>
+              ` : `
+                <span class="px-2.5 py-1 bg-slate-100 text-slate-500 rounded-xl font-bold text-[11px] border border-slate-200">
+                  <i class="fa-solid fa-lock mr-1"></i> Decision Locked
+                </span>
+              `}
               <button onclick="deleteSingleLeaveRecord('${lv.LeaveID}')" class="px-2.5 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-xl font-bold" title="Delete Record Permanently">
                 <i class="fa-solid fa-trash"></i>
               </button>
@@ -1776,9 +1781,16 @@
       const lv = STATE.leaves.find(x => String(x.LeaveID) === String(leaveId));
       if (!lv) return;
 
+      // Prevent re-approving or re-rejecting an already decided leave
+      if (lv.Status !== 'Pending') {
+        alert(`This leave request has already been ${lv.Status} and is locked.`);
+        renderLeavesManagementTable();
+        return;
+      }
+
       let remarks = '';
       if (newStatus === 'Rejected') {
-        remarks = prompt(`Enter mandatory remarks / reason for declining ${lv.StudentName}'s leave request (This remark will be visible to the student):`, lv.Remarks || '');
+        remarks = prompt(`Enter mandatory remarks / reason for declining ${lv.StudentName}'s leave request (This remark will be visible to the student):`, '');
         if (remarks === null) return;
         if (!remarks.trim()) {
           alert("A remark is required when declining a leave application.");
@@ -1811,7 +1823,7 @@
         STATE.dates.sort();
       }
 
-      // Immediately update UI & localStorage before cloud finishes so it feels instant
+      // Immediately update UI & localStorage so buttons disappear right away
       saveLocalState();
       refreshAllViews();
 
