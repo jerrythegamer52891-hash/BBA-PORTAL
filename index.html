@@ -35,7 +35,7 @@
 </head>
 <body class="min-h-screen text-slate-800">
 
-  <!-- ================= LOGIN SCREEN ================= -->
+  <!-- ================= LOGIN & PUBLIC STUDENT LEAVE SCREEN ================= -->
   <div id="loginScreen" class="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-emerald-950 via-emerald-900 to-slate-900">
     <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl p-8 border border-emerald-100">
       <div class="apdc-logo-box mb-4">
@@ -44,31 +44,131 @@
       <div class="text-center mb-6">
         <span class="px-3 py-1 text-xs font-bold uppercase tracking-wider bg-emerald-100 text-emerald-800 rounded-full">APSACS System</span>
         <h1 class="text-2xl font-extrabold text-slate-900 mt-2">APDC BBA Portal</h1>
-        <p class="text-xs text-slate-500 mt-1">Department Attendance, Academic & Control System</p>
+        <p class="text-xs text-slate-500 mt-1">Department Attendance, Leave & Control System</p>
       </div>
 
-      <form onsubmit="handleLogin(event)" class="space-y-4">
-        <div>
-          <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Username</label>
-          <div class="relative">
-            <i class="fa-solid fa-user absolute left-3.5 top-3 text-slate-400"></i>
-            <input id="loginUser" type="text" required placeholder="Enter username"
-              class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-600 focus:outline-none text-sm" />
+      <!-- VIEW 1: STAFF / COUNCIL / CR SIGN IN -->
+      <div id="authBoxSignIn">
+        <form onsubmit="handleLogin(event)" class="space-y-4">
+          <div>
+            <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Username</label>
+            <div class="relative">
+              <i class="fa-solid fa-user absolute left-3.5 top-3 text-slate-400"></i>
+              <input id="loginUser" type="text" required placeholder="Enter username"
+                class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-600 focus:outline-none text-sm" />
+            </div>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Password</label>
+            <div class="relative">
+              <i class="fa-solid fa-lock absolute left-3.5 top-3 text-slate-400"></i>
+              <input id="loginPass" type="password" required placeholder="Enter password"
+                class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-600 focus:outline-none text-sm" />
+            </div>
+          </div>
+          <div id="loginError" class="hidden text-xs font-bold text-center text-red-600 bg-red-50 p-2.5 rounded-lg border border-red-200"></div>
+          <button type="submit" class="w-full py-3 bg-emerald-700 hover:bg-emerald-800 text-white font-bold rounded-xl shadow-lg transition flex items-center justify-center gap-2">
+            <i class="fa-solid fa-right-to-bracket"></i> Sign In to Portal
+          </button>
+        </form>
+
+        <!-- Student Leave Portal Triggers (No Login Required) -->
+        <div class="mt-6 pt-5 border-t border-slate-200">
+          <div class="text-center text-xs font-bold uppercase text-slate-400 mb-3">Student Leave Portal (No Login Needed)</div>
+          <div class="grid grid-cols-2 gap-2.5">
+            <button type="button" onclick="togglePublicLeaveMode('apply')" class="py-2.5 px-3 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5">
+              <i class="fa-solid fa-paper-plane text-amber-600"></i> Apply for Leave
+            </button>
+            <button type="button" onclick="togglePublicLeaveMode('track')" class="py-2.5 px-3 bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5">
+              <i class="fa-solid fa-magnifying-glass text-emerald-700"></i> Check Leave Status
+            </button>
           </div>
         </div>
-        <div>
-          <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Password</label>
-          <div class="relative">
-            <i class="fa-solid fa-lock absolute left-3.5 top-3 text-slate-400"></i>
-            <input id="loginPass" type="password" required placeholder="Enter password"
-              class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-600 focus:outline-none text-sm" />
-          </div>
+      </div>
+
+      <!-- VIEW 2: STUDENT LEAVE APPLICATION FORM (NO GR/SEAT NO) -->
+      <div id="authBoxLeaveApply" class="hidden space-y-4">
+        <div class="flex items-center justify-between border-b pb-2.5">
+          <h3 class="font-extrabold text-slate-900 text-sm"><i class="fa-solid fa-paper-plane text-emerald-700 mr-1.5"></i>Student Leave Application</h3>
+          <button type="button" onclick="togglePublicLeaveMode('signin')" class="text-xs text-slate-500 hover:text-slate-800 font-bold">
+            <i class="fa-solid fa-arrow-left mr-1"></i> Back to Login
+          </button>
         </div>
-        <div id="loginError" class="hidden text-xs font-bold text-center text-red-600 bg-red-50 p-2.5 rounded-lg border border-red-200"></div>
-        <button type="submit" class="w-full py-3 bg-emerald-700 hover:bg-emerald-800 text-white font-bold rounded-xl shadow-lg transition flex items-center justify-center gap-2">
-          <i class="fa-solid fa-right-to-bracket"></i> Sign In to Portal
-        </button>
-      </form>
+
+        <form id="publicLeaveForm" onsubmit="handlePublicLeaveSubmit(event)" class="space-y-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-600 mb-1">Semester *</label>
+            <select id="lvApplySem" onchange="populateLeaveStudentDropdown()" required class="w-full px-3 py-2 border rounded-xl text-xs font-bold bg-slate-50">
+              <option value="II">Semester II</option>
+              <option value="IV">Semester IV</option>
+              <option value="VI">Semester VI</option>
+              <option value="VIII">Semester VIII</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-600 mb-1">Student Full Name *</label>
+            <select id="lvApplyNameSelect" class="w-full px-3 py-2 border rounded-xl text-xs font-semibold bg-white"></select>
+          </div>
+
+          <div class="grid grid-cols-2 gap-2.5">
+            <div>
+              <label class="block text-xs font-bold text-slate-600 mb-1">Start Date *</label>
+              <input type="date" id="lvApplyStart" required class="w-full px-2.5 py-2 border rounded-xl text-xs" />
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-600 mb-1">End Date *</label>
+              <input type="date" id="lvApplyEnd" required class="w-full px-2.5 py-2 border rounded-xl text-xs" />
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-600 mb-1">Reason for Leave *</label>
+            <textarea id="lvApplyReason" rows="3" required placeholder="Explain your reason (Medical, family emergency, etc.)..." class="w-full px-3 py-2 border rounded-xl text-xs"></textarea>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-600 mb-1">Attachment (Optional - Medical / Application Photo)</label>
+            <input type="file" id="lvApplyFile" class="w-full text-xs border p-1.5 rounded-xl bg-slate-50" />
+          </div>
+
+          <button type="submit" id="lvSubmitBtn" class="w-full py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white font-bold rounded-xl text-xs shadow-lg">
+            <i class="fa-solid fa-check-circle mr-1"></i> Submit Leave Request
+          </button>
+        </form>
+
+        <!-- Tracking Receipt Box after Submit -->
+        <div id="lvReceiptBox" class="hidden bg-emerald-50 border-2 border-emerald-500 p-4 rounded-2xl text-center space-y-2">
+          <div class="text-xs font-bold uppercase text-emerald-800">Application Submitted Successfully!</div>
+          <p class="text-[11px] text-slate-600">Save your unique Tracking Code below to check your leave status:</p>
+          <div id="lvGeneratedCode" class="text-xl font-black font-mono text-emerald-900 bg-white py-2 px-4 rounded-xl border border-emerald-300 select-all"></div>
+          <button type="button" onclick="togglePublicLeaveMode('track')" class="text-xs text-emerald-700 font-bold underline pt-1 block mx-auto">
+            Go to Leave Status Tracker
+          </button>
+        </div>
+      </div>
+
+      <!-- VIEW 3: PUBLIC LEAVE STATUS TRACKER (CLEAN ANONYMOUS STATUS) -->
+      <div id="authBoxLeaveTrack" class="hidden space-y-4">
+        <div class="flex items-center justify-between border-b pb-2.5">
+          <h3 class="font-extrabold text-slate-900 text-sm"><i class="fa-solid fa-magnifying-glass text-emerald-700 mr-1.5"></i>Check Leave Status</h3>
+          <button type="button" onclick="togglePublicLeaveMode('signin')" class="text-xs text-slate-500 hover:text-slate-800 font-bold">
+            <i class="fa-solid fa-arrow-left mr-1"></i> Back to Login
+          </button>
+        </div>
+
+        <form onsubmit="handleTrackLeave(event)" class="space-y-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-600 mb-1">Enter Tracking Code or Your Full Name</label>
+            <input id="lvTrackInput" type="text" required placeholder="e.g. APDC-LV-4829 or Full Name" class="w-full px-3.5 py-2.5 border rounded-xl text-xs font-semibold" />
+          </div>
+          <button type="submit" class="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl text-xs">
+            Check Status Now
+          </button>
+        </form>
+
+        <div id="lvTrackResultBox" class="space-y-2.5 max-h-64 overflow-y-auto"></div>
+      </div>
 
       <div class="mt-6 pt-4 border-t border-slate-100 text-center text-xs text-slate-400">
         Army Public Degree College • BBA Department
@@ -108,6 +208,11 @@
           </button>
           <button onclick="switchMainTab('redzone')" id="nav-redzone" class="nav-btn px-3.5 py-2 rounded-xl text-sm flex items-center gap-2 hover:bg-slate-100 transition">
             <i class="fa-solid fa-triangle-exclamation text-red-500"></i> Red Zone
+          </button>
+          <!-- LEAVE APPROVAL TAB (SIR FAISAL + 5 COUNCIL MEMBERS) -->
+          <button onclick="switchMainTab('leaves')" id="nav-leaves" class="nav-btn hidden px-3.5 py-2 rounded-xl text-sm flex items-center gap-2 hover:bg-slate-100 transition">
+            <i class="fa-solid fa-envelope-open-text text-emerald-600"></i> Leave Requests
+            <span id="pendingLeavesBadge" class="hidden px-2 py-0.5 text-[11px] bg-red-600 text-white rounded-full font-extrabold">0</span>
           </button>
           <button onclick="switchMainTab('files')" id="nav-files" class="nav-btn px-3.5 py-2 rounded-xl text-sm flex items-center gap-2 hover:bg-slate-100 transition">
             <i class="fa-solid fa-folder-open text-amber-500"></i> Dept. Files
@@ -151,9 +256,9 @@
             <div id="statRedZoneLabel" class="text-xs text-slate-500 mt-1">Below 75% Threshold</div>
           </div>
           <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
-            <div class="text-xs font-bold uppercase text-amber-600">Missing Credentials</div>
-            <div id="statMissingCreds" class="text-3xl font-extrabold text-amber-600 mt-1">0</div>
-            <div class="text-xs text-slate-500 mt-1">Missing GR / Seat / Enrolment No.</div>
+            <div class="text-xs font-bold uppercase text-amber-600">Pending Leave Requests</div>
+            <div id="statPendingLeaves" class="text-3xl font-extrabold text-amber-600 mt-1">0</div>
+            <div class="text-xs text-slate-500 mt-1">Awaiting Council / Sir Faisal Review</div>
           </div>
         </div>
 
@@ -271,7 +376,7 @@
         <div class="bg-red-50 border border-red-200 p-4 rounded-2xl flex items-center justify-between">
           <div>
             <h3 class="font-bold text-red-900 text-base"><i class="fa-solid fa-triangle-exclamation mr-2"></i>Red Zone Low-Attendance Watchlist</h3>
-            <p class="text-xs text-red-700 mt-0.5">Students whose cumulative attendance from Aug–Oct 2026 is below the required threshold (<span id="rzThresholdSpan">75</span>%).</p>
+            <p class="text-xs text-red-700 mt-0.5">Students whose cumulative attendance is below the required threshold (<span id="rzThresholdSpan">75</span>%).</p>
           </div>
           <select id="rzSemFilter" onchange="renderRedZoneTable()" class="px-3 py-2 rounded-xl border border-red-300 bg-white text-xs font-bold">
             <option value="ALL">All Semesters</option>
@@ -300,7 +405,42 @@
         </div>
       </section>
 
-      <!-- 5. DEPARTMENT FILES VIEW -->
+      <!-- 5. LEAVE REQUESTS MANAGEMENT TAB (COUNCIL & SIR FAISAL) -->
+      <section id="tab-leaves" class="hidden space-y-4">
+        <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <h3 class="font-extrabold text-slate-900 text-base"><i class="fa-solid fa-envelope-open-text text-emerald-700 mr-2"></i>Student Leave Applications & Council Approval</h3>
+            <p class="text-xs text-slate-500 mt-0.5">Approving a leave automatically marks the student as <strong>L (Leave)</strong> in advance for those dates. Declining requires a remark for the student.</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <select id="leaveStatusFilter" onchange="renderLeavesManagementTable()" class="px-3.5 py-2 rounded-xl border border-slate-300 text-xs font-bold">
+              <option value="ALL">All Applications</option>
+              <option value="Pending">Pending Only</option>
+              <option value="Approved">Approved</option>
+              <option value="Rejected">Rejected</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-x-auto">
+          <table class="w-full text-left border-collapse text-xs">
+            <thead class="bg-slate-50 border-b border-slate-200 uppercase text-slate-500">
+              <tr>
+                <th class="p-3.5">Tracking ID</th>
+                <th class="p-3.5">Student & Sem</th>
+                <th class="p-3.5">Leave Dates</th>
+                <th class="p-3.5">Reason & Attachment</th>
+                <th class="p-3.5">Status & Remarks</th>
+                <th class="p-3.5">Reviewed By (Internal)</th>
+                <th class="p-3.5 text-right">Council / HOD Action</th>
+              </tr>
+            </thead>
+            <tbody id="leavesTableBody" class="divide-y divide-slate-100"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- 6. DEPARTMENT FILES VIEW -->
       <section id="tab-files" class="hidden space-y-4">
         <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-wrap items-center justify-between gap-4">
           <div>
@@ -319,7 +459,7 @@
         <div id="publicFilesGrid" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
       </section>
 
-      <!-- 6. CONTROL PANEL (SIR FAISAL & PRESIDENT ONLY) -->
+      <!-- 7. CONTROL PANEL (SIR FAISAL & PRESIDENT ONLY) -->
       <section id="tab-control" class="hidden space-y-6">
         <div class="bg-gradient-to-r from-slate-900 to-emerald-950 text-white p-6 rounded-2xl shadow-lg flex flex-wrap items-center justify-between gap-4">
           <div>
@@ -338,7 +478,7 @@
             <i class="fa-solid fa-user-graduate"></i> 1. Student Master & Missing GR/Seat No.
           </button>
           <button onclick="switchControlSubTab('cp-users')" id="sub-cp-users" class="subtab-btn px-5 py-3.5 text-xs sm:text-sm flex items-center gap-2">
-            <i class="fa-solid fa-user-shield"></i> 2. Manage CRs, Usernames & Passwords
+            <i class="fa-solid fa-user-shield"></i> 2. Manage Council, CRs & Passwords
           </button>
           <button onclick="switchControlSubTab('cp-files')" id="sub-cp-files" class="subtab-btn px-5 py-3.5 text-xs sm:text-sm flex items-center gap-2">
             <i class="fa-solid fa-cloud-arrow-up"></i> 3. Upload & Organize Dept. Files
@@ -456,7 +596,7 @@
           <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 space-y-4">
             <div class="flex flex-wrap items-center justify-between gap-2">
               <div>
-                <h4 class="font-bold text-slate-900">Appoint New CR / Create or Edit Login ID</h4>
+                <h4 class="font-bold text-slate-900">Appoint New CR / Manage Council & Faculty Logins</h4>
                 <p class="text-xs text-slate-500">Easily create a new login when a new semester or CR is appointed, change any password, or delete old CR accounts below.</p>
               </div>
               <div class="flex items-center gap-2">
@@ -477,8 +617,8 @@
                 <label class="block text-[11px] font-bold text-slate-500 mb-1">Role *</label>
                 <select id="userFormRole" onchange="autoSuggestCRCreds()" class="w-full px-3 py-2 border rounded-xl text-xs font-bold">
                   <option value="CR" selected>Class Representative (CR)</option>
-                  <option value="Faculty">Faculty</option>
                   <option value="Council">Council Member</option>
+                  <option value="Faculty">Faculty</option>
                   <option value="President">President (Full Control)</option>
                   <option value="Sir Faisal">Sir Faisal (Full Control)</option>
                 </select>
@@ -643,16 +783,35 @@
       return `${y}-${m}-${d}`;
     }
 
-    // DEFAULT HIGH-SECURITY BALANCED ACCOUNTS
+    // GENERATE ARRAY OF YYYY-MM-DD DATES BETWEEN START & END (INCLUSIVE)
+    function getDatesBetween(startStr, endStr) {
+      const arr = [];
+      const curr = new Date(startStr + 'T00:00:00');
+      const last = new Date(endStr + 'T00:00:00');
+      if (isNaN(curr.getTime()) || isNaN(last.getTime()) || curr > last) return [startStr];
+      while (curr <= last) {
+        const y = curr.getFullYear();
+        const m = String(curr.getMonth() + 1).padStart(2, '0');
+        const d = String(curr.getDate()).padStart(2, '0');
+        arr.push(`${y}-${m}-${d}`);
+        curr.setDate(curr.getDate() + 1);
+      }
+      return arr;
+    }
+
+    // OFFICIAL ACCOUNTS (INCLUDING SIR FAISAL, PRESIDENT JARAR & THE 4 COUNCIL MEMBERS)
     const DEFAULT_USERS = [
       { UserID: 'USR-001', Username: 'faisal.hod', Password: 'faisal786', FullName: 'Sir Faisal (HOD / Coordinator)', Role: 'Sir Faisal', AssignedSemester: 'ALL' },
       { UserID: 'USR-002', Username: 'jarar.pres', Password: 'jarar99', FullName: 'M. Jarar Ali Khadim (President)', Role: 'President', AssignedSemester: 'ALL' },
-      { UserID: 'USR-003', Username: 'bba.faculty', Password: 'faculty2026', FullName: 'BBA Faculty Member', Role: 'Faculty', AssignedSemester: 'ALL' },
-      { UserID: 'USR-004', Username: 'bba.council', Password: 'council505', FullName: 'BBA Student Council', Role: 'Council', AssignedSemester: 'ALL' },
-      { UserID: 'USR-005', Username: 'cr.sem2', Password: 'bba2cr88', FullName: 'CR Semester II', Role: 'CR', AssignedSemester: 'II' },
-      { UserID: 'USR-006', Username: 'cr.sem4', Password: 'bba4cr44', FullName: 'CR Semester IV', Role: 'CR', AssignedSemester: 'IV' },
-      { UserID: 'USR-007', Username: 'cr.sem6', Password: 'bba6cr66', FullName: 'CR Semester VI', Role: 'CR', AssignedSemester: 'VI' },
-      { UserID: 'USR-008', Username: 'cr.sem8', Password: 'bba8cr22', FullName: 'CR Semester VIII', Role: 'CR', AssignedSemester: 'VIII' }
+      { UserID: 'USR-003', Username: 'fakhar.vp', Password: 'fakhar2026', FullName: 'Fakhar-E-Alam (Vice President)', Role: 'Council', AssignedSemester: 'ALL' },
+      { UserID: 'USR-004', Username: 'tauqeer.adv', Password: 'tauqeer404', FullName: 'Touqeer Ahmed Khan (Council Advisor)', Role: 'Council', AssignedSemester: 'ALL' },
+      { UserID: 'USR-005', Username: 'rubab.sec', Password: 'rubab303', FullName: 'Rubab Haider (Secretary)', Role: 'Council', AssignedSemester: 'ALL' },
+      { UserID: 'USR-006', Username: 'zainab.jsec', Password: 'zainab202', FullName: 'Zainab Fatima (Joint Secretary)', Role: 'Council', AssignedSemester: 'ALL' },
+      { UserID: 'USR-007', Username: 'bba.faculty', Password: 'faculty2026', FullName: 'BBA Faculty Member', Role: 'Faculty', AssignedSemester: 'ALL' },
+      { UserID: 'USR-008', Username: 'cr.sem2', Password: 'bba2cr88', FullName: 'CR Semester II', Role: 'CR', AssignedSemester: 'II' },
+      { UserID: 'USR-009', Username: 'cr.sem4', Password: 'bba4cr44', FullName: 'CR Semester IV', Role: 'CR', AssignedSemester: 'IV' },
+      { UserID: 'USR-010', Username: 'cr.sem6', Password: 'bba6cr66', FullName: 'CR Semester VI', Role: 'CR', AssignedSemester: 'VI' },
+      { UserID: 'USR-011', Username: 'cr.sem8', Password: 'bba8cr22', FullName: 'CR Semester VIII', Role: 'CR', AssignedSemester: 'VIII' }
     ];
 
     // ALL 48 ACTIVE DATES & 75 REAL STUDENTS FROM YOUR ATTACHED EXCEL FILES
@@ -744,25 +903,38 @@
       students: [],
       attendance: {},
       dates: [...SEED_DATA.dates],
+      leaves: [],
       files: [],
       settings: {
         redZoneThreshold: 75,
         academicSession: 'Fall 2026',
-        announcement: 'Welcome to the Official APDC BBA Portal — Updated Roster & Aug–Oct 2026 Attendance Loaded.'
+        announcement: 'Welcome to the Official APDC BBA Portal — Updated Roster & Leave System Active.'
       }
     };
 
     // INITIALIZE LOCAL SEED + FETCH LATEST FROM GOOGLE SHEET
     async function initData() {
-      document.getElementById('markDateInput').value = getTodayDateString();
-      const saved = localStorage.getItem('APDC_PORTAL_V6');
+      const today = getTodayDateString();
+      document.getElementById('markDateInput').value = today;
+      document.getElementById('lvApplyStart').value = today;
+      document.getElementById('lvApplyEnd').value = today;
+
+      const saved = localStorage.getItem('APDC_PORTAL_V7');
       if (saved) {
         try {
           const parsed = JSON.parse(saved);
-          if (parsed.users && parsed.users.length > 0) STATE.users = parsed.users;
+          if (parsed.users && parsed.users.length > 0) {
+            DEFAULT_USERS.forEach(defU => {
+              if (!parsed.users.some(cu => String(cu.Username).toLowerCase() === defU.Username.toLowerCase())) {
+                parsed.users.push(defU);
+              }
+            });
+            STATE.users = parsed.users;
+          }
           STATE.students = parsed.students || [];
           STATE.attendance = parsed.attendance || {};
           STATE.dates = parsed.dates || [...SEED_DATA.dates];
+          STATE.leaves = parsed.leaves || [];
           STATE.files = parsed.files || [];
           STATE.settings = parsed.settings || STATE.settings;
         } catch (e) {
@@ -771,6 +943,7 @@
       } else {
         loadFromEmbeddedSeed();
       }
+      populateLeaveStudentDropdown();
       await fetchCloudData();
     }
 
@@ -806,16 +979,56 @@
             STATE.attendance = attMap;
             STATE.dates = Array.from(dateSet).sort();
           }
+          if (data.leaves) {
+            STATE.leaves = data.leaves;
+            applyAllApprovedLeavesToAttendance();
+          }
           if (data.files) STATE.files = data.files;
           if (data.settings && Object.keys(data.settings).length > 0) {
             STATE.settings = { ...STATE.settings, ...data.settings };
           }
           saveLocalState();
+          populateLeaveStudentDropdown();
           if (STATE.currentUser) refreshAllViews();
         }
       } catch (err) {
         console.warn("Using local cached dataset:", err);
       }
+    }
+
+    // ENSURE ALL APPROVED LEAVES ARE AUTOMATICALLY MARKED 'L' IN ADVANCE
+    function applyAllApprovedLeavesToAttendance() {
+      const dateSet = new Set(STATE.dates);
+      STATE.leaves.forEach(lv => {
+        if (lv.Status === 'Approved' && lv.StartDate && lv.EndDate) {
+          const stu = STATE.students.find(s =>
+            (lv.StudentID && String(s.StudentID) === String(lv.StudentID)) ||
+            (String(s.Name).toLowerCase() === String(lv.StudentName).toLowerCase() && String(s.Semester) === String(lv.Semester))
+          );
+          if (stu) {
+            const dList = getDatesBetween(String(lv.StartDate).substring(0, 10), String(lv.EndDate).substring(0, 10));
+            if (!STATE.attendance[stu.StudentID]) STATE.attendance[stu.StudentID] = {};
+            dList.forEach(d => {
+              STATE.attendance[stu.StudentID][d] = 'L';
+              dateSet.add(d);
+            });
+          }
+        }
+      });
+      STATE.dates = Array.from(dateSet).sort();
+    }
+
+    // CHECK IF A STUDENT HAS AN APPROVED LEAVE ON A SPECIFIC DATE
+    function hasApprovedLeaveOnDate(student, dateStr) {
+      return STATE.leaves.some(lv => {
+        if (lv.Status !== 'Approved') return false;
+        const matchStu = (lv.StudentID && String(lv.StudentID) === String(student.StudentID)) ||
+                         (String(lv.StudentName).toLowerCase() === String(student.Name).toLowerCase() && String(lv.Semester) === String(student.Semester));
+        if (!matchStu) return false;
+        const start = String(lv.StartDate).substring(0, 10);
+        const end = String(lv.EndDate).substring(0, 10);
+        return dateStr >= start && dateStr <= end;
+      });
     }
 
     function loadFromEmbeddedSeed() {
@@ -846,11 +1059,12 @@
     }
 
     function saveLocalState() {
-      localStorage.setItem('APDC_PORTAL_V6', JSON.stringify({
+      localStorage.setItem('APDC_PORTAL_V7', JSON.stringify({
         users: STATE.users,
         students: STATE.students,
         attendance: STATE.attendance,
         dates: STATE.dates,
+        leaves: STATE.leaves,
         files: STATE.files,
         settings: STATE.settings
       }));
@@ -884,13 +1098,143 @@
       }
     }
 
-    // CHECK IF A SEMESTER'S ATTENDANCE IS ALREADY MARKED FOR A GIVEN DATE
+    // ================= PUBLIC STUDENT LEAVE PORTAL (ON LOGIN SCREEN) =================
+    function togglePublicLeaveMode(mode) {
+      document.getElementById('authBoxSignIn').classList.toggle('hidden', mode !== 'signin');
+      document.getElementById('authBoxLeaveApply').classList.toggle('hidden', mode !== 'apply');
+      document.getElementById('authBoxLeaveTrack').classList.toggle('hidden', mode !== 'track');
+      document.getElementById('lvReceiptBox').classList.add('hidden');
+      document.getElementById('publicLeaveForm').classList.remove('hidden');
+      populateLeaveStudentDropdown();
+    }
+
+    function populateLeaveStudentDropdown() {
+      const sem = document.getElementById('lvApplySem').value;
+      const select = document.getElementById('lvApplyNameSelect');
+      if (!select) return;
+      const list = STATE.students.filter(s => String(s.Semester) === String(sem) && s.Status !== 'Alumni');
+      select.innerHTML = list.map(s => `<option value="${s.StudentID}|${s.Name}">${s.Name} (S/O, D/O: ${s.FatherName})</option>`).join('');
+    }
+
+    async function handlePublicLeaveSubmit(e) {
+      e.preventDefault();
+      const sem = document.getElementById('lvApplySem').value;
+      const rawStu = document.getElementById('lvApplyNameSelect').value;
+      const [stuId, stuName] = rawStu.split('|');
+      const startDate = document.getElementById('lvApplyStart').value;
+      const endDate = document.getElementById('lvApplyEnd').value;
+      const reason = document.getElementById('lvApplyReason').value.trim();
+      const fileInput = document.getElementById('lvApplyFile');
+
+      if (endDate < startDate) {
+        alert("End Date cannot be earlier than Start Date.");
+        return;
+      }
+
+      const btn = document.getElementById('lvSubmitBtn');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> Submitting...';
+
+      const leaveId = 'APDC-LV-' + Math.floor(1000 + Math.random() * 9000);
+      const nowStr = getTodayDateString();
+
+      const finalizeSubmission = async (base64Data, fileName, mimeType, localDataUrl) => {
+        const leaveObj = {
+          LeaveID: leaveId,
+          StudentID: stuId,
+          StudentName: stuName,
+          Semester: sem,
+          StartDate: startDate,
+          EndDate: endDate,
+          Reason: reason,
+          AttachmentUrl: localDataUrl || '',
+          Status: 'Pending',
+          Remarks: '',
+          ActionBy: '',
+          SubmittedAt: nowStr,
+          base64Data: base64Data || '',
+          fileName: fileName || '',
+          mimeType: mimeType || ''
+        };
+
+        const resp = await callBackend({ action: 'SUBMIT_LEAVE', leave: leaveObj });
+        if (resp && resp.attachmentUrl) {
+          leaveObj.AttachmentUrl = resp.attachmentUrl;
+        }
+        delete leaveObj.base64Data;
+
+        STATE.leaves.unshift(leaveObj);
+        saveLocalState();
+
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-check-circle mr-1"></i> Submit Leave Request';
+        document.getElementById('publicLeaveForm').reset();
+        document.getElementById('lvApplyStart').value = nowStr;
+        document.getElementById('lvApplyEnd').value = nowStr;
+        document.getElementById('publicLeaveForm').classList.add('hidden');
+        document.getElementById('lvGeneratedCode').textContent = leaveId;
+        document.getElementById('lvReceiptBox').classList.remove('hidden');
+        document.getElementById('lvTrackInput').value = leaveId;
+      };
+
+      if (fileInput.files && fileInput.files[0]) {
+        const f = fileInput.files[0];
+        const reader = new FileReader();
+        reader.onload = function() {
+          const base64 = reader.result.split(',')[1];
+          finalizeSubmission(base64, f.name, f.type, reader.result);
+        };
+        reader.readAsDataURL(f);
+      } else {
+        await finalizeSubmission('', '', '', '');
+      }
+    }
+
+    // PUBLIC STATUS CHECKER (DOES NOT SHOW WHO APPROVED OR REJECTED)
+    function handleTrackLeave(e) {
+      e.preventDefault();
+      const q = document.getElementById('lvTrackInput').value.trim().toLowerCase();
+      const box = document.getElementById('lvTrackResultBox');
+
+      const matches = STATE.leaves.filter(lv =>
+        String(lv.LeaveID).toLowerCase() === q ||
+        String(lv.StudentName).toLowerCase().includes(q)
+      );
+
+      if (matches.length === 0) {
+        box.innerHTML = `<div class="p-3.5 bg-red-50 border border-red-200 text-red-700 rounded-xl text-xs text-center font-semibold">No leave application found matching "${document.getElementById('lvTrackInput').value}".</div>`;
+        return;
+      }
+
+      box.innerHTML = matches.map(lv => {
+        let badgeClass = 'bg-amber-100 text-amber-800 border-amber-300';
+        let statusLabel = 'Status: Pending Review';
+        if (lv.Status === 'Approved') {
+          badgeClass = 'bg-emerald-100 text-emerald-900 border-emerald-400';
+          statusLabel = 'Status: Approved';
+        } else if (lv.Status === 'Rejected') {
+          badgeClass = 'bg-red-100 text-red-800 border-red-300';
+          statusLabel = 'Status: Rejected';
+        }
+
+        return `
+          <div class="p-4 rounded-xl border bg-slate-50 space-y-2 text-xs">
+            <div class="flex items-center justify-between">
+              <span class="font-mono font-bold text-slate-700">${lv.LeaveID}</span>
+              <span class="px-2.5 py-1 rounded-full font-extrabold border ${badgeClass}">${statusLabel}</span>
+            </div>
+            <div class="font-bold text-slate-900">${lv.StudentName} • Semester ${lv.Semester}</div>
+            <div class="text-slate-600">Dates: <strong>${lv.StartDate}</strong> to <strong>${lv.EndDate}</strong></div>
+            ${lv.Status === 'Approved' ? `<div class="p-2 bg-emerald-50 text-emerald-800 rounded-lg font-medium border border-emerald-200"><i class="fa-solid fa-check-circle mr-1"></i>Your leave is approved and your attendance is automatically marked as Leave (L) for these dates.</div>` : ''}
+            ${lv.Status === 'Rejected' ? `<div class="p-2.5 bg-red-50 text-red-900 rounded-lg border border-red-200"><strong>Remarks:</strong> ${lv.Remarks || 'Application declined by department council.'}</div>` : ''}
+          </div>
+        `;
+      }).join('');
+    }
+
+    // CHECK IF A SEMESTER'S ATTENDANCE IS ALREADY MARKED BY CR FOR A GIVEN DATE
     function isSemesterDateMarked(semester, dateStr) {
-      const semStudents = STATE.students.filter(s => String(s.Semester) === String(semester) && s.Status !== 'Alumni');
-      if (semStudents.length === 0) return false;
-      const hasRecord = semStudents.some(s => STATE.attendance[s.StudentID] && STATE.attendance[s.StudentID][dateStr]);
-      const lockedFlag = STATE.settings && STATE.settings[`locked_${semester}_${dateStr}`] === 'true';
-      return hasRecord || lockedFlag;
+      return STATE.settings && STATE.settings[`locked_${semester}_${dateStr}`] === 'true';
     }
 
     // AUTHENTICATION & ROLE-BASED ACCESS CONTROL
@@ -922,6 +1266,7 @@
       document.getElementById('currentUserDisplay').textContent = `${found.FullName} • Role: ${found.Role}`;
 
       const isSuperAdmin = (found.Role === 'Sir Faisal' || found.Role === 'President');
+      const canApproveLeaves = (found.Role === 'Sir Faisal' || found.Role === 'President' || found.Role === 'Council');
       const isCR = (found.Role === 'CR');
 
       // 1. Hide/Show navigation buttons based on role
@@ -929,6 +1274,7 @@
       document.getElementById('nav-dashboard').classList.toggle('hidden', isCR);
       document.getElementById('nav-redzone').classList.toggle('hidden', isCR);
       document.getElementById('nav-files').classList.toggle('hidden', isCR);
+      document.getElementById('nav-leaves').classList.toggle('hidden', !canApproveLeaves);
       document.getElementById('nav-control').classList.toggle('hidden', !isSuperAdmin);
 
       // 2. Configure semester & date locks for CR
@@ -946,7 +1292,6 @@
           regSemSelect.value = found.AssignedSemester;
           regSemSelect.disabled = true;
         }
-        // CR is strictly locked to today's date
         markDateInput.value = todayStr;
         markDateInput.disabled = true;
         switchMainTab('mark');
@@ -961,25 +1306,25 @@
     function logout() {
       STATE.currentUser = null;
       document.getElementById('loginPass').value = '';
+      togglePublicLeaveMode('signin');
       document.getElementById('appScreen').classList.add('hidden');
       document.getElementById('loginScreen').classList.remove('hidden');
     }
 
     function switchMainTab(tab) {
-      // Prevent CR from switching to any tab other than 'mark' or 'sheet'
       if (STATE.currentUser && STATE.currentUser.Role === 'CR' && tab !== 'mark' && tab !== 'sheet') {
         tab = 'mark';
       }
 
-      // Whenever opening 'mark', if user is CR, force today's date
       if (tab === 'mark' && STATE.currentUser && STATE.currentUser.Role === 'CR') {
         const markDateInput = document.getElementById('markDateInput');
         markDateInput.value = getTodayDateString();
         markDateInput.disabled = true;
       }
 
-      ['dashboard', 'mark', 'sheet', 'redzone', 'files', 'control'].forEach(t => {
-        document.getElementById('tab-' + t).classList.toggle('hidden', t !== tab);
+      ['dashboard', 'mark', 'sheet', 'redzone', 'leaves', 'files', 'control'].forEach(t => {
+        const sec = document.getElementById('tab-' + t);
+        if (sec) sec.classList.toggle('hidden', t !== tab);
         const btn = document.getElementById('nav-' + t);
         if (btn) btn.classList.toggle('active', t === tab);
       });
@@ -1008,6 +1353,8 @@
     }
 
     function refreshAllViews() {
+      applyAllApprovedLeavesToAttendance();
+
       document.getElementById('sessionBadge').textContent = STATE.settings.academicSession || 'Fall 2026';
       document.getElementById('announcementText').textContent = STATE.settings.announcement || '';
       document.getElementById('rzThresholdSpan').textContent = STATE.settings.redZoneThreshold || 75;
@@ -1017,10 +1364,20 @@
       document.getElementById('setThresholdInput').value = STATE.settings.redZoneThreshold || 75;
       document.getElementById('setAnnouncementInput').value = STATE.settings.announcement || '';
 
+      const pendingCount = STATE.leaves.filter(x => x.Status === 'Pending').length;
+      const pBadge = document.getElementById('pendingLeavesBadge');
+      if (pBadge) {
+        pBadge.textContent = pendingCount;
+        pBadge.classList.toggle('hidden', pendingCount === 0);
+      }
+      const statPend = document.getElementById('statPendingLeaves');
+      if (statPend) statPend.textContent = pendingCount;
+
       renderDashboard();
       renderMarkAttendanceList();
       renderRegisterTable();
       renderRedZoneTable();
+      renderLeavesManagementTable();
       renderDepartmentFiles();
       renderControlStudents();
       renderControlUsers();
@@ -1031,19 +1388,17 @@
       const activeStudents = STATE.students.filter(s => s.Status !== 'Alumni');
       document.getElementById('statTotalStudents').textContent = activeStudents.length;
 
-      let sumPct = 0, redCount = 0, missingCreds = 0;
+      let sumPct = 0, redCount = 0;
       const threshold = Number(STATE.settings.redZoneThreshold || 75);
 
       activeStudents.forEach(s => {
         const st = getStudentAttendanceStats(s.StudentID);
         sumPct += st.pct;
         if (st.total > 0 && st.pct < threshold) redCount++;
-        if (!s.GRNO || !s.SeatNo || !s.EnrolmentNo) missingCreds++;
       });
 
       document.getElementById('statAvgAttendance').textContent = activeStudents.length ? Math.round(sumPct / activeStudents.length) + '%' : '0%';
       document.getElementById('statRedZoneCount').textContent = redCount;
-      document.getElementById('statMissingCreds').textContent = missingCreds;
 
       const sems = ['II', 'IV', 'VI', 'VIII'];
       const grid = document.getElementById('semesterCardsGrid');
@@ -1067,7 +1422,7 @@
       }).join('');
     }
 
-    // 2. RENDER MARK ATTENDANCE (WITH PERMANENT CR LOCK)
+    // 2. RENDER MARK ATTENDANCE (WITH PERMANENT CR LOCK + AUTO-APPROVED LEAVE LOCK)
     function renderMarkAttendanceList() {
       const isCR = STATE.currentUser && STATE.currentUser.Role === 'CR';
       const markDateInput = document.getElementById('markDateInput');
@@ -1081,7 +1436,6 @@
       const list = STATE.students.filter(s => String(s.Semester) === sem && s.Status !== 'Alumni');
       const tbody = document.getElementById('markAttendanceTableBody');
 
-      // Check if locked for CR
       const lockedForCR = isCR && isSemesterDateMarked(sem, date);
       document.getElementById('crLockedBanner').classList.toggle('hidden', !lockedForCR);
       document.getElementById('markActionButtons').classList.toggle('hidden', lockedForCR);
@@ -1092,21 +1446,27 @@
       }
 
       tbody.innerHTML = list.map((s, idx) => {
-        const current = (STATE.attendance[s.StudentID] && STATE.attendance[s.StudentID][date]) || 'P';
+        const autoLeave = hasApprovedLeaveOnDate(s, date);
+        const current = autoLeave ? 'L' : ((STATE.attendance[s.StudentID] && STATE.attendance[s.StudentID][date]) || 'P');
+        const rowLocked = lockedForCR || (isCR && autoLeave);
+
         return `
-          <tr class="hover:bg-slate-50">
+          <tr class="hover:bg-slate-50 ${autoLeave ? 'bg-amber-50/40' : ''}">
             <td class="p-3.5 font-semibold text-slate-400">${idx + 1}</td>
             <td class="p-3.5 font-mono text-xs">${s.GRNO || '<span class="text-amber-500 italic">Pending</span>'}</td>
             <td class="p-3.5 font-mono text-xs">${s.SeatNo || '<span class="text-amber-500 italic">Pending</span>'}</td>
-            <td class="p-3.5 font-bold text-slate-900">${s.Name}</td>
+            <td class="p-3.5 font-bold text-slate-900">
+              ${s.Name}
+              ${autoLeave ? `<span class="ml-2 px-2 py-0.5 bg-amber-100 text-amber-800 border border-amber-300 rounded-full text-[10px] font-extrabold"><i class="fa-solid fa-check-circle mr-1"></i>Approved Leave</span>` : ''}
+            </td>
             <td class="p-3.5 text-slate-600">${s.FatherName}</td>
             <td class="p-3.5 text-center">
               <div class="inline-flex rounded-xl border border-slate-200 p-1 bg-slate-50 gap-1" data-stu="${s.StudentID}">
                 ${['P', 'A', 'L', 'NC'].map(code => `
                   <button type="button"
-                    ${lockedForCR ? 'disabled' : `onclick="setRowStatus('${s.StudentID}', '${code}')"`}
+                    ${rowLocked ? 'disabled' : `onclick="setRowStatus('${s.StudentID}', '${code}')"`}
                     id="attbtn-${s.StudentID}-${code}"
-                    class="px-3 py-1 rounded-lg text-xs font-bold transition ${current === code ? getStatusActiveClass(code) : 'text-slate-500 hover:bg-white'} ${lockedForCR ? 'opacity-75 cursor-not-allowed' : ''}">
+                    class="px-3 py-1 rounded-lg text-xs font-bold transition ${current === code ? getStatusActiveClass(code) : 'text-slate-500 hover:bg-white'} ${rowLocked ? 'opacity-75 cursor-not-allowed' : ''}">
                     ${code}
                   </button>
                 `).join('')}
@@ -1130,6 +1490,9 @@
       const date = document.getElementById('markDateInput').value;
       if (isCR && isSemesterDateMarked(sem, date)) return;
 
+      const stu = STATE.students.find(x => String(x.StudentID) === String(studentId));
+      if (isCR && stu && hasApprovedLeaveOnDate(stu, date)) return;
+
       ['P', 'A', 'L', 'NC'].forEach(c => {
         const btn = document.getElementById(`attbtn-${studentId}-${c}`);
         if (btn) btn.className = `px-3 py-1 rounded-lg text-xs font-bold transition ${c === code ? getStatusActiveClass(c) : 'text-slate-500 hover:bg-white'}`;
@@ -1142,7 +1505,13 @@
       const date = document.getElementById('markDateInput').value;
       if (isCR && isSemesterDateMarked(sem, date)) return;
 
-      STATE.students.filter(s => String(s.Semester) === sem).forEach(s => setRowStatus(s.StudentID, code));
+      STATE.students.filter(s => String(s.Semester) === sem).forEach(s => {
+        if (hasApprovedLeaveOnDate(s, date)) {
+          setRowStatus(s.StudentID, 'L');
+        } else {
+          setRowStatus(s.StudentID, code);
+        }
+      });
     }
 
     async function saveDailyAttendance() {
@@ -1179,13 +1548,14 @@
           const b = document.getElementById(`attbtn-${s.StudentID}-${c}`);
           if (b && b.className.includes('text-white')) chosen = c;
         });
+        if (hasApprovedLeaveOnDate(s, date)) chosen = 'L';
         if (!STATE.attendance[s.StudentID]) STATE.attendance[s.StudentID] = {};
         STATE.attendance[s.StudentID][date] = chosen;
         records.push({ studentId: s.StudentID, status: chosen });
       });
 
-      // Set permanent lock flag for CR on this semester + date
       STATE.settings[`locked_${sem}_${date}`] = 'true';
+      await callBackend({ action: 'SAVE_SETTINGS', settings: STATE.settings });
 
       await callBackend({
         action: 'SAVE_ATTENDANCE',
@@ -1272,7 +1642,112 @@
       `).join('');
     }
 
-    // 5. CONTROL PANEL: STUDENT MASTER (ADD / EDIT / FILL MISSING GR & SEAT NO)
+    // 5. RENDER LEAVE REQUESTS TAB (COUNCIL & SIR FAISAL INTERNAL VIEW)
+    function renderLeavesManagementTable() {
+      const filter = document.getElementById('leaveStatusFilter').value;
+      const list = STATE.leaves.filter(lv => filter === 'ALL' || lv.Status === filter);
+      const tbody = document.getElementById('leavesTableBody');
+
+      if (list.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-slate-400 font-medium">No leave requests found in this view.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = list.map(lv => {
+        let badge = 'bg-amber-100 text-amber-800';
+        if (lv.Status === 'Approved') badge = 'bg-emerald-100 text-emerald-800';
+        if (lv.Status === 'Rejected') badge = 'bg-red-100 text-red-800';
+
+        return `
+          <tr class="hover:bg-slate-50">
+            <td class="p-3.5 font-mono font-bold text-slate-700">${lv.LeaveID}</td>
+            <td class="p-3.5">
+              <div class="font-bold text-slate-900">${lv.StudentName}</div>
+              <div class="text-slate-500">Semester ${lv.Semester}</div>
+            </td>
+            <td class="p-3.5 font-mono">
+              <div>${lv.StartDate}</div>
+              <div class="text-slate-400">to ${lv.EndDate}</div>
+            </td>
+            <td class="p-3.5 max-w-xs">
+              <div class="text-slate-800">${lv.Reason}</div>
+              ${lv.AttachmentUrl ? `<a href="${lv.AttachmentUrl}" target="_blank" class="inline-block mt-1 text-emerald-700 font-bold underline"><i class="fa-solid fa-paperclip mr-1"></i>View Attachment</a>` : ''}
+            </td>
+            <td class="p-3.5">
+              <span class="px-2.5 py-1 rounded-full font-extrabold text-[11px] ${badge}">${lv.Status}</span>
+              ${lv.Remarks ? `<div class="mt-1 text-slate-600 italic">Remarks: "${lv.Remarks}"</div>` : ''}
+            </td>
+            <td class="p-3.5 font-semibold text-slate-700">
+              ${lv.ActionBy ? `<span class="px-2 py-1 bg-slate-100 rounded-lg border text-slate-800">${lv.ActionBy}</span>` : '<span class="text-slate-400 italic">Awaiting Action</span>'}
+            </td>
+            <td class="p-3.5 text-right whitespace-nowrap space-x-1.5">
+              <button onclick="decideLeaveRequest('${lv.LeaveID}', 'Approved')" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold shadow-sm">
+                <i class="fa-solid fa-check mr-1"></i> Approve
+              </button>
+              <button onclick="decideLeaveRequest('${lv.LeaveID}', 'Rejected')" class="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold shadow-sm">
+                <i class="fa-solid fa-xmark mr-1"></i> Decline
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    async function decideLeaveRequest(leaveId, newStatus) {
+      const lv = STATE.leaves.find(x => String(x.LeaveID) === String(leaveId));
+      if (!lv) return;
+
+      let remarks = '';
+      if (newStatus === 'Rejected') {
+        remarks = prompt(`Enter mandatory remarks / reason for declining ${lv.StudentName}'s leave request (This remark will be visible to the student):`);
+        if (remarks === null) return; // Cancelled
+        if (!remarks.trim()) {
+          alert("A remark is required when declining a leave application.");
+          return;
+        }
+        remarks = remarks.trim();
+      } else {
+        if (!confirm(`Approve leave for ${lv.StudentName} (${lv.StartDate} to ${lv.EndDate})?\n\nThis will automatically mark ${lv.StudentName} as 'L' (Leave) in advance for these dates.`)) {
+          return;
+        }
+      }
+
+      const reviewerName = STATE.currentUser ? STATE.currentUser.FullName : 'Council';
+      lv.Status = newStatus;
+      lv.Remarks = remarks;
+      lv.ActionBy = reviewerName;
+
+      const datesList = getDatesBetween(String(lv.StartDate).substring(0, 10), String(lv.EndDate).substring(0, 10));
+      const stu = STATE.students.find(s =>
+        (lv.StudentID && String(s.StudentID) === String(lv.StudentID)) ||
+        (String(s.Name).toLowerCase() === String(lv.StudentName).toLowerCase() && String(s.Semester) === String(lv.Semester))
+      );
+
+      if (newStatus === 'Approved' && stu) {
+        if (!STATE.attendance[stu.StudentID]) STATE.attendance[stu.StudentID] = {};
+        datesList.forEach(d => {
+          STATE.attendance[stu.StudentID][d] = 'L';
+          if (!STATE.dates.includes(d)) STATE.dates.push(d);
+        });
+        STATE.dates.sort();
+      }
+
+      await callBackend({
+        action: 'DECIDE_LEAVE',
+        leaveId: lv.LeaveID,
+        status: newStatus,
+        remarks: remarks,
+        actionBy: reviewerName,
+        datesList: datesList,
+        studentId: stu ? stu.StudentID : lv.StudentID,
+        semester: lv.Semester
+      });
+
+      refreshAllViews();
+      alert(`Leave application ${lv.LeaveID} marked as ${newStatus}!`);
+    }
+
+    // 6. CONTROL PANEL: STUDENT MASTER (ADD / EDIT / FILL MISSING GR & SEAT NO)
     function renderControlStudents() {
       const sem = document.getElementById('cpStuSemFilter').value;
       const q = document.getElementById('cpStuSearch').value.trim().toLowerCase();
@@ -1365,7 +1840,7 @@
       refreshAllViews();
     }
 
-    // 6. CONTROL PANEL: CR & USER ACCOUNTS MANAGER
+    // 7. CONTROL PANEL: COUNCIL, CR & USER ACCOUNTS MANAGER
     function quickFillNewCR() {
       document.getElementById('userFormId').value = '';
       document.getElementById('userFormRole').value = 'CR';
@@ -1404,7 +1879,7 @@
       const tbody = document.getElementById('cpUsersTableBody');
       tbody.innerHTML = STATE.users.map(u => `
         <tr class="hover:bg-slate-50">
-          <td class="p-3.5"><span class="px-2.5 py-1 rounded-full text-xs font-bold ${u.Role === 'Sir Faisal' || u.Role === 'President' ? 'bg-amber-100 text-amber-900' : u.Role === 'CR' ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-700'}">${u.Role}</span></td>
+          <td class="p-3.5"><span class="px-2.5 py-1 rounded-full text-xs font-bold ${u.Role === 'Sir Faisal' || u.Role === 'President' ? 'bg-amber-100 text-amber-900' : u.Role === 'Council' ? 'bg-purple-100 text-purple-900' : u.Role === 'CR' ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-700'}">${u.Role}</span></td>
           <td class="p-3.5 font-bold text-slate-900">${u.FullName}</td>
           <td class="p-3.5 font-mono text-emerald-700 font-bold">${u.Username}</td>
           <td class="p-3.5 font-mono text-slate-700">${u.Password}</td>
@@ -1463,7 +1938,7 @@
       renderControlUsers();
     }
 
-    // 7. CONTROL PANEL: GOOGLE DRIVE DEPARTMENT FILE SYSTEM
+    // 8. CONTROL PANEL: GOOGLE DRIVE DEPARTMENT FILE SYSTEM
     async function handleFileUpload(e) {
       e.preventDefault();
       const fileInput = document.getElementById('uploadFileInput');
@@ -1547,7 +2022,7 @@
       renderDepartmentFiles();
     }
 
-    // 8. CONTROL PANEL: SETTINGS, PROMOTIONS & CLOUD OVERWRITE
+    // 9. CONTROL PANEL: SETTINGS, PROMOTIONS & CLOUD OVERWRITE
     async function saveGlobalSettings() {
       STATE.settings.academicSession = document.getElementById('setSessionInput').value.trim();
       STATE.settings.redZoneThreshold = Number(document.getElementById('setThresholdInput').value || 75);
@@ -1574,10 +2049,10 @@
     }
 
     async function syncSeedDataToCloud() {
-      if (!confirm('This will wipe all old trial/test students in the Google Sheet and replace them with the 75 official BBA students, their Aug–Oct 2026 attendance records, and the updated login accounts. Proceed?')) return;
+      if (!confirm('This will wipe all old trial/test students in the Google Sheet and replace them with the 75 official BBA students, their Aug–Oct 2026 attendance records, and all 11 official login accounts (including Council members). Proceed?')) return;
       const btn = document.getElementById('syncCloudBtn');
       btn.disabled = true;
-      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Syncing 75 Students, Attendance & Accounts...';
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Syncing 75 Students, Attendance & 11 Accounts...';
 
       loadFromEmbeddedSeed();
       await callBackend({
@@ -1591,9 +2066,9 @@
       }
 
       btn.disabled = false;
-      btn.innerHTML = '<i class="fa-solid fa-check"></i> Synced! All 75 Students, Attendance & Logins Live';
+      btn.innerHTML = '<i class="fa-solid fa-check"></i> Synced! All 75 Students, Attendance & Council Logins Live';
       refreshAllViews();
-      alert('All 75 real students, 3,436 attendance records, and updated login IDs are now synced to your Google Sheet!');
+      alert('All 75 real students, 3,436 attendance records, and all 11 login IDs (Sir Faisal, President Jarar, 4 Council Members, Faculty, and CRs) are now synced to your Google Sheet!');
     }
 
     // Start Portal
