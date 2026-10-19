@@ -163,11 +163,23 @@
 
       <!-- 2. MARK ATTENDANCE TAB -->
       <section id="tab-mark" class="hidden space-y-4">
+        <!-- CR Permanent Lock Banner -->
+        <div id="crLockedBanner" class="hidden bg-emerald-50 border border-emerald-300 text-emerald-900 p-4 rounded-2xl flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <i class="fa-solid fa-lock text-emerald-700 text-lg"></i>
+            <div>
+              <h4 class="font-extrabold text-sm">Today's Attendance is Submitted & Permanently Locked</h4>
+              <p class="text-xs text-emerald-700">As Class Representative, you have already marked today's attendance. It cannot be edited or changed. Contact Sir Faisal or the President for any corrections.</p>
+            </div>
+          </div>
+          <span class="px-3 py-1 bg-emerald-700 text-white text-xs font-bold rounded-full uppercase">Locked</span>
+        </div>
+
         <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-wrap items-end justify-between gap-4">
           <div class="flex flex-wrap items-center gap-4">
             <div>
               <label class="block text-xs font-bold uppercase text-slate-500 mb-1">Select Semester</label>
-              <select id="markSemSelect" onchange="renderMarkAttendanceList()" class="px-3.5 py-2 rounded-xl border border-slate-300 text-sm font-semibold">
+              <select id="markSemSelect" onchange="renderMarkAttendanceList()" class="px-3.5 py-2 rounded-xl border border-slate-300 text-sm font-semibold disabled:bg-slate-100 disabled:text-slate-600">
                 <option value="I">Semester I</option>
                 <option value="II" selected>Semester II</option>
                 <option value="III">Semester III</option>
@@ -180,10 +192,10 @@
             </div>
             <div>
               <label class="block text-xs font-bold uppercase text-slate-500 mb-1">Attendance Date</label>
-              <input type="date" id="markDateInput" value="2026-10-18" onchange="renderMarkAttendanceList()" class="px-3.5 py-2 rounded-xl border border-slate-300 text-sm font-semibold" />
+              <input type="date" id="markDateInput" onchange="renderMarkAttendanceList()" class="px-3.5 py-2 rounded-xl border border-slate-300 text-sm font-semibold disabled:bg-slate-100 disabled:text-slate-600" />
             </div>
           </div>
-          <div class="flex items-center gap-2">
+          <div id="markActionButtons" class="flex items-center gap-2">
             <button onclick="markAllStatus('P')" class="px-3 py-2 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded-xl text-xs font-bold border border-emerald-200">Mark All Present (P)</button>
             <button onclick="markAllStatus('NC')" class="px-3 py-2 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-xl text-xs font-bold">No Class (NC)</button>
             <button id="saveAttBtn" onclick="saveDailyAttendance()" class="px-5 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-sm font-bold shadow">
@@ -209,13 +221,13 @@
         </div>
       </section>
 
-      <!-- 3. ATTENDANCE REGISTER (AUG - OCT 2026) -->
+      <!-- 3. ATTENDANCE REGISTER (READ-ONLY VIEW) -->
       <section id="tab-sheet" class="hidden space-y-4">
         <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-wrap items-center justify-between gap-4">
           <div class="flex flex-wrap items-center gap-3">
             <div>
               <label class="block text-xs font-bold uppercase text-slate-500 mb-1">Semester</label>
-              <select id="regSemSelect" onchange="renderRegisterTable()" class="px-3.5 py-2 rounded-xl border border-slate-300 text-sm font-semibold">
+              <select id="regSemSelect" onchange="renderRegisterTable()" class="px-3.5 py-2 rounded-xl border border-slate-300 text-sm font-semibold disabled:bg-slate-100 disabled:text-slate-600">
                 <option value="I">Semester I</option>
                 <option value="II" selected>Semester II</option>
                 <option value="III">Semester III</option>
@@ -229,10 +241,12 @@
             <div>
               <label class="block text-xs font-bold uppercase text-slate-500 mb-1">Month Filter</label>
               <select id="regMonthSelect" onchange="renderRegisterTable()" class="px-3.5 py-2 rounded-xl border border-slate-300 text-sm font-semibold">
-                <option value="ALL">All Months (Aug - Oct 2026)</option>
+                <option value="ALL">All Recorded Months</option>
                 <option value="2026-08">August 2026</option>
                 <option value="2026-09">September 2026</option>
                 <option value="2026-10">October 2026</option>
+                <option value="2026-11">November 2026</option>
+                <option value="2026-12">December 2026</option>
               </select>
             </div>
           </div>
@@ -240,6 +254,7 @@
             <span class="inline-block w-3 h-3 bg-emerald-100 border border-emerald-400 rounded mr-1 align-middle"></span> P = Present
             <span class="inline-block w-3 h-3 bg-red-100 border border-red-400 rounded ml-3 mr-1 align-middle"></span> A = Absent
             <span class="inline-block w-3 h-3 bg-amber-100 border border-amber-400 rounded ml-3 mr-1 align-middle"></span> L = Leave
+            <span class="ml-3 text-slate-400 font-semibold"><i class="fa-solid fa-eye mr-1"></i>Read-Only Register</span>
           </div>
         </div>
 
@@ -619,6 +634,15 @@
     // YOUR LIVE GOOGLE APPS SCRIPT WEB APP URL:
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby2s4ncMkxRINERW3JBlEH4lciB2SR5Ho63Qat7LhmEGfqS6_u1FmshYSs1dP0N-6K0Qw/exec";
 
+    // HELPER FOR TODAY'S LOCAL DATE (YYYY-MM-DD)
+    function getTodayDateString() {
+      const now = new Date();
+      const y = now.getFullYear();
+      const m = String(now.getMonth() + 1).padStart(2, '0');
+      const d = String(now.getDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    }
+
     // DEFAULT HIGH-SECURITY BALANCED ACCOUNTS
     const DEFAULT_USERS = [
       { UserID: 'USR-001', Username: 'faisal.hod', Password: 'faisal786', FullName: 'Sir Faisal (HOD / Coordinator)', Role: 'Sir Faisal', AssignedSemester: 'ALL' },
@@ -730,7 +754,8 @@
 
     // INITIALIZE LOCAL SEED + FETCH LATEST FROM GOOGLE SHEET
     async function initData() {
-      const saved = localStorage.getItem('APDC_PORTAL_V5');
+      document.getElementById('markDateInput').value = getTodayDateString();
+      const saved = localStorage.getItem('APDC_PORTAL_V6');
       if (saved) {
         try {
           const parsed = JSON.parse(saved);
@@ -754,11 +779,9 @@
         const res = await fetch(SCRIPT_URL);
         const data = await res.json();
         if (data && data.success) {
-          // Only accept cloud users if they have valid Username & Password fields
           if (data.users && data.users.length > 0) {
             const validCloudUsers = data.users.filter(u => u.Username && u.Password);
             if (validCloudUsers.length > 0) {
-              // Merge default master accounts if missing
               DEFAULT_USERS.forEach(defU => {
                 if (!validCloudUsers.some(cu => String(cu.Username).toLowerCase() === defU.Username.toLowerCase())) {
                   validCloudUsers.push(defU);
@@ -823,7 +846,7 @@
     }
 
     function saveLocalState() {
-      localStorage.setItem('APDC_PORTAL_V5', JSON.stringify({
+      localStorage.setItem('APDC_PORTAL_V6', JSON.stringify({
         users: STATE.users,
         students: STATE.students,
         attendance: STATE.attendance,
@@ -861,16 +884,23 @@
       }
     }
 
-    // SELF-HEALING AUTHENTICATION
+    // CHECK IF A SEMESTER'S ATTENDANCE IS ALREADY MARKED FOR A GIVEN DATE
+    function isSemesterDateMarked(semester, dateStr) {
+      const semStudents = STATE.students.filter(s => String(s.Semester) === String(semester) && s.Status !== 'Alumni');
+      if (semStudents.length === 0) return false;
+      const hasRecord = semStudents.some(s => STATE.attendance[s.StudentID] && STATE.attendance[s.StudentID][dateStr]);
+      const lockedFlag = STATE.settings && STATE.settings[`locked_${semester}_${dateStr}`] === 'true';
+      return hasRecord || lockedFlag;
+    }
+
+    // AUTHENTICATION & ROLE-BASED ACCESS CONTROL
     function handleLogin(e) {
       e.preventDefault();
       const u = document.getElementById('loginUser').value.trim().toLowerCase();
       const p = document.getElementById('loginPass').value.trim();
 
-      // 1. Check active users list
       let found = STATE.users.find(x => String(x.Username || '').trim().toLowerCase() === u && String(x.Password || '').trim() === p);
 
-      // 2. Fallback check against DEFAULT_USERS if not overridden by a custom password
       if (!found) {
         const hasCustom = STATE.users.some(x => String(x.Username || '').trim().toLowerCase() === u && x.Password);
         if (!hasCustom) {
@@ -891,20 +921,41 @@
       document.getElementById('appScreen').classList.remove('hidden');
       document.getElementById('currentUserDisplay').textContent = `${found.FullName} • Role: ${found.Role}`;
 
-      // Show Control Panel ONLY to Sir Faisal and President
       const isSuperAdmin = (found.Role === 'Sir Faisal' || found.Role === 'President');
+      const isCR = (found.Role === 'CR');
+
+      // 1. Hide/Show navigation buttons based on role
+      // CR ONLY sees "Mark Attendance" and "Attendance Register"
+      document.getElementById('nav-dashboard').classList.toggle('hidden', isCR);
+      document.getElementById('nav-redzone').classList.toggle('hidden', isCR);
+      document.getElementById('nav-files').classList.toggle('hidden', isCR);
       document.getElementById('nav-control').classList.toggle('hidden', !isSuperAdmin);
 
-      // Lock semester dropdown if user is a CR for a specific semester
+      // 2. Configure semester & date locks for CR
+      const todayStr = getTodayDateString();
       const markSemSelect = document.getElementById('markSemSelect');
-      if (found.Role === 'CR' && found.AssignedSemester && found.AssignedSemester !== 'ALL') {
-        markSemSelect.value = found.AssignedSemester;
-        markSemSelect.disabled = true;
+      const regSemSelect = document.getElementById('regSemSelect');
+      const markDateInput = document.getElementById('markDateInput');
+
+      markDateInput.value = todayStr;
+
+      if (isCR) {
+        if (found.AssignedSemester && found.AssignedSemester !== 'ALL') {
+          markSemSelect.value = found.AssignedSemester;
+          markSemSelect.disabled = true;
+          regSemSelect.value = found.AssignedSemester;
+          regSemSelect.disabled = true;
+        }
+        // CR is strictly locked to today's date
+        markDateInput.value = todayStr;
+        markDateInput.disabled = true;
+        switchMainTab('mark');
       } else {
         markSemSelect.disabled = false;
+        regSemSelect.disabled = false;
+        markDateInput.disabled = false;
+        switchMainTab('dashboard');
       }
-
-      refreshAllViews();
     }
 
     function logout() {
@@ -915,6 +966,18 @@
     }
 
     function switchMainTab(tab) {
+      // Prevent CR from switching to any tab other than 'mark' or 'sheet'
+      if (STATE.currentUser && STATE.currentUser.Role === 'CR' && tab !== 'mark' && tab !== 'sheet') {
+        tab = 'mark';
+      }
+
+      // Whenever opening 'mark', if user is CR, force today's date
+      if (tab === 'mark' && STATE.currentUser && STATE.currentUser.Role === 'CR') {
+        const markDateInput = document.getElementById('markDateInput');
+        markDateInput.value = getTodayDateString();
+        markDateInput.disabled = true;
+      }
+
       ['dashboard', 'mark', 'sheet', 'redzone', 'files', 'control'].forEach(t => {
         document.getElementById('tab-' + t).classList.toggle('hidden', t !== tab);
         const btn = document.getElementById('nav-' + t);
@@ -1004,12 +1067,24 @@
       }).join('');
     }
 
-    // 2. RENDER MARK ATTENDANCE
+    // 2. RENDER MARK ATTENDANCE (WITH PERMANENT CR LOCK)
     function renderMarkAttendanceList() {
+      const isCR = STATE.currentUser && STATE.currentUser.Role === 'CR';
+      const markDateInput = document.getElementById('markDateInput');
+      if (isCR) {
+        markDateInput.value = getTodayDateString();
+        markDateInput.disabled = true;
+      }
+
       const sem = document.getElementById('markSemSelect').value;
-      const date = document.getElementById('markDateInput').value;
+      const date = markDateInput.value;
       const list = STATE.students.filter(s => String(s.Semester) === sem && s.Status !== 'Alumni');
       const tbody = document.getElementById('markAttendanceTableBody');
+
+      // Check if locked for CR
+      const lockedForCR = isCR && isSemesterDateMarked(sem, date);
+      document.getElementById('crLockedBanner').classList.toggle('hidden', !lockedForCR);
+      document.getElementById('markActionButtons').classList.toggle('hidden', lockedForCR);
 
       if (list.length === 0) {
         tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-slate-400 text-xs">No active students found in Semester ${sem}.</td></tr>`;
@@ -1028,9 +1103,10 @@
             <td class="p-3.5 text-center">
               <div class="inline-flex rounded-xl border border-slate-200 p-1 bg-slate-50 gap-1" data-stu="${s.StudentID}">
                 ${['P', 'A', 'L', 'NC'].map(code => `
-                  <button type="button" onclick="setRowStatus('${s.StudentID}', '${code}')"
+                  <button type="button"
+                    ${lockedForCR ? 'disabled' : `onclick="setRowStatus('${s.StudentID}', '${code}')"`}
                     id="attbtn-${s.StudentID}-${code}"
-                    class="px-3 py-1 rounded-lg text-xs font-bold transition ${current === code ? getStatusActiveClass(code) : 'text-slate-500 hover:bg-white'}">
+                    class="px-3 py-1 rounded-lg text-xs font-bold transition ${current === code ? getStatusActiveClass(code) : 'text-slate-500 hover:bg-white'} ${lockedForCR ? 'opacity-75 cursor-not-allowed' : ''}">
                     ${code}
                   </button>
                 `).join('')}
@@ -1049,6 +1125,11 @@
     }
 
     function setRowStatus(studentId, code) {
+      const isCR = STATE.currentUser && STATE.currentUser.Role === 'CR';
+      const sem = document.getElementById('markSemSelect').value;
+      const date = document.getElementById('markDateInput').value;
+      if (isCR && isSemesterDateMarked(sem, date)) return;
+
       ['P', 'A', 'L', 'NC'].forEach(c => {
         const btn = document.getElementById(`attbtn-${studentId}-${c}`);
         if (btn) btn.className = `px-3 py-1 rounded-lg text-xs font-bold transition ${c === code ? getStatusActiveClass(c) : 'text-slate-500 hover:bg-white'}`;
@@ -1056,13 +1137,31 @@
     }
 
     function markAllStatus(code) {
+      const isCR = STATE.currentUser && STATE.currentUser.Role === 'CR';
       const sem = document.getElementById('markSemSelect').value;
+      const date = document.getElementById('markDateInput').value;
+      if (isCR && isSemesterDateMarked(sem, date)) return;
+
       STATE.students.filter(s => String(s.Semester) === sem).forEach(s => setRowStatus(s.StudentID, code));
     }
 
     async function saveDailyAttendance() {
+      const isCR = STATE.currentUser && STATE.currentUser.Role === 'CR';
       const sem = document.getElementById('markSemSelect').value;
-      const date = document.getElementById('markDateInput').value;
+      const date = isCR ? getTodayDateString() : document.getElementById('markDateInput').value;
+
+      if (isCR && isSemesterDateMarked(sem, date)) {
+        alert("Today's attendance is already submitted and permanently locked for CR.");
+        renderMarkAttendanceList();
+        return;
+      }
+
+      if (isCR) {
+        if (!confirm(`Confirm Attendance Submission for Semester ${sem} (${date})?\n\nIMPORTANT: Once submitted, it becomes permanent for you and you will NOT be able to edit or change it.`)) {
+          return;
+        }
+      }
+
       const btn = document.getElementById('saveAttBtn');
       btn.disabled = true;
       btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> Saving...';
@@ -1085,6 +1184,9 @@
         records.push({ studentId: s.StudentID, status: chosen });
       });
 
+      // Set permanent lock flag for CR on this semester + date
+      STATE.settings[`locked_${sem}_${date}`] = 'true';
+
       await callBackend({
         action: 'SAVE_ATTENDANCE',
         date,
@@ -1099,7 +1201,7 @@
       alert(`Attendance saved for Semester ${sem} on ${date}!`);
     }
 
-    // 3. RENDER ATTENDANCE REGISTER (AUG - OCT 2026)
+    // 3. RENDER ATTENDANCE REGISTER (STRICTLY READ-ONLY)
     function renderRegisterTable() {
       const sem = document.getElementById('regSemSelect').value;
       const month = document.getElementById('regMonthSelect').value;
@@ -1130,7 +1232,7 @@
               if (val === 'P') badge = 'bg-emerald-100 text-emerald-800 font-bold';
               if (val === 'A') badge = 'bg-red-100 text-red-700 font-bold';
               if (val === 'L') badge = 'bg-amber-100 text-amber-800 font-bold';
-              return `<td class="p-1.5 text-center"><span class="inline-block w-6 py-0.5 rounded ${badge}">${val}</span></td>`;
+              return `<td class="p-1.5 text-center select-none"><span class="inline-block w-6 py-0.5 rounded ${badge}">${val}</span></td>`;
             }).join('')}
           </tr>
         `;
@@ -1276,7 +1378,7 @@
 
     function autoSuggestCRCreds() {
       const existingId = document.getElementById('userFormId').value;
-      if (existingId) return; // Don't overwrite when editing existing user
+      if (existingId) return;
       const role = document.getElementById('userFormRole').value;
       const sem = document.getElementById('userFormSem').value;
       const semMap = { 'I': '1', 'II': '2', 'III': '3', 'IV': '4', 'V': '5', 'VI': '6', 'VII': '7', 'VIII': '8', 'ALL': 'all' };
