@@ -30,6 +30,11 @@
     }
     .nav-btn.active { background-color: #065f46; color: #ffffff; font-weight: 600; }
     .subtab-btn.active { border-bottom: 3px solid #059669; color: #065f46; font-weight: 700; background-color: #ecfdf5; }
+    @keyframes pulse-dot {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.25); opacity: 0.65; }
+    }
+    .status-dot-pulse { animation: pulse-dot 2s infinite; }
   </style>
 </head>
 <body class="min-h-screen text-slate-800">
@@ -37,6 +42,12 @@
   <!-- ================= LOGIN & PUBLIC STUDENT LEAVE SCREEN ================= -->
   <div id="loginScreen" class="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-emerald-950 via-emerald-900 to-slate-900">
     <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl p-8 border border-emerald-100">
+      <div class="flex justify-end mb-2">
+        <div id="loginServerStatus" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-slate-100 text-slate-600 border border-slate-200">
+          <span class="w-2 h-2 rounded-full bg-slate-400"></span> Checking Server...
+        </div>
+      </div>
+
       <div class="apdc-logo-box mb-4">
         <img src="apdc-logo.png" alt="APDC Logo" onerror="this.onerror=null; this.src='https://placehold.co/140x140/ffffff/065f46?text=APSACS+APDC';" />
       </div>
@@ -180,56 +191,69 @@
   <!-- ================= MAIN APPLICATION ================= -->
   <div id="appScreen" class="hidden min-h-screen flex flex-col">
     <!-- Top Header -->
-    <header class="bg-white border-b border-slate-200 sticky top-0 z-30">
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
       <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+        <!-- Brand & User Info -->
         <div class="flex items-center gap-3">
           <div class="w-12 h-12 rounded-xl border border-slate-200 p-1 bg-white flex items-center justify-center">
             <img src="apdc-logo.png" alt="Logo" class="w-full h-full object-contain" onerror="this.onerror=null; this.src='https://placehold.co/60x60/ffffff/065f46?text=APDC';" />
           </div>
           <div>
-            <div class="flex items-center gap-2">
+            <div class="flex flex-wrap items-center gap-2">
               <h2 class="font-extrabold text-slate-900 text-lg leading-none">APDC BBA Portal</h2>
               <span id="sessionBadge" class="text-xs bg-emerald-100 text-emerald-800 px-2.5 py-0.5 rounded-full font-bold">Fall 2026</span>
-              <span id="cloudStatusBadge" class="text-[11px] bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full font-medium">System Ready</span>
             </div>
             <p id="currentUserDisplay" class="text-xs text-slate-500 mt-0.5"></p>
           </div>
         </div>
 
-        <!-- Navigation Bar -->
-        <nav class="flex flex-wrap items-center gap-1.5">
-          <button onclick="switchMainTab('dashboard')" id="nav-dashboard" class="nav-btn active px-3.5 py-2 rounded-xl text-sm flex items-center gap-2 hover:bg-slate-100 transition">
-            <i class="fa-solid fa-chart-pie"></i> Dashboard
-          </button>
-          <button onclick="switchMainTab('mark')" id="nav-mark" class="nav-btn px-3.5 py-2 rounded-xl text-sm flex items-center gap-2 hover:bg-slate-100 transition">
-            <i class="fa-solid fa-clipboard-check"></i> Mark Attendance
-          </button>
-          <button onclick="switchMainTab('sheet')" id="nav-sheet" class="nav-btn px-3.5 py-2 rounded-xl text-sm flex items-center gap-2 hover:bg-slate-100 transition">
-            <i class="fa-solid fa-table"></i> Attendance Register
-          </button>
-          <button onclick="switchMainTab('redzone')" id="nav-redzone" class="nav-btn px-3.5 py-2 rounded-xl text-sm flex items-center gap-2 hover:bg-slate-100 transition">
-            <i class="fa-solid fa-triangle-exclamation text-red-500"></i> Red Zone
-          </button>
-          <!-- LEAVE APPROVAL TAB (SIR FAISAL + 5 COUNCIL MEMBERS) -->
-          <button onclick="switchMainTab('leaves')" id="nav-leaves" class="nav-btn hidden px-3.5 py-2 rounded-xl text-sm flex items-center gap-2 hover:bg-slate-100 transition">
-            <i class="fa-solid fa-envelope-open-text text-emerald-600"></i> Leave Requests
-            <span id="pendingLeavesBadge" class="hidden px-2 py-0.5 text-[11px] bg-red-600 text-white rounded-full font-extrabold">0</span>
-          </button>
-          <button onclick="switchMainTab('files')" id="nav-files" class="nav-btn px-3.5 py-2 rounded-xl text-sm flex items-center gap-2 hover:bg-slate-100 transition">
-            <i class="fa-solid fa-folder-open text-amber-500"></i> Dept. Files
-          </button>
-          <!-- RESTRICTED TO SIR FAISAL & PRESIDENT ONLY -->
-          <button onclick="switchMainTab('control')" id="nav-control" class="nav-btn hidden px-3.5 py-2 rounded-xl text-sm flex items-center gap-2 bg-amber-50 text-amber-900 border border-amber-300 hover:bg-amber-100 transition">
-            <i class="fa-solid fa-sliders"></i> Control Panel
-          </button>
-          <button onclick="logout()" class="px-3 py-2 rounded-xl text-sm text-red-600 hover:bg-red-50 font-semibold ml-1" title="Sign Out">
-            <i class="fa-solid fa-power-off"></i>
-          </button>
-        </nav>
+        <!-- Navigation Bar & Top-Right Live Server Controls -->
+        <div class="flex flex-wrap items-center gap-2">
+          <nav class="flex flex-wrap items-center gap-1">
+            <button onclick="switchMainTab('dashboard')" id="nav-dashboard" class="nav-btn active px-3 py-2 rounded-xl text-xs sm:text-sm flex items-center gap-1.5 hover:bg-slate-100 transition">
+              <i class="fa-solid fa-chart-pie"></i> Dashboard
+            </button>
+            <button onclick="switchMainTab('mark')" id="nav-mark" class="nav-btn px-3 py-2 rounded-xl text-xs sm:text-sm flex items-center gap-1.5 hover:bg-slate-100 transition">
+              <i class="fa-solid fa-clipboard-check"></i> Mark Attendance
+            </button>
+            <button onclick="switchMainTab('sheet')" id="nav-sheet" class="nav-btn px-3 py-2 rounded-xl text-xs sm:text-sm flex items-center gap-1.5 hover:bg-slate-100 transition">
+              <i class="fa-solid fa-table"></i> Attendance Register
+            </button>
+            <button onclick="switchMainTab('redzone')" id="nav-redzone" class="nav-btn px-3 py-2 rounded-xl text-xs sm:text-sm flex items-center gap-1.5 hover:bg-slate-100 transition">
+              <i class="fa-solid fa-triangle-exclamation text-red-500"></i> Red Zone
+            </button>
+            <button onclick="switchMainTab('leaves')" id="nav-leaves" class="nav-btn hidden px-3 py-2 rounded-xl text-xs sm:text-sm flex items-center gap-1.5 hover:bg-slate-100 transition">
+              <i class="fa-solid fa-envelope-open-text text-emerald-600"></i> Leave Requests
+              <span id="pendingLeavesBadge" class="hidden px-1.5 py-0.5 text-[10px] bg-red-600 text-white rounded-full font-extrabold">0</span>
+            </button>
+            <button onclick="switchMainTab('files')" id="nav-files" class="nav-btn px-3 py-2 rounded-xl text-xs sm:text-sm flex items-center gap-1.5 hover:bg-slate-100 transition">
+              <i class="fa-solid fa-folder-open text-amber-500"></i> Dept. Files
+            </button>
+            <button onclick="switchMainTab('control')" id="nav-control" class="nav-btn hidden px-3 py-2 rounded-xl text-xs sm:text-sm flex items-center gap-1.5 bg-amber-50 text-amber-900 border border-amber-300 hover:bg-amber-100 transition">
+              <i class="fa-solid fa-sliders"></i> Control Panel
+            </button>
+          </nav>
+
+          <!-- LIVE SERVER CONNECTION STATUS + ONE-CLICK REFRESH BUTTON -->
+          <div class="flex items-center gap-1.5 pl-2 border-l border-slate-200">
+            <div id="serverConnectionPill" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
+              <span id="serverConnectionDot" class="w-2.5 h-2.5 rounded-full bg-emerald-500 status-dot-pulse"></span>
+              <span id="serverConnectionText">Connected to Server</span>
+            </div>
+
+            <button onclick="manualRefreshServer()" id="globalRefreshBtn" class="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold shadow-sm transition flex items-center gap-1.5" title="Fetch Latest Data from Live Server">
+              <i id="globalRefreshIcon" class="fa-solid fa-arrows-rotate"></i> Refresh Server
+            </button>
+
+            <button onclick="logout()" class="px-2.5 py-1.5 rounded-xl text-sm text-red-600 hover:bg-red-50 font-semibold" title="Sign Out">
+              <i class="fa-solid fa-power-off"></i>
+            </button>
+          </div>
+        </div>
       </div>
 
       <!-- Live Department Announcement Banner -->
-      <div id="announcementBar" class="bg-emerald-900 text-emerald-50 text-xs py-2 px-4 text-center font-medium">
+      <div id="announcementBar" class="bg-emerald-900 text-emerald-50 text-xs py-1.5 px-4 text-center font-medium">
         <i class="fa-solid fa-bullhorn mr-2 text-amber-400"></i>
         <span id="announcementText">Welcome to the Official APDC BBA Portal.</span>
       </div>
@@ -249,7 +273,7 @@
           <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
             <div class="text-xs font-bold uppercase text-slate-400">Department Avg Attendance</div>
             <div id="statAvgAttendance" class="text-3xl font-extrabold text-emerald-700 mt-1">--%</div>
-            <div class="text-xs text-slate-500 mt-1">Aug – Oct 2026 Recorded Days</div>
+            <div class="text-xs text-slate-500 mt-1">All Recorded Sessions</div>
           </div>
           <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
             <div class="text-xs font-bold uppercase text-red-500">Red Zone Watchlist</div>
@@ -411,7 +435,7 @@
         <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-wrap items-center justify-between gap-4">
           <div>
             <h3 class="font-extrabold text-slate-900 text-base"><i class="fa-solid fa-envelope-open-text text-emerald-700 mr-2"></i>Student Leave Applications & History</h3>
-            <p class="text-xs text-slate-500 mt-0.5">All Pending, Approved, and Rejected records are permanently saved below. Once decided, a request is locked and can only be deleted.</p>
+            <p class="text-xs text-slate-500 mt-0.5">All Pending, Approved, and Rejected records from the live server. Once decided, a request is locked and can only be deleted.</p>
           </div>
           <div class="flex flex-wrap items-center gap-2">
             <button onclick="toggleManualLeaveBox()" class="px-3 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 rounded-xl text-xs font-bold">
@@ -423,8 +447,8 @@
               <option value="Approved">Approved History</option>
               <option value="Rejected">Rejected History</option>
             </select>
-            <button onclick="refreshCloudLeavesNow()" id="refreshLeavesBtn" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold">
-              <i class="fa-solid fa-rotate mr-1"></i> Sync Now
+            <button onclick="manualRefreshServer()" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold">
+              <i class="fa-solid fa-rotate mr-1"></i> Sync Leaves
             </button>
             <button onclick="clearDecidedLeavesHistory()" class="px-3 py-2 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 rounded-xl text-xs font-bold">
               <i class="fa-solid fa-trash-can mr-1"></i> Clear Approved/Rejected History
@@ -436,8 +460,8 @@
         <div id="manualLeaveEntryBox" class="hidden bg-emerald-50/70 border border-emerald-300 p-5 rounded-2xl space-y-3">
           <div class="flex items-center justify-between">
             <div>
-              <h4 class="font-extrabold text-emerald-950 text-sm"><i class="fa-solid fa-file-Medical mr-1.5 text-emerald-700"></i>Log Student Leave by Reference ID / Direct Council Entry</h4>
-              <p class="text-xs text-emerald-800">If a student showed you a screenshot of their Reference ID (or contacted Council directly for an emergency), enter it here to register & approve it immediately.</p>
+              <h4 class="font-extrabold text-emerald-950 text-sm"><i class="fa-solid fa-file-medical mr-1.5 text-emerald-700"></i>Log Student Leave by Reference ID / Direct Council Entry</h4>
+              <p class="text-xs text-emerald-800">Enter a student's Reference ID or emergency leave directly here to register & approve it immediately.</p>
             </div>
             <button type="button" onclick="toggleManualLeaveBox()" class="text-xs text-slate-500 font-bold hover:underline">Close</button>
           </div>
@@ -472,8 +496,8 @@
               <input id="manLvReason" type="text" required placeholder="Medical / Emergency..." class="w-full px-3 py-2 border rounded-xl text-xs bg-white" />
             </div>
             <div class="sm:col-span-2 md:col-span-6 flex justify-end gap-2 pt-1">
-              <button type="submit" class="px-5 py-2 bg-emerald-700 hover:bg-emerald-800 text-white font-bold rounded-xl text-xs shadow">
-                <i class="fa-solid fa-plus-circle mr-1"></i> Add to Leave Requests List
+              <button type="submit" id="manLvSubmitBtn" class="px-5 py-2 bg-emerald-700 hover:bg-emerald-800 text-white font-bold rounded-xl text-xs shadow">
+                <i class="fa-solid fa-plus-circle mr-1"></i> Save Leave to Server
               </button>
             </div>
           </form>
@@ -520,13 +544,18 @@
       <section id="tab-control" class="hidden space-y-6">
         <div class="bg-gradient-to-r from-slate-900 to-emerald-950 text-white p-6 rounded-2xl shadow-lg flex flex-wrap items-center justify-between gap-4">
           <div>
-            <span class="px-2.5 py-1 bg-amber-400 text-slate-950 font-extrabold text-xs rounded-full uppercase">Executive Access Only</span>
+            <span class="px-2.5 py-1 bg-amber-400 text-slate-950 font-extrabold text-xs rounded-full uppercase">Executive Office Control</span>
             <h2 class="text-2xl font-extrabold mt-2"><i class="fa-solid fa-sliders mr-2 text-amber-400"></i>Master Control Panel</h2>
-            <p class="text-xs text-slate-300 mt-1">Exclusive zero-code administration for <strong>Sir Faisal</strong> & <strong>M. Jarar Ali Khadim (President)</strong>.</p>
+            <p class="text-xs text-slate-300 mt-1">Real-time executive management for <strong>Sir Faisal</strong> & <strong>M. Jarar Ali Khadim (President)</strong>.</p>
           </div>
-          <button id="syncCloudBtn" onclick="syncSeedDataToCloud()" class="px-4 py-2.5 bg-amber-400 hover:bg-amber-300 text-slate-950 font-extrabold rounded-xl text-xs shadow-lg transition flex items-center gap-2">
-            <i class="fa-solid fa-cloud-arrow-up"></i> Sync & Overwrite Real Students + Attendance + Logins to Google Sheet
-          </button>
+          <div class="flex flex-wrap items-center gap-2">
+            <button onclick="deduplicateStudentsNow()" id="dedupBtn" class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs shadow transition flex items-center gap-1.5">
+              <i class="fa-solid fa-broom"></i> Clean Up Duplicate Students
+            </button>
+            <button id="syncCloudBtn" onclick="syncSeedDataToCloud()" class="px-4 py-2.5 bg-amber-400 hover:bg-amber-300 text-slate-950 font-extrabold rounded-xl text-xs shadow-lg transition flex items-center gap-1.5">
+              <i class="fa-solid fa-cloud-arrow-up"></i> Reset & Sync 75 Master Students
+            </button>
+          </div>
         </div>
 
         <!-- Control Panel Sub-Navigation -->
@@ -551,7 +580,7 @@
             <div class="flex flex-wrap items-center justify-between gap-3">
               <div>
                 <h4 class="font-bold text-slate-900">Add New Student / Edit Existing Student Credentials</h4>
-                <p class="text-xs text-slate-500">Click "Edit / Fill Info" on any student below to fill in missing GR No, Seat No, or Enrolment No, or add a new student.</p>
+                <p class="text-xs text-slate-500">Duplicate-protected: clicking Save updates the student on the live server once without creating multiple copies.</p>
               </div>
               <button onclick="resetStudentForm()" class="text-xs text-emerald-700 font-bold hover:underline">Clear Form</button>
             </div>
@@ -599,7 +628,7 @@
                 <input id="stuFormEnr" type="text" placeholder="e.g. BAC/APCM/12358/2023" class="w-full px-3 py-2 border border-amber-300 bg-amber-50/40 rounded-xl text-xs" />
               </div>
               <div class="flex items-end">
-                <button type="submit" class="w-full py-2 bg-emerald-700 hover:bg-emerald-800 text-white font-bold rounded-xl text-xs shadow">
+                <button type="submit" id="saveStudentBtn" class="w-full py-2 bg-emerald-700 hover:bg-emerald-800 text-white font-bold rounded-xl text-xs shadow">
                   <i class="fa-solid fa-check mr-1"></i> Save Student Record
                 </button>
               </div>
@@ -826,12 +855,11 @@
     </main>
   </div>
 
-  <!-- ================= JAVASCRIPT & PRE-LOADED REAL DATA ================= -->
+  <!-- ================= JAVASCRIPT & HIGH-SPEED ENGINE v11 ================= -->
   <script>
-    // YOUR LIVE GOOGLE APPS SCRIPT WEB APP URL:
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby2s4ncMkxRINERW3JBlEH4lciB2SR5Ho63Qat7LhmEGfqS6_u1FmshYSs1dP0N-6K0Qw/exec";
+    // YOUR NEW LIVE GOOGLE APPS SCRIPT DEPLOYMENT URL:
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby8iIDwbZN7gVbOPYmK4xFWDKgJfUEi5d-vINifCOkmGOW9jUVfHc4H5737PuHeW7F8cQ/exec";
 
-    // HELPER FOR TODAY'S LOCAL DATE (YYYY-MM-DD)
     function getTodayDateString() {
       const now = new Date();
       const y = now.getFullYear();
@@ -840,7 +868,6 @@
       return `${y}-${m}-${d}`;
     }
 
-    // GENERATE ARRAY OF YYYY-MM-DD DATES BETWEEN START & END (INCLUSIVE)
     function getDatesBetween(startStr, endStr) {
       const arr = [];
       const curr = new Date(startStr + 'T00:00:00');
@@ -856,7 +883,6 @@
       return arr;
     }
 
-    // COMPRESS IMAGES BEFORE UPLOADING SO MOBILE PHOTOS NEVER TIMEOUT APPS SCRIPT
     function compressFileIfImage(file) {
       return new Promise((resolve) => {
         if (!file.type.startsWith('image/')) {
@@ -870,13 +896,13 @@
           const img = new Image();
           img.onload = () => {
             const canvas = document.createElement('canvas');
-            const MAX_WIDTH = 1000;
+            const MAX_WIDTH = 950;
             const scale = img.width > MAX_WIDTH ? MAX_WIDTH / img.width : 1;
             canvas.width = Math.round(img.width * scale);
             canvas.height = Math.round(img.height * scale);
             const ctx = canvas.getContext('2d');
             ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-            const dataUrl = canvas.toDataURL('image/jpeg', 0.72);
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.70);
             resolve({
               base64: dataUrl.split(',')[1],
               dataUrl: dataUrl,
@@ -890,7 +916,7 @@
       });
     }
 
-    // OFFICIAL ACCOUNTS (INCLUDING SIR FAISAL, PRESIDENT JARAR & THE 4 COUNCIL MEMBERS)
+    // OFFICIAL ACCOUNTS
     const DEFAULT_USERS = [
       { UserID: 'USR-001', Username: 'faisal.hod', Password: 'faisal786', FullName: 'Sir Faisal (HOD / Coordinator)', Role: 'Sir Faisal', AssignedSemester: 'ALL' },
       { UserID: 'USR-002', Username: 'jarar.pres', Password: 'jarar99', FullName: 'M. Jarar Ali Khadim (President)', Role: 'President', AssignedSemester: 'ALL' },
@@ -990,6 +1016,7 @@
     // APPLICATION STATE
     let STATE = {
       currentUser: null,
+      isOnline: false,
       users: JSON.parse(JSON.stringify(DEFAULT_USERS)),
       students: [],
       attendance: {},
@@ -999,11 +1026,106 @@
       settings: {
         redZoneThreshold: 75,
         academicSession: 'Fall 2026',
-        announcement: 'Welcome to the Official APDC BBA Portal — Updated Roster & Leave System Active.'
+        announcement: 'Welcome to the Official APDC BBA Portal — Live Server v11 Active.'
       }
     };
 
-    // INITIALIZE LOCAL SEED + FETCH LATEST FROM GOOGLE SHEET
+    function setServerConnectionUI(state) {
+      const pill = document.getElementById('serverConnectionPill');
+      const dot = document.getElementById('serverConnectionDot');
+      const text = document.getElementById('serverConnectionText');
+      const loginPill = document.getElementById('loginServerStatus');
+
+      if (state === 'CONNECTED') {
+        STATE.isOnline = true;
+        if (pill) pill.className = 'flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-50 text-emerald-800 border border-emerald-300';
+        if (dot) dot.className = 'w-2.5 h-2.5 rounded-full bg-emerald-500 status-dot-pulse';
+        if (text) text.textContent = 'Connected to Server';
+        if (loginPill) {
+          loginPill.className = 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-300';
+          loginPill.innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-500 status-dot-pulse"></span> Connected to Server';
+        }
+      } else if (state === 'SYNCING') {
+        if (pill) pill.className = 'flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-amber-50 text-amber-800 border border-amber-300';
+        if (dot) dot.className = 'w-2.5 h-2.5 rounded-full bg-amber-500 status-dot-pulse';
+        if (text) text.textContent = 'Syncing Server...';
+      } else {
+        STATE.isOnline = false;
+        if (pill) pill.className = 'flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-red-50 text-red-700 border border-red-300';
+        if (dot) dot.className = 'w-2.5 h-2.5 rounded-full bg-red-600';
+        if (text) text.textContent = 'Not Connected to Server';
+        if (loginPill) {
+          loginPill.className = 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-red-50 text-red-700 border border-red-300';
+          loginPill.innerHTML = '<span class="w-2 h-2 rounded-full bg-red-600"></span> Not Connected to Server';
+        }
+      }
+    }
+
+    window.addEventListener('online', () => manualRefreshServer());
+    window.addEventListener('offline', () => setServerConnectionUI('OFFLINE'));
+
+    function deduplicateStudentArray(arr) {
+      const seen = new Set();
+      const clean = [];
+      (arr || []).forEach(s => {
+        if (!s || !s.Name) return;
+        const key = `${String(s.Name).trim().toLowerCase()}|${String(s.FatherName || '').trim().toLowerCase()}|${String(s.Semester || '').trim().toUpperCase()}`;
+        if (!seen.has(key)) {
+          seen.add(key);
+          clean.push(s);
+        }
+      });
+      return clean;
+    }
+
+    // DUAL-CHANNEL LEAVE SYNC HELPER (MERGES LEAVES_DB + SETTINGS_DB BACKUP MIRROR)
+    function mergeDualChannelLeaves(cloudLeavesArray, settingsObj) {
+      const map = new Map();
+      let backupArr = [];
+      if (settingsObj && settingsObj.leaves_backup_json) {
+        try {
+          backupArr = JSON.parse(settingsObj.leaves_backup_json) || [];
+        } catch (e) {
+          backupArr = [];
+        }
+      }
+      backupArr.forEach(raw => {
+        if (!raw || !raw.LeaveID) return;
+        const clean = normalizeLeaveRecord(raw);
+        map.set(clean.LeaveID, clean);
+      });
+      (cloudLeavesArray || []).forEach(raw => {
+        if (!raw || !raw.LeaveID) return;
+        const clean = normalizeLeaveRecord(raw);
+        const existing = map.get(clean.LeaveID);
+        if (existing && existing.Status !== 'Pending' && clean.Status === 'Pending') {
+          map.set(clean.LeaveID, existing);
+        } else {
+          map.set(clean.LeaveID, clean);
+        }
+      });
+      return Array.from(map.values());
+    }
+
+    async function syncLeavesBackupMirror() {
+      const lightList = STATE.leaves.slice(0, 80).map(lv => ({
+        LeaveID: lv.LeaveID,
+        StudentID: lv.StudentID,
+        StudentName: lv.StudentName,
+        Semester: lv.Semester,
+        StartDate: lv.StartDate,
+        EndDate: lv.EndDate,
+        Reason: lv.Reason,
+        AttachmentUrl: (lv.AttachmentUrl && lv.AttachmentUrl.startsWith('http')) ? lv.AttachmentUrl : '',
+        Status: lv.Status,
+        Remarks: lv.Remarks,
+        ActionBy: lv.ActionBy,
+        SubmittedAt: lv.SubmittedAt
+      }));
+      STATE.settings.leaves_backup_json = JSON.stringify(lightList);
+      await callBackend({ action: 'SAVE_SETTINGS', settings: STATE.settings });
+    }
+
     async function initData() {
       const today = getTodayDateString();
       document.getElementById('markDateInput').value = today;
@@ -1012,19 +1134,12 @@
       document.getElementById('manLvStart').value = today;
       document.getElementById('manLvEnd').value = today;
 
-      const saved = localStorage.getItem('APDC_PORTAL_V9') || localStorage.getItem('APDC_PORTAL_V8');
+      const saved = localStorage.getItem('APDC_PORTAL_V11');
       if (saved) {
         try {
           const parsed = JSON.parse(saved);
-          if (parsed.users && parsed.users.length > 0) {
-            DEFAULT_USERS.forEach(defU => {
-              if (!parsed.users.some(cu => String(cu.Username).toLowerCase() === defU.Username.toLowerCase())) {
-                parsed.users.push(defU);
-              }
-            });
-            STATE.users = parsed.users;
-          }
-          STATE.students = parsed.students || [];
+          if (parsed.users && parsed.users.length > 0) STATE.users = parsed.users;
+          STATE.students = deduplicateStudentArray(parsed.students || []);
           STATE.attendance = parsed.attendance || {};
           STATE.dates = parsed.dates || [...SEED_DATA.dates];
           STATE.leaves = parsed.leaves || [];
@@ -1041,7 +1156,90 @@
       await fetchCloudData();
     }
 
-    // NORMALIZE LEAVE OBJECT & MERGE LOCAL + CLOUD LEAVES SO HISTORY NEVER DISAPPEARS
+    async function manualRefreshServer() {
+      const btn = document.getElementById('globalRefreshBtn');
+      const icon = document.getElementById('globalRefreshIcon');
+      if (btn) btn.disabled = true;
+      if (icon) icon.classList.add('fa-spin');
+
+      const ok = await fetchCloudData();
+
+      if (btn) btn.disabled = false;
+      if (icon) icon.classList.remove('fa-spin');
+
+      if (STATE.currentUser) {
+        refreshAllViews();
+      }
+      return ok;
+    }
+
+    async function fetchCloudData() {
+      if (!navigator.onLine) {
+        setServerConnectionUI('OFFLINE');
+        return false;
+      }
+      setServerConnectionUI('SYNCING');
+      try {
+        const res = await fetch(SCRIPT_URL + '?t=' + Date.now(), { cache: 'no-store' });
+        const data = await res.json();
+        if (data && data.success) {
+          if (Array.isArray(data.users) && data.users.length > 0) {
+            const validCloudUsers = data.users.filter(u => u.Username && u.Password);
+            DEFAULT_USERS.forEach(defU => {
+              if (!validCloudUsers.some(cu => String(cu.Username).toLowerCase() === defU.Username.toLowerCase())) {
+                validCloudUsers.push(defU);
+              }
+            });
+            STATE.users = validCloudUsers;
+          }
+
+          if (Array.isArray(data.students) && data.students.length > 0) {
+            STATE.students = deduplicateStudentArray(data.students);
+          }
+
+          if (Array.isArray(data.attendance) && data.attendance.length > 0) {
+            const attMap = {};
+            const dateSet = new Set(SEED_DATA.dates);
+            data.attendance.forEach(row => {
+              const d = String(row.Date || '').substring(0, 10);
+              const sid = String(row.StudentID || '').trim();
+              if (!sid || !d) return;
+              if (!attMap[sid]) attMap[sid] = {};
+              attMap[sid][d] = String(row.Status || 'P').trim();
+              dateSet.add(d);
+            });
+            STATE.attendance = attMap;
+            STATE.dates = Array.from(dateSet).sort();
+          }
+
+          if (data.settings && typeof data.settings === 'object') {
+            STATE.settings = { ...STATE.settings, ...data.settings };
+          }
+
+          // Merge Leaves_DB + Settings_DB Backup Mirror so no student leave is ever missed
+          const mergedLeaves = mergeDualChannelLeaves(data.leaves || [], STATE.settings);
+          STATE.leaves = mergedLeaves;
+          applyAllApprovedLeavesToAttendance();
+
+          if (Array.isArray(data.files)) STATE.files = data.files;
+
+          saveLocalState();
+          populateLeaveStudentDropdown();
+          populateManualLeaveStudents();
+          setServerConnectionUI('CONNECTED');
+          if (STATE.currentUser) refreshAllViews();
+          return true;
+        } else {
+          setServerConnectionUI('OFFLINE');
+          return false;
+        }
+      } catch (err) {
+        console.warn("Server connection error:", err);
+        setServerConnectionUI('OFFLINE');
+        return false;
+      }
+    }
+
     function normalizeLeaveRecord(lv) {
       let status = lv.Status;
       let attUrl = lv.AttachmentUrl || '';
@@ -1053,106 +1251,21 @@
         status = 'Pending';
       }
       return {
-        LeaveID: String(lv.LeaveID || ''),
-        StudentID: String(lv.StudentID || ''),
-        StudentName: String(lv.StudentName || ''),
-        Semester: String(lv.Semester || ''),
+        LeaveID: String(lv.LeaveID || '').trim(),
+        StudentID: String(lv.StudentID || '').trim(),
+        StudentName: String(lv.StudentName || '').trim(),
+        Semester: String(lv.Semester || '').trim(),
         StartDate: String(lv.StartDate || '').substring(0, 10),
         EndDate: String(lv.EndDate || '').substring(0, 10),
-        Reason: String(lv.Reason || ''),
+        Reason: String(lv.Reason || '').trim(),
         AttachmentUrl: attUrl,
         Status: status,
-        Remarks: String(lv.Remarks || ''),
-        ActionBy: String(lv.ActionBy || lv.ApprovedBy || ''),
+        Remarks: String(lv.Remarks || '').trim(),
+        ActionBy: String(lv.ActionBy || lv.ApprovedBy || '').trim(),
         SubmittedAt: String(lv.SubmittedAt || getTodayDateString()).substring(0, 10)
       };
     }
 
-    function mergeLeavesHistory(localLeaves, cloudLeaves) {
-      const map = new Map();
-      (localLeaves || []).forEach(raw => {
-        if (!raw || !raw.LeaveID) return;
-        const clean = normalizeLeaveRecord(raw);
-        map.set(clean.LeaveID, clean);
-      });
-      (cloudLeaves || []).forEach(raw => {
-        if (!raw || !raw.LeaveID) return;
-        const cleanCloud = normalizeLeaveRecord(raw);
-        const existingLocal = map.get(cleanCloud.LeaveID);
-        if (existingLocal && existingLocal.Status !== 'Pending' && cleanCloud.Status === 'Pending') {
-          map.set(cleanCloud.LeaveID, existingLocal);
-        } else {
-          map.set(cleanCloud.LeaveID, cleanCloud);
-        }
-      });
-      return Array.from(map.values());
-    }
-
-    async function fetchCloudData() {
-      try {
-        const res = await fetch(SCRIPT_URL + '?t=' + Date.now());
-        const data = await res.json();
-        if (data && data.success) {
-          if (data.users && data.users.length > 0) {
-            const validCloudUsers = data.users.filter(u => u.Username && u.Password);
-            if (validCloudUsers.length > 0) {
-              DEFAULT_USERS.forEach(defU => {
-                if (!validCloudUsers.some(cu => String(cu.Username).toLowerCase() === defU.Username.toLowerCase())) {
-                  validCloudUsers.push(defU);
-                }
-              });
-              STATE.users = validCloudUsers;
-            }
-          }
-          if (data.students && data.students.length > 0) {
-            STATE.students = data.students;
-          }
-          if (data.attendance && data.attendance.length > 0) {
-            const attMap = {};
-            const dateSet = new Set(STATE.dates);
-            data.attendance.forEach(row => {
-              const d = String(row.Date).substring(0, 10);
-              const sid = row.StudentID;
-              if (!attMap[sid]) attMap[sid] = {};
-              attMap[sid][d] = row.Status;
-              if (d) dateSet.add(d);
-            });
-            STATE.attendance = attMap;
-            STATE.dates = Array.from(dateSet).sort();
-          }
-          if (Array.isArray(data.leaves)) {
-            STATE.leaves = mergeLeavesHistory(STATE.leaves, data.leaves);
-            applyAllApprovedLeavesToAttendance();
-          }
-          if (data.files) STATE.files = data.files;
-          if (data.settings && Object.keys(data.settings).length > 0) {
-            STATE.settings = { ...STATE.settings, ...data.settings };
-          }
-          saveLocalState();
-          populateLeaveStudentDropdown();
-          populateManualLeaveStudents();
-          if (STATE.currentUser) refreshAllViews();
-        }
-      } catch (err) {
-        console.warn("Using local cached dataset:", err);
-      }
-    }
-
-    async function refreshCloudLeavesNow() {
-      const btn = document.getElementById('refreshLeavesBtn');
-      if (btn) {
-        btn.disabled = true;
-        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> Syncing...';
-      }
-      await fetchCloudData();
-      if (btn) {
-        btn.disabled = false;
-        btn.innerHTML = '<i class="fa-solid fa-rotate mr-1"></i> Sync Now';
-      }
-      renderLeavesManagementTable();
-    }
-
-    // ENSURE ALL APPROVED LEAVES ARE AUTOMATICALLY MARKED 'L' IN ADVANCE
     function applyAllApprovedLeavesToAttendance() {
       const dateSet = new Set(STATE.dates);
       STATE.leaves.forEach(lv => {
@@ -1214,7 +1327,7 @@
     }
 
     function saveLocalState() {
-      localStorage.setItem('APDC_PORTAL_V9', JSON.stringify({
+      localStorage.setItem('APDC_PORTAL_V11', JSON.stringify({
         users: STATE.users,
         students: STATE.students,
         attendance: STATE.attendance,
@@ -1227,11 +1340,7 @@
 
     async function callBackend(payload) {
       saveLocalState();
-      const badge = document.getElementById('cloudStatusBadge');
-      if (badge) {
-        badge.textContent = 'Syncing...';
-        badge.className = 'text-[11px] bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full font-medium';
-      }
+      setServerConnectionUI('SYNCING');
       try {
         const res = await fetch(SCRIPT_URL, {
           method: 'POST',
@@ -1239,23 +1348,19 @@
           body: JSON.stringify(payload)
         });
         const result = await res.json();
-        if (badge) {
-          badge.textContent = (result && result.success) ? 'Cloud Synced' : 'Sync Warning';
-          badge.className = (result && result.success)
-            ? 'text-[11px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full font-medium'
-            : 'text-[11px] bg-red-100 text-red-700 px-2 py-0.5 rounded-full font-medium';
+        if (result && result.success) {
+          setServerConnectionUI('CONNECTED');
+        } else {
+          setServerConnectionUI('OFFLINE');
         }
         return result;
       } catch (e) {
-        if (badge) {
-          badge.textContent = 'Saved Locally';
-          badge.className = 'text-[11px] bg-slate-200 text-slate-700 px-2 py-0.5 rounded-full font-medium';
-        }
+        setServerConnectionUI('OFFLINE');
         return null;
       }
     }
 
-    // ================= PUBLIC STUDENT LEAVE PORTAL (VERIFIED CLOUD SAVE) =================
+    // ================= PUBLIC STUDENT LEAVE PORTAL (DUAL-CHANNEL VERIFIED) =================
     function togglePublicLeaveMode(mode) {
       document.getElementById('authBoxSignIn').classList.toggle('hidden', mode !== 'signin');
       document.getElementById('authBoxLeaveApply').classList.toggle('hidden', mode !== 'apply');
@@ -1294,7 +1399,10 @@
 
       const btn = document.getElementById('lvSubmitBtn');
       btn.disabled = true;
-      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> Uploading to Department Server...';
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> Saving to Live Server...';
+
+      // Pull latest cloud leaves first so we never overwrite another student's submission
+      await fetchCloudData();
 
       const leaveId = 'APDC-LV-' + Math.floor(1000 + Math.random() * 9000);
       const nowStr = getTodayDateString();
@@ -1307,9 +1415,7 @@
           fileName = compressed.fileName;
           mimeType = compressed.mimeType;
           localDataUrl = compressed.dataUrl;
-        } catch (err) {
-          console.warn("Attachment compression fallback:", err);
-        }
+        } catch (err) {}
       }
 
       const leaveObj = {
@@ -1330,40 +1436,19 @@
         mimeType: mimeType
       };
 
-      // 1. Try submitting to Google Sheet
-      let resp = await callBackend({ action: 'SUBMIT_LEAVE', leave: leaveObj });
-
-      // 2. Fallback: If attachment or old script caused an error, retry via DECIDE_LEAVE (which also appends fullLeaveObj)
-      if (!resp || !resp.success) {
-        const lightLeave = { ...leaveObj };
-        delete lightLeave.base64Data;
-        resp = await callBackend({
-          action: 'DECIDE_LEAVE',
-          leaveId: leaveId,
-          status: 'Pending',
-          remarks: '',
-          actionBy: '',
-          datesList: [],
-          studentId: stuId,
-          semester: sem,
-          fullLeaveObj: lightLeave
-        });
-      }
-
-      btn.disabled = false;
-      btn.innerHTML = '<i class="fa-solid fa-check-circle mr-1"></i> Submit Leave Request';
-
-      // 3. If Google Sheet STILL rejected it (e.g., Code.gs was never redeployed as New Version), warn the user clearly!
-      if (!resp || !resp.success) {
-        errBox.innerHTML = `<i class="fa-solid fa-triangle-exclamation mr-1"></i> <strong>Server Sync Error:</strong> Could not reach the Google Sheet database (${resp && resp.error ? resp.error : 'Check internet or Apps Script New Version deployment'}). Please try again without an attachment or contact the Student Council.`;
-        errBox.classList.remove('hidden');
-        return;
-      }
+      // Primary Channel: Write to Leaves_DB
+      const resp = await callBackend({ action: 'SUBMIT_LEAVE', leave: leaveObj });
 
       const localCopy = { ...leaveObj, AttachmentUrl: (resp && resp.attachmentUrl) || localDataUrl || '' };
       delete localCopy.base64Data;
       STATE.leaves.unshift(localCopy);
       saveLocalState();
+
+      // Secondary Backup Channel: Mirror into Settings_DB so it is 100% guaranteed to appear for Council
+      await syncLeavesBackupMirror();
+
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-check-circle mr-1"></i> Submit Leave Request';
 
       document.getElementById('publicLeaveForm').reset();
       document.getElementById('lvApplyStart').value = nowStr;
@@ -1374,7 +1459,6 @@
       document.getElementById('lvTrackInput').value = leaveId;
     }
 
-    // PUBLIC STATUS CHECKER
     async function handleTrackLeave(e) {
       e.preventDefault();
       const btn = document.getElementById('trackSubmitBtn');
@@ -1425,7 +1509,7 @@
       }).join('');
     }
 
-    // MANUAL COUNCIL LEAVE ENTRY (FOR RECOVERING SCREENSHOT REF IDS OR DIRECT EMERGENCIES)
+    // MANUAL COUNCIL LEAVE ENTRY
     function toggleManualLeaveBox() {
       const box = document.getElementById('manualLeaveEntryBox');
       box.classList.toggle('hidden');
@@ -1442,6 +1526,10 @@
 
     async function handleManualCouncilLeave(e) {
       e.preventDefault();
+      const btn = document.getElementById('manLvSubmitBtn');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> Saving...';
+
       const customId = document.getElementById('manLvId').value.trim().toUpperCase();
       const leaveId = customId || ('APDC-LV-' + Math.floor(1000 + Math.random() * 9000));
       const sem = document.getElementById('manLvSem').value;
@@ -1468,15 +1556,19 @@
       STATE.leaves.unshift(leaveObj);
       saveLocalState();
       refreshAllViews();
+
+      await callBackend({ action: 'SUBMIT_LEAVE', leave: leaveObj });
+      await syncLeavesBackupMirror();
+
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-plus-circle mr-1"></i> Save Leave to Server';
       document.getElementById('manualLeaveEntryBox').classList.add('hidden');
       document.getElementById('manLvId').value = '';
       document.getElementById('manLvReason').value = '';
-
-      await callBackend({ action: 'SUBMIT_LEAVE', leave: leaveObj });
     }
 
     function isSemesterDateMarked(semester, dateStr) {
-      return STATE.settings && STATE.settings[`locked_${semester}_${dateStr}`] === 'true';
+      return STATE.settings && String(STATE.settings[`locked_${semester}_${dateStr}`]) === 'true';
     }
 
     // AUTHENTICATION & ROLE-BASED ACCESS CONTROL
@@ -1541,8 +1633,7 @@
         switchMainTab('dashboard');
       }
 
-      // Immediately pull fresh cloud data upon login
-      fetchCloudData();
+      manualRefreshServer();
     }
 
     function logout() {
@@ -1572,9 +1663,8 @@
       });
       refreshAllViews();
 
-      // Auto-sync live leaves from Google Sheet whenever the Leaves tab is opened
       if (tab === 'leaves') {
-        refreshCloudLeavesNow();
+        manualRefreshServer();
       }
     }
 
@@ -1585,7 +1675,6 @@
       });
     }
 
-    // ATTENDANCE STATS HELPER
     function getStudentAttendanceStats(studentId) {
       const rec = STATE.attendance[studentId] || {};
       let present = 0, total = 0;
@@ -1752,7 +1841,7 @@
       const date = document.getElementById('markDateInput').value;
       if (isCR && isSemesterDateMarked(sem, date)) return;
 
-      STATE.students.filter(s => String(s.Semester) === sem).forEach(s => {
+      STATE.students.filter(s => String(s.Semester) === sem && s.Status !== 'Alumni').forEach(s => {
         if (hasApprovedLeaveOnDate(s, date)) {
           setRowStatus(s.StudentID, 'L');
         } else {
@@ -1773,21 +1862,21 @@
       }
 
       if (isCR) {
-        if (!confirm(`Confirm Attendance Submission for Semester ${sem} (${date})?\n\nIMPORTANT: Once submitted, it becomes permanent for you and you will NOT be able to edit or change it.`)) {
+        if (!confirm(`Confirm Attendance Submission for Semester ${sem} (${date})?\n\nOnce submitted, it becomes permanent for you and cannot be edited.`)) {
           return;
         }
       }
 
       const btn = document.getElementById('saveAttBtn');
       btn.disabled = true;
-      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> Saving...';
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> Saving to Server...';
 
       if (!STATE.dates.includes(date)) {
         STATE.dates.push(date);
         STATE.dates.sort();
       }
 
-      const list = STATE.students.filter(s => String(s.Semester) === sem);
+      const list = STATE.students.filter(s => String(s.Semester) === sem && s.Status !== 'Alumni');
       const records = [];
       list.forEach(s => {
         let chosen = 'P';
@@ -1801,21 +1890,29 @@
         records.push({ studentId: s.StudentID, status: chosen });
       });
 
-      STATE.settings[`locked_${sem}_${date}`] = 'true';
-      await callBackend({ action: 'SAVE_SETTINGS', settings: STATE.settings });
+      if (isCR) {
+        STATE.settings[`locked_${sem}_${date}`] = 'true';
+      }
 
-      await callBackend({
+      const resp = await callBackend({
         action: 'SAVE_ATTENDANCE',
-        date,
+        date: date,
         semester: sem,
-        records,
+        records: records,
+        lockForCR: isCR,
         markedBy: STATE.currentUser ? STATE.currentUser.FullName : 'Admin'
       });
 
       btn.disabled = false;
       btn.innerHTML = '<i class="fa-solid fa-floppy-disk mr-1"></i> Save Attendance';
+
+      if (!resp || !resp.success) {
+        alert("Warning: Could not reach the live server. Please check your internet connection and click Save Attendance again.");
+        return;
+      }
+
       refreshAllViews();
-      alert(`Attendance saved for Semester ${sem} on ${date}!`);
+      alert(`Attendance for Semester ${sem} (${date}) saved to live server!`);
     }
 
     // 3. RENDER ATTENDANCE REGISTER
@@ -1823,7 +1920,7 @@
       const sem = document.getElementById('regSemSelect').value;
       const month = document.getElementById('regMonthSelect').value;
       const filteredDates = STATE.dates.filter(d => month === 'ALL' ? true : d.startsWith(month));
-      const list = STATE.students.filter(s => String(s.Semester) === sem);
+      const list = STATE.students.filter(s => String(s.Semester) === sem && s.Status !== 'Alumni');
 
       const thead = document.getElementById('regTableHead');
       thead.innerHTML = `
@@ -1862,7 +1959,7 @@
       const threshold = Number(STATE.settings.redZoneThreshold || 75);
       const rows = [];
 
-      STATE.students.forEach(s => {
+      STATE.students.filter(s => s.Status !== 'Alumni').forEach(s => {
         if (semFilter !== 'ALL' && String(s.Semester) !== semFilter) return;
         const st = getStudentAttendanceStats(s.StudentID);
         if (st.total > 0 && st.pct < threshold) {
@@ -1889,14 +1986,14 @@
       `).join('');
     }
 
-    // 5. RENDER LEAVE REQUESTS & PERMANENT HISTORY TAB (HIDES APPROVE/DECLINE ONCE DECIDED)
+    // 5. RENDER LEAVE REQUESTS & PERMANENT HISTORY TAB
     function renderLeavesManagementTable() {
       const filter = document.getElementById('leaveStatusFilter').value;
       const list = STATE.leaves.filter(lv => filter === 'ALL' || lv.Status === filter);
       const tbody = document.getElementById('leavesTableBody');
 
       if (list.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-slate-400 font-medium">No leave records found in "${filter}". Click "Sync Now" or "+ Enter Student Ref ID" above.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-slate-400 font-medium">No leave records found in "${filter}". Click "Refresh Server" at the top right to check for new submissions.</td></tr>`;
         return;
       }
 
@@ -1931,10 +2028,10 @@
             </td>
             <td class="p-3.5 text-right whitespace-nowrap space-x-1.5">
               ${isPending ? `
-                <button onclick="decideLeaveRequest('${lv.LeaveID}', 'Approved')" class="px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold shadow-sm" title="Approve Leave">
+                <button onclick="decideLeaveRequest('${lv.LeaveID}', 'Approved')" class="px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold shadow-sm">
                   <i class="fa-solid fa-check mr-1"></i> Approve
                 </button>
-                <button onclick="decideLeaveRequest('${lv.LeaveID}', 'Rejected')" class="px-2.5 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl font-bold shadow-sm" title="Reject Leave">
+                <button onclick="decideLeaveRequest('${lv.LeaveID}', 'Rejected')" class="px-2.5 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl font-bold shadow-sm">
                   <i class="fa-solid fa-xmark mr-1"></i> Decline
                 </button>
               ` : `
@@ -1963,7 +2060,7 @@
 
       let remarks = '';
       if (newStatus === 'Rejected') {
-        remarks = prompt(`Enter mandatory remarks / reason for declining ${lv.StudentName}'s leave request (This remark will be visible to the student):`, '');
+        remarks = prompt(`Enter mandatory remarks / reason for declining ${lv.StudentName}'s leave request (visible to student):`, '');
         if (remarks === null) return;
         if (!remarks.trim()) {
           alert("A remark is required when declining a leave application.");
@@ -2010,14 +2107,17 @@
         semester: lv.Semester,
         fullLeaveObj: lv
       });
+
+      await syncLeavesBackupMirror();
     }
 
     async function deleteSingleLeaveRecord(leaveId) {
-      if (!confirm(`Delete leave record ${leaveId} permanently?`)) return;
+      if (!confirm(`Delete leave record ${leaveId} permanently from server?`)) return;
       STATE.leaves = STATE.leaves.filter(x => String(x.LeaveID) !== String(leaveId));
       saveLocalState();
       refreshAllViews();
       await callBackend({ action: 'DELETE_LEAVE', leaveIds: [leaveId] });
+      await syncLeavesBackupMirror();
     }
 
     async function clearDecidedLeavesHistory() {
@@ -2032,6 +2132,7 @@
       saveLocalState();
       refreshAllViews();
       await callBackend({ action: 'DELETE_LEAVE', leaveIds: idsToDelete });
+      await syncLeavesBackupMirror();
       alert("Approved and Rejected leave history cleared!");
     }
 
@@ -2095,15 +2196,36 @@
       document.getElementById('stuFormEnr').value = '';
     }
 
+    let isSavingStudentLock = false;
     async function handleSaveStudent(e) {
       e.preventDefault();
-      const existingId = document.getElementById('stuFormId').value;
+      if (isSavingStudentLock) return;
+      isSavingStudentLock = true;
+
+      const btn = document.getElementById('saveStudentBtn');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> Saving...';
+
+      const nameVal = document.getElementById('stuFormName').value.trim();
+      const fatherVal = document.getElementById('stuFormFather').value.trim();
+      const semVal = document.getElementById('stuFormSem').value;
+      let existingId = document.getElementById('stuFormId').value;
+
+      const duplicateMatch = STATE.students.find(x =>
+        String(x.Name).trim().toLowerCase() === nameVal.toLowerCase() &&
+        String(x.FatherName).trim().toLowerCase() === fatherVal.toLowerCase() &&
+        String(x.Semester).trim().toUpperCase() === semVal.toUpperCase()
+      );
+      if (!existingId && duplicateMatch) {
+        existingId = duplicateMatch.StudentID;
+      }
+
       const studentObj = {
         StudentID: existingId || ('STU-' + String(STATE.students.length + 1).padStart(3, '0') + '-' + Date.now().toString().slice(-3)),
         SNo: STATE.students.length + 1,
-        Name: document.getElementById('stuFormName').value.trim(),
-        FatherName: document.getElementById('stuFormFather').value.trim(),
-        Semester: document.getElementById('stuFormSem').value,
+        Name: nameVal,
+        FatherName: fatherVal,
+        Semester: semVal,
         Gender: document.getElementById('stuFormGender').value,
         GRNO: document.getElementById('stuFormGR').value.trim(),
         SeatNo: document.getElementById('stuFormSeat').value.trim(),
@@ -2111,21 +2233,41 @@
         Status: 'Active'
       };
 
-      const idx = STATE.students.findIndex(x => String(x.StudentID) === String(existingId));
+      const idx = STATE.students.findIndex(x => String(x.StudentID) === String(studentObj.StudentID));
       if (idx >= 0) STATE.students[idx] = studentObj;
       else STATE.students.push(studentObj);
 
-      await callBackend({ action: 'SAVE_STUDENT', student: studentObj });
+      STATE.students = deduplicateStudentArray(STATE.students);
       resetStudentForm();
       refreshAllViews();
-      alert('Student record saved to Portal & Google Sheet!');
+
+      await callBackend({ action: 'SAVE_STUDENT', student: studentObj });
+
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-check mr-1"></i> Save Student Record';
+      isSavingStudentLock = false;
+      alert('Student record saved to Live Server (Zero Duplicates)!');
     }
 
     async function deleteStudent(id) {
-      if (!confirm('Remove this student permanently from the roster?')) return;
+      const target = STATE.students.find(x => String(x.StudentID) === String(id));
+      if (!confirm(`Permanently delete ${target ? target.Name : id} from the live server?`)) return;
       STATE.students = STATE.students.filter(x => String(x.StudentID) !== String(id));
-      await callBackend({ action: 'DELETE_STUDENT', studentId: id });
+      saveLocalState();
       refreshAllViews();
+      await callBackend({ action: 'DELETE_STUDENT', studentId: id });
+    }
+
+    async function deduplicateStudentsNow() {
+      const btn = document.getElementById('dedupBtn');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Cleaning Duplicates...';
+      STATE.students = deduplicateStudentArray(STATE.students);
+      await callBackend({ action: 'DEDUPLICATE_STUDENTS' });
+      await fetchCloudData();
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-broom"></i> Clean Up Duplicate Students';
+      alert('All duplicate student entries have been cleaned from the live Google Sheet!');
     }
 
     // 7. CONTROL PANEL: COUNCIL, CR & USER ACCOUNTS MANAGER
@@ -2211,9 +2353,9 @@
       if (idx >= 0) STATE.users[idx] = userObj;
       else STATE.users.push(userObj);
 
-      await callBackend({ action: 'SAVE_USER', user: userObj });
       resetUserForm();
       renderControlUsers();
+      await callBackend({ action: 'SAVE_USER', user: userObj });
       alert(`Login ID "${userObj.Username}" saved!`);
     }
 
@@ -2222,8 +2364,8 @@
       if (!target) return;
       if (!confirm(`Delete login ID "${target.Username}" (${target.FullName}) permanently?`)) return;
       STATE.users = STATE.users.filter(x => String(x.UserID) !== String(id));
-      await callBackend({ action: 'DELETE_USER', userId: id });
       renderControlUsers();
+      await callBackend({ action: 'DELETE_USER', userId: id });
     }
 
     // 8. CONTROL PANEL: GOOGLE DRIVE DEPARTMENT FILE SYSTEM
@@ -2262,7 +2404,7 @@
           ViewUrl: (resp && resp.viewUrl) || reader.result,
           DownloadUrl: (resp && resp.downloadUrl) || reader.result,
           UploadedBy: uploadedBy,
-          UploadedAt: new Date().toISOString().split('T')[0]
+          UploadedAt: getTodayDateString()
         };
 
         STATE.files.unshift(newFile);
@@ -2306,8 +2448,8 @@
     async function deleteDeptFile(id) {
       if (!confirm('Delete this file from the portal and Google Drive?')) return;
       STATE.files = STATE.files.filter(x => String(x.FileID) !== String(id));
-      await callBackend({ action: 'DELETE_FILE', fileId: id });
       renderDepartmentFiles();
+      await callBackend({ action: 'DELETE_FILE', fileId: id });
     }
 
     // 9. CONTROL PANEL: SETTINGS, PROMOTIONS & CLOUD OVERWRITE
@@ -2315,8 +2457,8 @@
       STATE.settings.academicSession = document.getElementById('setSessionInput').value.trim();
       STATE.settings.redZoneThreshold = Number(document.getElementById('setThresholdInput').value || 75);
       STATE.settings.announcement = document.getElementById('setAnnouncementInput').value.trim();
-      await callBackend({ action: 'SAVE_SETTINGS', settings: STATE.settings });
       refreshAllViews();
+      await callBackend({ action: 'SAVE_SETTINGS', settings: STATE.settings });
       alert('Global portal settings updated!');
     }
 
@@ -2331,16 +2473,16 @@
           if (toSem === 'Graduated') s.Status = 'Alumni';
         }
       });
-      await callBackend({ action: 'PROMOTE_SEMESTER', fromSem, toSem });
       refreshAllViews();
+      await callBackend({ action: 'PROMOTE_SEMESTER', fromSem, toSem });
       alert(`Batch promoted from ${fromSem} to ${toSem}!`);
     }
 
     async function syncSeedDataToCloud() {
-      if (!confirm('This will wipe all old trial/test students in the Google Sheet and replace them with the 75 official BBA students, their Aug–Oct 2026 attendance records, and all 11 official login accounts (including Council members). Proceed?')) return;
+      if (!confirm('This will reset the Google Sheet students & attendance back to the clean 75 official BBA students and sync all 11 login accounts. Proceed?')) return;
       const btn = document.getElementById('syncCloudBtn');
       btn.disabled = true;
-      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Syncing 75 Students, Attendance & 11 Accounts...';
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Syncing 75 Students & Accounts...';
 
       loadFromEmbeddedSeed();
       await callBackend({
@@ -2353,10 +2495,11 @@
         await callBackend({ action: 'SAVE_USER', user: u });
       }
 
+      await fetchCloudData();
       btn.disabled = false;
-      btn.innerHTML = '<i class="fa-solid fa-check"></i> Synced! All 75 Students, Attendance & Council Logins Live';
+      btn.innerHTML = '<i class="fa-solid fa-check"></i> Synced! All 75 Students Live';
       refreshAllViews();
-      alert('All 75 real students, 3,436 attendance records, and all 11 login IDs (Sir Faisal, President Jarar, 4 Council Members, Faculty, and CRs) are now synced to your Google Sheet!');
+      alert('All 75 real students, attendance records, and 11 login IDs are cleanly synced to your Google Sheet!');
     }
 
     // Start Portal
