@@ -9,7 +9,6 @@
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
     body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; }
-    /* 100% Uncropped APDC Logo Container */
     .apdc-logo-box {
       width: 140px;
       height: 140px;
@@ -26,7 +25,7 @@
     .apdc-logo-box img {
       width: 100%;
       height: 100%;
-      object-fit: contain; /* Guarantees 100% full image with ZERO cropping */
+      object-fit: contain;
       object-position: center;
     }
     .nav-btn.active { background-color: #065f46; color: #ffffff; font-weight: 600; }
@@ -86,7 +85,7 @@
         </div>
       </div>
 
-      <!-- VIEW 2: STUDENT LEAVE APPLICATION FORM (NO GR/SEAT NO) -->
+      <!-- VIEW 2: STUDENT LEAVE APPLICATION FORM -->
       <div id="authBoxLeaveApply" class="hidden space-y-4">
         <div class="flex items-center justify-between border-b pb-2.5">
           <h3 class="font-extrabold text-slate-900 text-sm"><i class="fa-solid fa-paper-plane text-emerald-700 mr-1.5"></i>Student Leave Application</h3>
@@ -129,17 +128,19 @@
 
           <div>
             <label class="block text-xs font-bold text-slate-600 mb-1">Attachment (Optional - Medical / Application Photo)</label>
-            <input type="file" id="lvApplyFile" class="w-full text-xs border p-1.5 rounded-xl bg-slate-50" />
+            <input type="file" id="lvApplyFile" accept="image/*,.pdf" class="w-full text-xs border p-1.5 rounded-xl bg-slate-50" />
           </div>
+
+          <div id="lvSubmitErrorBox" class="hidden p-2.5 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs font-semibold"></div>
 
           <button type="submit" id="lvSubmitBtn" class="w-full py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white font-bold rounded-xl text-xs shadow-lg">
             <i class="fa-solid fa-check-circle mr-1"></i> Submit Leave Request
           </button>
         </form>
 
-        <!-- Tracking Receipt Box after Submit -->
+        <!-- Tracking Receipt Box after Confirmed Cloud Save -->
         <div id="lvReceiptBox" class="hidden bg-emerald-50 border-2 border-emerald-500 p-4 rounded-2xl text-center space-y-2">
-          <div class="text-xs font-bold uppercase text-emerald-800">Application Submitted Successfully!</div>
+          <div class="text-xs font-bold uppercase text-emerald-800"><i class="fa-solid fa-cloud-check mr-1"></i>Saved to Department Server!</div>
           <p class="text-[11px] text-slate-600">Save your unique Tracking Code below to check your leave status:</p>
           <div id="lvGeneratedCode" class="text-xl font-black font-mono text-emerald-900 bg-white py-2 px-4 rounded-xl border border-emerald-300 select-all"></div>
           <button type="button" onclick="togglePublicLeaveMode('track')" class="text-xs text-emerald-700 font-bold underline pt-1 block mx-auto">
@@ -148,7 +149,7 @@
         </div>
       </div>
 
-      <!-- VIEW 3: PUBLIC LEAVE STATUS TRACKER (CLEAN ANONYMOUS STATUS) -->
+      <!-- VIEW 3: PUBLIC LEAVE STATUS TRACKER -->
       <div id="authBoxLeaveTrack" class="hidden space-y-4">
         <div class="flex items-center justify-between border-b pb-2.5">
           <h3 class="font-extrabold text-slate-900 text-sm"><i class="fa-solid fa-magnifying-glass text-emerald-700 mr-1.5"></i>Check Leave Status</h3>
@@ -413,6 +414,9 @@
             <p class="text-xs text-slate-500 mt-0.5">All Pending, Approved, and Rejected records are permanently saved below. Once decided, a request is locked and can only be deleted.</p>
           </div>
           <div class="flex flex-wrap items-center gap-2">
+            <button onclick="toggleManualLeaveBox()" class="px-3 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 rounded-xl text-xs font-bold">
+              <i class="fa-solid fa-plus mr-1"></i> Enter Student Ref ID / Emergency Leave
+            </button>
             <select id="leaveStatusFilter" onchange="renderLeavesManagementTable()" class="px-3.5 py-2 rounded-xl border border-slate-300 text-xs font-bold">
               <option value="ALL">All Records (Pending + History)</option>
               <option value="Pending">Pending Only</option>
@@ -426,6 +430,53 @@
               <i class="fa-solid fa-trash-can mr-1"></i> Clear Approved/Rejected History
             </button>
           </div>
+        </div>
+
+        <!-- QUICK MANUAL / EMERGENCY LEAVE ENTRY BOX FOR COUNCIL -->
+        <div id="manualLeaveEntryBox" class="hidden bg-emerald-50/70 border border-emerald-300 p-5 rounded-2xl space-y-3">
+          <div class="flex items-center justify-between">
+            <div>
+              <h4 class="font-extrabold text-emerald-950 text-sm"><i class="fa-solid fa-file-Medical mr-1.5 text-emerald-700"></i>Log Student Leave by Reference ID / Direct Council Entry</h4>
+              <p class="text-xs text-emerald-800">If a student showed you a screenshot of their Reference ID (or contacted Council directly for an emergency), enter it here to register & approve it immediately.</p>
+            </div>
+            <button type="button" onclick="toggleManualLeaveBox()" class="text-xs text-slate-500 font-bold hover:underline">Close</button>
+          </div>
+          <form onsubmit="handleManualCouncilLeave(event)" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-6 gap-3">
+            <div>
+              <label class="block text-[11px] font-bold text-slate-600 mb-1">Ref / Tracking ID</label>
+              <input id="manLvId" type="text" placeholder="e.g. APDC-LV-4821" class="w-full px-3 py-2 border rounded-xl text-xs font-mono bg-white" />
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold text-slate-600 mb-1">Semester *</label>
+              <select id="manLvSem" onchange="populateManualLeaveStudents()" class="w-full px-3 py-2 border rounded-xl text-xs font-bold bg-white">
+                <option value="II">Semester II</option>
+                <option value="IV">Semester IV</option>
+                <option value="VI">Semester VI</option>
+                <option value="VIII">Semester VIII</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold text-slate-600 mb-1">Student Name *</label>
+              <select id="manLvStu" class="w-full px-3 py-2 border rounded-xl text-xs font-semibold bg-white"></select>
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold text-slate-600 mb-1">Start Date *</label>
+              <input id="manLvStart" type="date" required class="w-full px-2.5 py-2 border rounded-xl text-xs bg-white" />
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold text-slate-600 mb-1">End Date *</label>
+              <input id="manLvEnd" type="date" required class="w-full px-2.5 py-2 border rounded-xl text-xs bg-white" />
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold text-slate-600 mb-1">Reason *</label>
+              <input id="manLvReason" type="text" required placeholder="Medical / Emergency..." class="w-full px-3 py-2 border rounded-xl text-xs bg-white" />
+            </div>
+            <div class="sm:col-span-2 md:col-span-6 flex justify-end gap-2 pt-1">
+              <button type="submit" class="px-5 py-2 bg-emerald-700 hover:bg-emerald-800 text-white font-bold rounded-xl text-xs shadow">
+                <i class="fa-solid fa-plus-circle mr-1"></i> Add to Leave Requests List
+              </button>
+            </div>
+          </form>
         </div>
 
         <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-x-auto">
@@ -805,6 +856,40 @@
       return arr;
     }
 
+    // COMPRESS IMAGES BEFORE UPLOADING SO MOBILE PHOTOS NEVER TIMEOUT APPS SCRIPT
+    function compressFileIfImage(file) {
+      return new Promise((resolve) => {
+        if (!file.type.startsWith('image/')) {
+          const reader = new FileReader();
+          reader.onload = () => resolve({ base64: reader.result.split(',')[1], dataUrl: reader.result, mimeType: file.type, fileName: file.name });
+          reader.readAsDataURL(file);
+          return;
+        }
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          const img = new Image();
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            const MAX_WIDTH = 1000;
+            const scale = img.width > MAX_WIDTH ? MAX_WIDTH / img.width : 1;
+            canvas.width = Math.round(img.width * scale);
+            canvas.height = Math.round(img.height * scale);
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.72);
+            resolve({
+              base64: dataUrl.split(',')[1],
+              dataUrl: dataUrl,
+              mimeType: 'image/jpeg',
+              fileName: file.name.replace(/\.[^/.]+$/, "") + ".jpg"
+            });
+          };
+          img.src = event.target.result;
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
     // OFFICIAL ACCOUNTS (INCLUDING SIR FAISAL, PRESIDENT JARAR & THE 4 COUNCIL MEMBERS)
     const DEFAULT_USERS = [
       { UserID: 'USR-001', Username: 'faisal.hod', Password: 'faisal786', FullName: 'Sir Faisal (HOD / Coordinator)', Role: 'Sir Faisal', AssignedSemester: 'ALL' },
@@ -820,7 +905,7 @@
       { UserID: 'USR-011', Username: 'cr.sem8', Password: 'bba8cr22', FullName: 'CR Semester VIII', Role: 'CR', AssignedSemester: 'VIII' }
     ];
 
-    // ALL 48 ACTIVE DATES & 75 REAL STUDENTS FROM YOUR ATTACHED EXCEL FILES
+    // ALL 48 ACTIVE DATES & 75 REAL STUDENTS
     const SEED_DATA = {
       "dates": ["2026-08-11", "2026-08-12", "2026-08-13", "2026-08-15", "2026-08-18", "2026-08-19", "2026-08-20", "2026-08-21", "2026-08-22", "2026-08-25", "2026-08-26", "2026-08-27", "2026-08-28", "2026-09-01", "2026-09-02", "2026-09-03", "2026-09-04", "2026-09-05", "2026-09-08", "2026-09-09", "2026-09-10", "2026-09-11", "2026-09-12", "2026-09-15", "2026-09-16", "2026-09-17", "2026-09-18", "2026-09-19", "2026-09-22", "2026-09-23", "2026-09-24", "2026-09-25", "2026-09-26", "2026-09-29", "2026-09-30", "2026-10-01", "2026-10-02", "2026-10-03", "2026-10-06", "2026-10-07", "2026-10-08", "2026-10-09", "2026-10-10", "2026-10-13", "2026-10-14", "2026-10-15", "2026-10-16", "2026-10-17"],
       "students": [
@@ -924,8 +1009,10 @@
       document.getElementById('markDateInput').value = today;
       document.getElementById('lvApplyStart').value = today;
       document.getElementById('lvApplyEnd').value = today;
+      document.getElementById('manLvStart').value = today;
+      document.getElementById('manLvEnd').value = today;
 
-      const saved = localStorage.getItem('APDC_PORTAL_V8') || localStorage.getItem('APDC_PORTAL_V7');
+      const saved = localStorage.getItem('APDC_PORTAL_V9') || localStorage.getItem('APDC_PORTAL_V8');
       if (saved) {
         try {
           const parsed = JSON.parse(saved);
@@ -950,6 +1037,7 @@
         loadFromEmbeddedSeed();
       }
       populateLeaveStudentDropdown();
+      populateManualLeaveStudents();
       await fetchCloudData();
     }
 
@@ -1042,6 +1130,7 @@
           }
           saveLocalState();
           populateLeaveStudentDropdown();
+          populateManualLeaveStudents();
           if (STATE.currentUser) refreshAllViews();
         }
       } catch (err) {
@@ -1125,7 +1214,7 @@
     }
 
     function saveLocalState() {
-      localStorage.setItem('APDC_PORTAL_V8', JSON.stringify({
+      localStorage.setItem('APDC_PORTAL_V9', JSON.stringify({
         users: STATE.users,
         students: STATE.students,
         attendance: STATE.attendance,
@@ -1151,8 +1240,10 @@
         });
         const result = await res.json();
         if (badge) {
-          badge.textContent = 'Cloud Synced';
-          badge.className = 'text-[11px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full font-medium';
+          badge.textContent = (result && result.success) ? 'Cloud Synced' : 'Sync Warning';
+          badge.className = (result && result.success)
+            ? 'text-[11px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full font-medium'
+            : 'text-[11px] bg-red-100 text-red-700 px-2 py-0.5 rounded-full font-medium';
         }
         return result;
       } catch (e) {
@@ -1164,12 +1255,13 @@
       }
     }
 
-    // ================= PUBLIC STUDENT LEAVE PORTAL (ON LOGIN SCREEN) =================
+    // ================= PUBLIC STUDENT LEAVE PORTAL (VERIFIED CLOUD SAVE) =================
     function togglePublicLeaveMode(mode) {
       document.getElementById('authBoxSignIn').classList.toggle('hidden', mode !== 'signin');
       document.getElementById('authBoxLeaveApply').classList.toggle('hidden', mode !== 'apply');
       document.getElementById('authBoxLeaveTrack').classList.toggle('hidden', mode !== 'track');
       document.getElementById('lvReceiptBox').classList.add('hidden');
+      document.getElementById('lvSubmitErrorBox').classList.add('hidden');
       document.getElementById('publicLeaveForm').classList.remove('hidden');
       populateLeaveStudentDropdown();
     }
@@ -1184,6 +1276,9 @@
 
     async function handlePublicLeaveSubmit(e) {
       e.preventDefault();
+      const errBox = document.getElementById('lvSubmitErrorBox');
+      errBox.classList.add('hidden');
+
       const sem = document.getElementById('lvApplySem').value;
       const rawStu = document.getElementById('lvApplyNameSelect').value;
       const [stuId, stuName] = rawStu.split('|');
@@ -1199,66 +1294,87 @@
 
       const btn = document.getElementById('lvSubmitBtn');
       btn.disabled = true;
-      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> Submitting...';
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> Uploading to Department Server...';
 
       const leaveId = 'APDC-LV-' + Math.floor(1000 + Math.random() * 9000);
       const nowStr = getTodayDateString();
 
-      const finalizeSubmission = async (base64Data, fileName, mimeType, localDataUrl) => {
-        const leaveObj = {
-          LeaveID: leaveId,
-          StudentID: stuId,
-          StudentName: stuName,
-          Semester: sem,
-          StartDate: startDate,
-          EndDate: endDate,
-          Reason: reason,
-          AttachmentUrl: localDataUrl || '',
-          Status: 'Pending',
-          Remarks: '',
-          ActionBy: '',
-          SubmittedAt: nowStr,
-          base64Data: base64Data || '',
-          fileName: fileName || '',
-          mimeType: mimeType || ''
-        };
-
-        const localCopy = { ...leaveObj };
-        delete localCopy.base64Data;
-        STATE.leaves.unshift(localCopy);
-        saveLocalState();
-
-        const resp = await callBackend({ action: 'SUBMIT_LEAVE', leave: leaveObj });
-        if (resp && resp.attachmentUrl) {
-          localCopy.AttachmentUrl = resp.attachmentUrl;
-          saveLocalState();
+      let base64Data = '', fileName = '', mimeType = '', localDataUrl = '';
+      if (fileInput.files && fileInput.files[0]) {
+        try {
+          const compressed = await compressFileIfImage(fileInput.files[0]);
+          base64Data = compressed.base64;
+          fileName = compressed.fileName;
+          mimeType = compressed.mimeType;
+          localDataUrl = compressed.dataUrl;
+        } catch (err) {
+          console.warn("Attachment compression fallback:", err);
         }
+      }
 
-        btn.disabled = false;
-        btn.innerHTML = '<i class="fa-solid fa-check-circle mr-1"></i> Submit Leave Request';
-        document.getElementById('publicLeaveForm').reset();
-        document.getElementById('lvApplyStart').value = nowStr;
-        document.getElementById('lvApplyEnd').value = nowStr;
-        document.getElementById('publicLeaveForm').classList.add('hidden');
-        document.getElementById('lvGeneratedCode').textContent = leaveId;
-        document.getElementById('lvReceiptBox').classList.remove('hidden');
-        document.getElementById('lvTrackInput').value = leaveId;
+      const leaveObj = {
+        LeaveID: leaveId,
+        StudentID: stuId,
+        StudentName: stuName,
+        Semester: sem,
+        StartDate: startDate,
+        EndDate: endDate,
+        Reason: reason,
+        AttachmentUrl: '',
+        Status: 'Pending',
+        Remarks: '',
+        ActionBy: '',
+        SubmittedAt: nowStr,
+        base64Data: base64Data,
+        fileName: fileName,
+        mimeType: mimeType
       };
 
-      if (fileInput.files && fileInput.files[0]) {
-        const f = fileInput.files[0];
-        const reader = new FileReader();
-        reader.onload = function() {
-          const base64 = reader.result.split(',')[1];
-          finalizeSubmission(base64, f.name, f.type, reader.result);
-        };
-        reader.readAsDataURL(f);
-      } else {
-        await finalizeSubmission('', '', '', '');
+      // 1. Try submitting to Google Sheet
+      let resp = await callBackend({ action: 'SUBMIT_LEAVE', leave: leaveObj });
+
+      // 2. Fallback: If attachment or old script caused an error, retry via DECIDE_LEAVE (which also appends fullLeaveObj)
+      if (!resp || !resp.success) {
+        const lightLeave = { ...leaveObj };
+        delete lightLeave.base64Data;
+        resp = await callBackend({
+          action: 'DECIDE_LEAVE',
+          leaveId: leaveId,
+          status: 'Pending',
+          remarks: '',
+          actionBy: '',
+          datesList: [],
+          studentId: stuId,
+          semester: sem,
+          fullLeaveObj: lightLeave
+        });
       }
+
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-check-circle mr-1"></i> Submit Leave Request';
+
+      // 3. If Google Sheet STILL rejected it (e.g., Code.gs was never redeployed as New Version), warn the user clearly!
+      if (!resp || !resp.success) {
+        errBox.innerHTML = `<i class="fa-solid fa-triangle-exclamation mr-1"></i> <strong>Server Sync Error:</strong> Could not reach the Google Sheet database (${resp && resp.error ? resp.error : 'Check internet or Apps Script New Version deployment'}). Please try again without an attachment or contact the Student Council.`;
+        errBox.classList.remove('hidden');
+        return;
+      }
+
+      const localCopy = { ...leaveObj, AttachmentUrl: (resp && resp.attachmentUrl) || localDataUrl || '' };
+      delete localCopy.base64Data;
+      STATE.leaves.unshift(localCopy);
+      saveLocalState();
+
+      document.getElementById('publicLeaveForm').reset();
+      document.getElementById('lvApplyStart').value = nowStr;
+      document.getElementById('lvApplyEnd').value = nowStr;
+      document.getElementById('publicLeaveForm').classList.add('hidden');
+      document.getElementById('lvGeneratedCode').textContent = leaveId;
+      document.getElementById('lvReceiptBox').classList.remove('hidden');
+      document.getElementById('lvTrackInput').value = leaveId;
     }
 
-    // PUBLIC STATUS CHECKER (FETCHES LIVE CLOUD DATA FIRST SO IT IS ALWAYS REAL-TIME)
+    // PUBLIC STATUS CHECKER
     async function handleTrackLeave(e) {
       e.preventDefault();
       const btn = document.getElementById('trackSubmitBtn');
@@ -1307,6 +1423,56 @@
           </div>
         `;
       }).join('');
+    }
+
+    // MANUAL COUNCIL LEAVE ENTRY (FOR RECOVERING SCREENSHOT REF IDS OR DIRECT EMERGENCIES)
+    function toggleManualLeaveBox() {
+      const box = document.getElementById('manualLeaveEntryBox');
+      box.classList.toggle('hidden');
+      populateManualLeaveStudents();
+    }
+
+    function populateManualLeaveStudents() {
+      const sem = document.getElementById('manLvSem').value;
+      const sel = document.getElementById('manLvStu');
+      if (!sel) return;
+      const list = STATE.students.filter(s => String(s.Semester) === String(sem) && s.Status !== 'Alumni');
+      sel.innerHTML = list.map(s => `<option value="${s.StudentID}|${s.Name}">${s.Name}</option>`).join('');
+    }
+
+    async function handleManualCouncilLeave(e) {
+      e.preventDefault();
+      const customId = document.getElementById('manLvId').value.trim().toUpperCase();
+      const leaveId = customId || ('APDC-LV-' + Math.floor(1000 + Math.random() * 9000));
+      const sem = document.getElementById('manLvSem').value;
+      const [stuId, stuName] = document.getElementById('manLvStu').value.split('|');
+      const startDate = document.getElementById('manLvStart').value;
+      const endDate = document.getElementById('manLvEnd').value;
+      const reason = document.getElementById('manLvReason').value.trim();
+
+      const leaveObj = {
+        LeaveID: leaveId,
+        StudentID: stuId,
+        StudentName: stuName,
+        Semester: sem,
+        StartDate: startDate,
+        EndDate: endDate,
+        Reason: reason,
+        AttachmentUrl: '',
+        Status: 'Pending',
+        Remarks: '',
+        ActionBy: '',
+        SubmittedAt: getTodayDateString()
+      };
+
+      STATE.leaves.unshift(leaveObj);
+      saveLocalState();
+      refreshAllViews();
+      document.getElementById('manualLeaveEntryBox').classList.add('hidden');
+      document.getElementById('manLvId').value = '';
+      document.getElementById('manLvReason').value = '';
+
+      await callBackend({ action: 'SUBMIT_LEAVE', leave: leaveObj });
     }
 
     function isSemesterDateMarked(semester, dateStr) {
@@ -1374,6 +1540,9 @@
         markDateInput.disabled = false;
         switchMainTab('dashboard');
       }
+
+      // Immediately pull fresh cloud data upon login
+      fetchCloudData();
     }
 
     function logout() {
@@ -1402,6 +1571,11 @@
         if (btn) btn.classList.toggle('active', t === tab);
       });
       refreshAllViews();
+
+      // Auto-sync live leaves from Google Sheet whenever the Leaves tab is opened
+      if (tab === 'leaves') {
+        refreshCloudLeavesNow();
+      }
     }
 
     function switchControlSubTab(subId) {
@@ -1495,7 +1669,7 @@
       }).join('');
     }
 
-    // 2. RENDER MARK ATTENDANCE (WITH PERMANENT CR LOCK + AUTO-APPROVED LEAVE LOCK)
+    // 2. RENDER MARK ATTENDANCE
     function renderMarkAttendanceList() {
       const isCR = STATE.currentUser && STATE.currentUser.Role === 'CR';
       const markDateInput = document.getElementById('markDateInput');
@@ -1644,7 +1818,7 @@
       alert(`Attendance saved for Semester ${sem} on ${date}!`);
     }
 
-    // 3. RENDER ATTENDANCE REGISTER (STRICTLY READ-ONLY)
+    // 3. RENDER ATTENDANCE REGISTER
     function renderRegisterTable() {
       const sem = document.getElementById('regSemSelect').value;
       const month = document.getElementById('regMonthSelect').value;
@@ -1722,7 +1896,7 @@
       const tbody = document.getElementById('leavesTableBody');
 
       if (list.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-slate-400 font-medium">No leave records found in "${filter}".</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-slate-400 font-medium">No leave records found in "${filter}". Click "Sync Now" or "+ Enter Student Ref ID" above.</td></tr>`;
         return;
       }
 
@@ -1781,7 +1955,6 @@
       const lv = STATE.leaves.find(x => String(x.LeaveID) === String(leaveId));
       if (!lv) return;
 
-      // Prevent re-approving or re-rejecting an already decided leave
       if (lv.Status !== 'Pending') {
         alert(`This leave request has already been ${lv.Status} and is locked.`);
         renderLeavesManagementTable();
@@ -1823,7 +1996,6 @@
         STATE.dates.sort();
       }
 
-      // Immediately update UI & localStorage so buttons disappear right away
       saveLocalState();
       refreshAllViews();
 
@@ -1863,7 +2035,7 @@
       alert("Approved and Rejected leave history cleared!");
     }
 
-    // 6. CONTROL PANEL: STUDENT MASTER (ADD / EDIT / FILL MISSING GR & SEAT NO)
+    // 6. CONTROL PANEL: STUDENT MASTER
     function renderControlStudents() {
       const sem = document.getElementById('cpStuSemFilter').value;
       const q = document.getElementById('cpStuSearch').value.trim().toLowerCase();
