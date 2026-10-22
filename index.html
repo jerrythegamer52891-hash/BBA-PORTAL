@@ -35,6 +35,23 @@
       50% { transform: scale(1.25); opacity: 0.65; }
     }
     .status-dot-pulse { animation: pulse-dot 2s infinite; }
+
+    /* Hide scrollbar on horizontal nav bar for clean mobile look */
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+    /* MOBILE LANDSCAPE & SMALL SCREEN FIX:
+       Prevents the top header from eating up the screen height when marking attendance */
+    @media (max-height: 560px), (max-width: 768px) {
+      #mainPortalHeader {
+        position: relative !important;
+      }
+      #announcementBar {
+        padding-top: 2px !important;
+        padding-bottom: 2px !important;
+        font-size: 10px !important;
+      }
+    }
   </style>
 </head>
 <body class="min-h-screen text-slate-800">
@@ -154,6 +171,7 @@
           <div class="text-xs font-bold uppercase text-emerald-800"><i class="fa-solid fa-cloud-check mr-1"></i>Saved to Department Server!</div>
           <p class="text-[11px] text-slate-600">Save your unique Tracking Code below to check your leave status:</p>
           <div id="lvGeneratedCode" class="text-xl font-black font-mono text-emerald-900 bg-white py-2 px-4 rounded-xl border border-emerald-300 select-all"></div>
+          <div id="lvGeneratedTime" class="text-[11px] font-semibold text-emerald-700"></div>
           <button type="button" onclick="togglePublicLeaveMode('track')" class="text-xs text-emerald-700 font-bold underline pt-1 block mx-auto">
             Go to Leave Status Tracker
           </button>
@@ -190,126 +208,127 @@
 
   <!-- ================= MAIN APPLICATION ================= -->
   <div id="appScreen" class="hidden min-h-screen flex flex-col">
-    <!-- Top Header -->
-    <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
-      <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
-        <!-- Brand & User Info -->
-        <div class="flex items-center gap-3">
-          <div class="w-12 h-12 rounded-xl border border-slate-200 p-1 bg-white flex items-center justify-center">
-            <img src="apdc-logo.png" alt="Logo" class="w-full h-full object-contain" onerror="this.onerror=null; this.src='https://placehold.co/60x60/ffffff/065f46?text=APDC';" />
-          </div>
-          <div>
-            <div class="flex flex-wrap items-center gap-2">
-              <h2 class="font-extrabold text-slate-900 text-lg leading-none">APDC BBA Portal</h2>
-              <span id="sessionBadge" class="text-xs bg-emerald-100 text-emerald-800 px-2.5 py-0.5 rounded-full font-bold">Fall 2026</span>
+    <!-- Top Header (Compact & Landscape-Friendly) -->
+    <header id="mainPortalHeader" class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
+      <div class="max-w-7xl mx-auto px-3 sm:px-4 py-2 flex flex-col gap-2">
+        <!-- Row 1: Brand + Top-Right Live Server Controls -->
+        <div class="flex items-center justify-between gap-2">
+          <div class="flex items-center gap-2.5 min-w-0">
+            <div class="w-9 h-9 sm:w-11 sm:h-11 rounded-xl border border-slate-200 p-1 bg-white flex items-center justify-center shrink-0">
+              <img src="apdc-logo.png" alt="Logo" class="w-full h-full object-contain" onerror="this.onerror=null; this.src='https://placehold.co/60x60/ffffff/065f46?text=APDC';" />
             </div>
-            <p id="currentUserDisplay" class="text-xs text-slate-500 mt-0.5"></p>
+            <div class="truncate">
+              <div class="flex items-center gap-1.5">
+                <h2 class="font-extrabold text-slate-900 text-sm sm:text-base leading-none truncate">APDC BBA Portal</h2>
+                <span id="sessionBadge" class="text-[10px] sm:text-xs bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full font-bold shrink-0">Fall 2026</span>
+              </div>
+              <p id="currentUserDisplay" class="text-[11px] text-slate-500 mt-0.5 truncate"></p>
+            </div>
           </div>
-        </div>
-
-        <!-- Navigation Bar & Top-Right Live Server Controls -->
-        <div class="flex flex-wrap items-center gap-2">
-          <nav class="flex flex-wrap items-center gap-1">
-            <button onclick="switchMainTab('dashboard')" id="nav-dashboard" class="nav-btn active px-3 py-2 rounded-xl text-xs sm:text-sm flex items-center gap-1.5 hover:bg-slate-100 transition">
-              <i class="fa-solid fa-chart-pie"></i> Dashboard
-            </button>
-            <button onclick="switchMainTab('mark')" id="nav-mark" class="nav-btn px-3 py-2 rounded-xl text-xs sm:text-sm flex items-center gap-1.5 hover:bg-slate-100 transition">
-              <i class="fa-solid fa-clipboard-check"></i> Mark Attendance
-            </button>
-            <button onclick="switchMainTab('sheet')" id="nav-sheet" class="nav-btn px-3 py-2 rounded-xl text-xs sm:text-sm flex items-center gap-1.5 hover:bg-slate-100 transition">
-              <i class="fa-solid fa-table"></i> Attendance Register
-            </button>
-            <button onclick="switchMainTab('redzone')" id="nav-redzone" class="nav-btn px-3 py-2 rounded-xl text-xs sm:text-sm flex items-center gap-1.5 hover:bg-slate-100 transition">
-              <i class="fa-solid fa-triangle-exclamation text-red-500"></i> Red Zone
-            </button>
-            <button onclick="switchMainTab('leaves')" id="nav-leaves" class="nav-btn hidden px-3 py-2 rounded-xl text-xs sm:text-sm flex items-center gap-1.5 hover:bg-slate-100 transition">
-              <i class="fa-solid fa-envelope-open-text text-emerald-600"></i> Leave Requests
-              <span id="pendingLeavesBadge" class="hidden px-1.5 py-0.5 text-[10px] bg-red-600 text-white rounded-full font-extrabold">0</span>
-            </button>
-            <button onclick="switchMainTab('files')" id="nav-files" class="nav-btn px-3 py-2 rounded-xl text-xs sm:text-sm flex items-center gap-1.5 hover:bg-slate-100 transition">
-              <i class="fa-solid fa-folder-open text-amber-500"></i> Dept. Files
-            </button>
-            <button onclick="switchMainTab('control')" id="nav-control" class="nav-btn hidden px-3 py-2 rounded-xl text-xs sm:text-sm flex items-center gap-1.5 bg-amber-50 text-amber-900 border border-amber-300 hover:bg-amber-100 transition">
-              <i class="fa-solid fa-sliders"></i> Control Panel
-            </button>
-          </nav>
 
           <!-- LIVE SERVER CONNECTION STATUS + ONE-CLICK REFRESH BUTTON -->
-          <div class="flex items-center gap-1.5 pl-2 border-l border-slate-200">
-            <div id="serverConnectionPill" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
-              <span id="serverConnectionDot" class="w-2.5 h-2.5 rounded-full bg-emerald-500 status-dot-pulse"></span>
-              <span id="serverConnectionText">Connected to Server</span>
+          <div class="flex items-center gap-1.5 shrink-0">
+            <div id="serverConnectionPill" class="flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[11px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
+              <span id="serverConnectionDot" class="w-2 h-2 rounded-full bg-emerald-500 status-dot-pulse"></span>
+              <span id="serverConnectionText" class="hidden sm:inline">Connected to Server</span>
             </div>
 
-            <button onclick="manualRefreshServer()" id="globalRefreshBtn" class="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold shadow-sm transition flex items-center gap-1.5" title="Fetch Latest Data from Live Server">
-              <i id="globalRefreshIcon" class="fa-solid fa-arrows-rotate"></i> Refresh Server
+            <button onclick="manualRefreshServer()" id="globalRefreshBtn" class="px-2.5 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-[11px] sm:text-xs font-bold shadow-sm transition flex items-center gap-1" title="Fetch Latest Data from Live Server">
+              <i id="globalRefreshIcon" class="fa-solid fa-arrows-rotate"></i>
+              <span>Refresh</span>
             </button>
 
-            <button onclick="logout()" class="px-2.5 py-1.5 rounded-xl text-sm text-red-600 hover:bg-red-50 font-semibold" title="Sign Out">
+            <button onclick="logout()" class="px-2.5 py-1.5 rounded-xl text-xs sm:text-sm text-red-600 hover:bg-red-50 font-semibold border border-transparent hover:border-red-200" title="Sign Out">
               <i class="fa-solid fa-power-off"></i>
             </button>
           </div>
         </div>
+
+        <!-- Row 2: Single-Line Horizontal Scroll Navigation Bar (Never wraps into tall blocks on mobile) -->
+        <nav class="flex items-center gap-1 overflow-x-auto no-scrollbar pb-0.5">
+          <button onclick="switchMainTab('dashboard')" id="nav-dashboard" class="nav-btn active px-3 py-1.5 rounded-xl text-xs whitespace-nowrap flex items-center gap-1.5 hover:bg-slate-100 transition shrink-0">
+            <i class="fa-solid fa-chart-pie"></i> Dashboard
+          </button>
+          <button onclick="switchMainTab('mark')" id="nav-mark" class="nav-btn px-3 py-1.5 rounded-xl text-xs whitespace-nowrap flex items-center gap-1.5 hover:bg-slate-100 transition shrink-0">
+            <i class="fa-solid fa-clipboard-check"></i> Mark Attendance
+          </button>
+          <button onclick="switchMainTab('sheet')" id="nav-sheet" class="nav-btn px-3 py-1.5 rounded-xl text-xs whitespace-nowrap flex items-center gap-1.5 hover:bg-slate-100 transition shrink-0">
+            <i class="fa-solid fa-table"></i> Attendance Register
+          </button>
+          <button onclick="switchMainTab('redzone')" id="nav-redzone" class="nav-btn px-3 py-1.5 rounded-xl text-xs whitespace-nowrap flex items-center gap-1.5 hover:bg-slate-100 transition shrink-0">
+            <i class="fa-solid fa-triangle-exclamation text-red-500"></i> Red Zone
+          </button>
+          <button onclick="switchMainTab('leaves')" id="nav-leaves" class="nav-btn hidden px-3 py-1.5 rounded-xl text-xs whitespace-nowrap flex items-center gap-1.5 hover:bg-slate-100 transition shrink-0">
+            <i class="fa-solid fa-envelope-open-text text-emerald-600"></i> Leave Requests
+            <span id="pendingLeavesBadge" class="hidden px-1.5 py-0.5 text-[10px] bg-red-600 text-white rounded-full font-extrabold">0</span>
+          </button>
+          <button onclick="switchMainTab('files')" id="nav-files" class="nav-btn px-3 py-1.5 rounded-xl text-xs whitespace-nowrap flex items-center gap-1.5 hover:bg-slate-100 transition shrink-0">
+            <i class="fa-solid fa-folder-open text-amber-500"></i> Dept. Files
+          </button>
+          <button onclick="switchMainTab('control')" id="nav-control" class="nav-btn hidden px-3 py-1.5 rounded-xl text-xs whitespace-nowrap flex items-center gap-1.5 bg-amber-50 text-amber-900 border border-amber-300 hover:bg-amber-100 transition shrink-0">
+            <i class="fa-solid fa-sliders"></i> Control Panel
+          </button>
+        </nav>
       </div>
 
-      <!-- Live Department Announcement Banner -->
-      <div id="announcementBar" class="bg-emerald-900 text-emerald-50 text-xs py-1.5 px-4 text-center font-medium">
-        <i class="fa-solid fa-bullhorn mr-2 text-amber-400"></i>
+      <!-- Compact Live Department Announcement Banner -->
+      <div id="announcementBar" class="bg-emerald-900 text-emerald-50 text-[11px] py-1 px-4 text-center font-medium truncate">
+        <i class="fa-solid fa-bullhorn mr-1.5 text-amber-400"></i>
         <span id="announcementText">Welcome to the Official APDC BBA Portal.</span>
       </div>
     </header>
 
     <!-- Main Content Container -->
-    <main class="max-w-7xl w-full mx-auto px-4 py-6 flex-1 space-y-6">
+    <main class="max-w-7xl w-full mx-auto px-3 sm:px-4 py-4 flex-1 space-y-5">
 
       <!-- 1. DASHBOARD TAB -->
-      <section id="tab-dashboard" class="space-y-6">
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
-            <div class="text-xs font-bold uppercase text-slate-400">Total Active Students</div>
-            <div id="statTotalStudents" class="text-3xl font-extrabold text-slate-900 mt-1">75</div>
-            <div class="text-xs text-emerald-600 mt-1 font-medium">Across Semesters II, IV, VI, VIII</div>
+      <section id="tab-dashboard" class="space-y-5">
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+          <div class="bg-white p-4 sm:p-5 rounded-2xl shadow-sm border border-slate-200">
+            <div class="text-[11px] font-bold uppercase text-slate-400">Total Active Students</div>
+            <div id="statTotalStudents" class="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-1">75</div>
+            <div class="text-[11px] text-emerald-600 mt-1 font-medium">Semesters II, IV, VI, VIII</div>
           </div>
-          <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
-            <div class="text-xs font-bold uppercase text-slate-400">Department Avg Attendance</div>
-            <div id="statAvgAttendance" class="text-3xl font-extrabold text-emerald-700 mt-1">--%</div>
-            <div class="text-xs text-slate-500 mt-1">All Recorded Sessions</div>
+          <div class="bg-white p-4 sm:p-5 rounded-2xl shadow-sm border border-slate-200">
+            <div class="text-[11px] font-bold uppercase text-slate-400">Department Avg Attendance</div>
+            <div id="statAvgAttendance" class="text-2xl sm:text-3xl font-extrabold text-emerald-700 mt-1">--%</div>
+            <div class="text-[11px] text-slate-500 mt-1">All Recorded Sessions</div>
           </div>
-          <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
-            <div class="text-xs font-bold uppercase text-red-500">Red Zone Watchlist</div>
-            <div id="statRedZoneCount" class="text-3xl font-extrabold text-red-600 mt-1">0</div>
-            <div id="statRedZoneLabel" class="text-xs text-slate-500 mt-1">Below 75% Threshold</div>
+          <div class="bg-white p-4 sm:p-5 rounded-2xl shadow-sm border border-slate-200">
+            <div class="text-[11px] font-bold uppercase text-red-500">Red Zone Watchlist</div>
+            <div id="statRedZoneCount" class="text-2xl sm:text-3xl font-extrabold text-red-600 mt-1">0</div>
+            <div id="statRedZoneLabel" class="text-[11px] text-slate-500 mt-1">Below 75% Threshold</div>
           </div>
-          <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
-            <div class="text-xs font-bold uppercase text-amber-600">Pending Leave Requests</div>
-            <div id="statPendingLeaves" class="text-3xl font-extrabold text-amber-600 mt-1">0</div>
-            <div class="text-xs text-slate-500 mt-1">Awaiting Council / Sir Faisal Review</div>
+          <div class="bg-white p-4 sm:p-5 rounded-2xl shadow-sm border border-slate-200">
+            <div class="text-[11px] font-bold uppercase text-amber-600">Pending Leave Requests</div>
+            <div id="statPendingLeaves" class="text-2xl sm:text-3xl font-extrabold text-amber-600 mt-1">0</div>
+            <div class="text-[11px] text-slate-500 mt-1">Awaiting Council / HOD Review</div>
           </div>
         </div>
 
         <!-- Semester Breakdown Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4" id="semesterCardsGrid"></div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4" id="semesterCardsGrid"></div>
       </section>
 
       <!-- 2. MARK ATTENDANCE TAB -->
-      <section id="tab-mark" class="hidden space-y-4">
-        <!-- CR Permanent Lock Banner -->
-        <div id="crLockedBanner" class="hidden bg-emerald-50 border border-emerald-300 text-emerald-900 p-4 rounded-2xl flex items-center justify-between">
+      <section id="tab-mark" class="hidden space-y-3">
+        <!-- Mutual CR & Faculty Permanent Lock Banner -->
+        <div id="crLockedBanner" class="hidden bg-emerald-50 border border-emerald-300 text-emerald-900 p-3.5 rounded-2xl flex flex-wrap items-center justify-between gap-2">
           <div class="flex items-center gap-3">
-            <i class="fa-solid fa-lock text-emerald-700 text-lg"></i>
+            <i class="fa-solid fa-lock text-emerald-700 text-base"></i>
             <div>
-              <h4 class="font-extrabold text-sm">Today's Attendance is Submitted & Permanently Locked</h4>
-              <p class="text-xs text-emerald-700">As Class Representative, you have already marked today's attendance. It cannot be edited or changed. Contact Sir Faisal or the President for any corrections.</p>
+              <h4 id="crLockedTitle" class="font-extrabold text-xs sm:text-sm">Attendance is Submitted & Locked</h4>
+              <p id="crLockedSub" class="text-[11px] text-emerald-700">This semester's attendance has already been marked for this date. To prevent double-marking by CR and Faculty, it is now locked. Contact Sir Faisal or the President for any changes.</p>
             </div>
           </div>
-          <span class="px-3 py-1 bg-emerald-700 text-white text-xs font-bold rounded-full uppercase">Locked</span>
+          <span class="px-2.5 py-1 bg-emerald-700 text-white text-[11px] font-bold rounded-full uppercase">Locked</span>
         </div>
 
-        <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-wrap items-end justify-between gap-4">
-          <div class="flex flex-wrap items-center gap-4">
+        <div class="bg-white p-3.5 sm:p-4 rounded-2xl shadow-sm border border-slate-200 flex flex-wrap items-end justify-between gap-3">
+          <div class="flex flex-wrap items-center gap-3">
             <div>
-              <label class="block text-xs font-bold uppercase text-slate-500 mb-1">Select Semester</label>
-              <select id="markSemSelect" onchange="renderMarkAttendanceList()" class="px-3.5 py-2 rounded-xl border border-slate-300 text-sm font-semibold disabled:bg-slate-100 disabled:text-slate-600">
+              <label class="block text-[11px] font-bold uppercase text-slate-500 mb-1">Select Semester</label>
+              <select id="markSemSelect" onchange="renderMarkAttendanceList()" class="px-3 py-1.5 rounded-xl border border-slate-300 text-xs sm:text-sm font-semibold disabled:bg-slate-100 disabled:text-slate-600">
                 <option value="I">Semester I</option>
                 <option value="II" selected>Semester II</option>
                 <option value="III">Semester III</option>
@@ -321,29 +340,29 @@
               </select>
             </div>
             <div>
-              <label class="block text-xs font-bold uppercase text-slate-500 mb-1">Attendance Date</label>
-              <input type="date" id="markDateInput" onchange="renderMarkAttendanceList()" class="px-3.5 py-2 rounded-xl border border-slate-300 text-sm font-semibold disabled:bg-slate-100 disabled:text-slate-600" />
+              <label class="block text-[11px] font-bold uppercase text-slate-500 mb-1">Attendance Date</label>
+              <input type="date" id="markDateInput" onchange="renderMarkAttendanceList()" class="px-3 py-1.5 rounded-xl border border-slate-300 text-xs sm:text-sm font-semibold disabled:bg-slate-100 disabled:text-slate-600" />
             </div>
           </div>
-          <div id="markActionButtons" class="flex items-center gap-2">
-            <button onclick="markAllStatus('P')" class="px-3 py-2 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded-xl text-xs font-bold border border-emerald-200">Mark All Present (P)</button>
-            <button onclick="markAllStatus('NC')" class="px-3 py-2 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-xl text-xs font-bold">No Class (NC)</button>
-            <button id="saveAttBtn" onclick="saveDailyAttendance()" class="px-5 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-sm font-bold shadow">
+          <div id="markActionButtons" class="flex flex-wrap items-center gap-2">
+            <button onclick="markAllStatus('P')" class="px-3 py-1.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded-xl text-xs font-bold border border-emerald-200">Mark All Present (P)</button>
+            <button onclick="markAllStatus('NC')" class="px-3 py-1.5 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-xl text-xs font-bold">No Class (NC)</button>
+            <button id="saveAttBtn" onclick="saveDailyAttendance()" class="px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs sm:text-sm font-bold shadow">
               <i class="fa-solid fa-floppy-disk mr-1"></i> Save Attendance
             </button>
           </div>
         </div>
 
-        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-          <table class="w-full text-left border-collapse text-sm">
-            <thead class="bg-slate-50 border-b border-slate-200 text-xs uppercase text-slate-500">
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-x-auto">
+          <table class="w-full text-left border-collapse text-xs sm:text-sm">
+            <thead class="bg-slate-50 border-b border-slate-200 text-[11px] uppercase text-slate-500">
               <tr>
-                <th class="p-3.5">#</th>
-                <th class="p-3.5">GR No.</th>
-                <th class="p-3.5">Seat No.</th>
-                <th class="p-3.5">Student Name</th>
-                <th class="p-3.5">Father's Name</th>
-                <th class="p-3.5 text-center">Status (P / A / L / NC)</th>
+                <th class="p-2.5 sm:p-3.5">#</th>
+                <th class="p-2.5 sm:p-3.5">GR No.</th>
+                <th class="p-2.5 sm:p-3.5">Seat No.</th>
+                <th class="p-2.5 sm:p-3.5">Student Name</th>
+                <th class="p-2.5 sm:p-3.5">Father's Name</th>
+                <th class="p-2.5 sm:p-3.5 text-center">Status (P / A / L / NC)</th>
               </tr>
             </thead>
             <tbody id="markAttendanceTableBody" class="divide-y divide-slate-100"></tbody>
@@ -353,11 +372,11 @@
 
       <!-- 3. ATTENDANCE REGISTER (READ-ONLY VIEW) -->
       <section id="tab-sheet" class="hidden space-y-4">
-        <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-wrap items-center justify-between gap-4">
+        <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 flex flex-wrap items-center justify-between gap-3">
           <div class="flex flex-wrap items-center gap-3">
             <div>
-              <label class="block text-xs font-bold uppercase text-slate-500 mb-1">Semester</label>
-              <select id="regSemSelect" onchange="renderRegisterTable()" class="px-3.5 py-2 rounded-xl border border-slate-300 text-sm font-semibold disabled:bg-slate-100 disabled:text-slate-600">
+              <label class="block text-[11px] font-bold uppercase text-slate-500 mb-1">Semester</label>
+              <select id="regSemSelect" onchange="renderRegisterTable()" class="px-3 py-1.5 rounded-xl border border-slate-300 text-xs sm:text-sm font-semibold disabled:bg-slate-100 disabled:text-slate-600">
                 <option value="I">Semester I</option>
                 <option value="II" selected>Semester II</option>
                 <option value="III">Semester III</option>
@@ -369,8 +388,8 @@
               </select>
             </div>
             <div>
-              <label class="block text-xs font-bold uppercase text-slate-500 mb-1">Month Filter</label>
-              <select id="regMonthSelect" onchange="renderRegisterTable()" class="px-3.5 py-2 rounded-xl border border-slate-300 text-sm font-semibold">
+              <label class="block text-[11px] font-bold uppercase text-slate-500 mb-1">Month Filter</label>
+              <select id="regMonthSelect" onchange="renderRegisterTable()" class="px-3 py-1.5 rounded-xl border border-slate-300 text-xs sm:text-sm font-semibold">
                 <option value="ALL">All Recorded Months</option>
                 <option value="2026-08">August 2026</option>
                 <option value="2026-09">September 2026</option>
@@ -400,7 +419,7 @@
       <section id="tab-redzone" class="hidden space-y-4">
         <div class="bg-red-50 border border-red-200 p-4 rounded-2xl flex items-center justify-between">
           <div>
-            <h3 class="font-bold text-red-900 text-base"><i class="fa-solid fa-triangle-exclamation mr-2"></i>Red Zone Low-Attendance Watchlist</h3>
+            <h3 class="font-bold text-red-900 text-sm sm:text-base"><i class="fa-solid fa-triangle-exclamation mr-2"></i>Red Zone Low-Attendance Watchlist</h3>
             <p class="text-xs text-red-700 mt-0.5">Students whose cumulative attendance is below the required threshold (<span id="rzThresholdSpan">75</span>%).</p>
           </div>
           <select id="rzSemFilter" onchange="renderRedZoneTable()" class="px-3 py-2 rounded-xl border border-red-300 bg-white text-xs font-bold">
@@ -412,8 +431,8 @@
           </select>
         </div>
 
-        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-          <table class="w-full text-left border-collapse text-sm">
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-x-auto">
+          <table class="w-full text-left border-collapse text-xs sm:text-sm">
             <thead class="bg-slate-50 border-b border-slate-200 text-xs uppercase text-slate-500">
               <tr>
                 <th class="p-3.5">Semester</th>
@@ -432,10 +451,10 @@
 
       <!-- 5. LEAVE REQUESTS MANAGEMENT TAB (COUNCIL & SIR FAISAL) -->
       <section id="tab-leaves" class="hidden space-y-4">
-        <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-wrap items-center justify-between gap-4">
+        <div class="bg-white p-4 sm:p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-wrap items-center justify-between gap-4">
           <div>
-            <h3 class="font-extrabold text-slate-900 text-base"><i class="fa-solid fa-envelope-open-text text-emerald-700 mr-2"></i>Student Leave Applications & History</h3>
-            <p class="text-xs text-slate-500 mt-0.5">All Pending, Approved, and Rejected records from the live server. Once decided, a request is locked and can only be deleted.</p>
+            <h3 class="font-extrabold text-slate-900 text-sm sm:text-base"><i class="fa-solid fa-envelope-open-text text-emerald-700 mr-2"></i>Student Leave Applications & History</h3>
+            <p class="text-xs text-slate-500 mt-0.5">Shows exact submission date & time to verify the 6-Hour Advance Rule. Once decided, a request is locked.</p>
           </div>
           <div class="flex flex-wrap items-center gap-2">
             <button onclick="toggleManualLeaveBox()" class="px-3 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 rounded-xl text-xs font-bold">
@@ -507,7 +526,7 @@
           <table class="w-full text-left border-collapse text-xs">
             <thead class="bg-slate-50 border-b border-slate-200 uppercase text-slate-500">
               <tr>
-                <th class="p-3.5">Tracking ID</th>
+                <th class="p-3.5">Tracking ID & Applied Time</th>
                 <th class="p-3.5">Student & Sem</th>
                 <th class="p-3.5">Leave Dates</th>
                 <th class="p-3.5">Reason & Attachment</th>
@@ -855,10 +874,17 @@
     </main>
   </div>
 
-  <!-- ================= JAVASCRIPT & HIGH-SPEED ENGINE v11 ================= -->
+  <!-- ================= JAVASCRIPT & HIGH-SPEED ENGINE v12 ================= -->
   <script>
-    // YOUR NEW LIVE GOOGLE APPS SCRIPT DEPLOYMENT URL:
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby8iIDwbZN7gVbOPYmK4xFWDKgJfUEi5d-vINifCOkmGOW9jUVfHc4H5737PuHeW7F8cQ/exec";
+    // YOUR NEW v12 GOOGLE APPS SCRIPT DEPLOYMENT URL:
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxBostK45xiAH-WzkE-yy427zMhB-cDJ2NgDAVklzTPOPqQAmZqbAn4Wvda6ZYQ7MvfvQ/exec";
+
+    // NORMALIZE SEMESTER ('6' -> 'VI', 'sem vi' -> 'VI', etc.) SO SEMESTER VI NEVER FAILS
+    function normalizeSem(sem) {
+      const s = String(sem || '').trim().toUpperCase().replace(/^SEMESTER\s+/i, '').replace(/^SEM\s+/i, '');
+      const map = { '1': 'I', '2': 'II', '3': 'III', '4': 'IV', '5': 'V', '6': 'VI', '7': 'VII', '8': 'VIII' };
+      return map[s] || s;
+    }
 
     function getTodayDateString() {
       const now = new Date();
@@ -866,6 +892,19 @@
       const m = String(now.getMonth() + 1).padStart(2, '0');
       const d = String(now.getDate()).padStart(2, '0');
       return `${y}-${m}-${d}`;
+    }
+
+    // EXACT DATE & TIME STRING (e.g., "2026-10-22 03:24 PM")
+    function getTodayDateTimeString() {
+      const now = new Date();
+      const datePart = getTodayDateString();
+      let hours = now.getHours();
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      const ampm = hours >= 12 ? 'PM' : 'AM';
+      hours = hours % 12;
+      hours = hours ? hours : 12;
+      const strHours = String(hours).padStart(2, '0');
+      return `${datePart} ${strHours}:${minutes} ${ampm}`;
     }
 
     function getDatesBetween(startStr, endStr) {
@@ -1026,7 +1065,7 @@
       settings: {
         redZoneThreshold: 75,
         academicSession: 'Fall 2026',
-        announcement: 'Welcome to the Official APDC BBA Portal — Live Server v11 Active.'
+        announcement: 'Welcome to the Official APDC BBA Portal — Live Server v12 Active.'
       }
     };
 
@@ -1038,22 +1077,22 @@
 
       if (state === 'CONNECTED') {
         STATE.isOnline = true;
-        if (pill) pill.className = 'flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-50 text-emerald-800 border border-emerald-300';
-        if (dot) dot.className = 'w-2.5 h-2.5 rounded-full bg-emerald-500 status-dot-pulse';
+        if (pill) pill.className = 'flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[11px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-300';
+        if (dot) dot.className = 'w-2 h-2 rounded-full bg-emerald-500 status-dot-pulse';
         if (text) text.textContent = 'Connected to Server';
         if (loginPill) {
           loginPill.className = 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-300';
           loginPill.innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-500 status-dot-pulse"></span> Connected to Server';
         }
       } else if (state === 'SYNCING') {
-        if (pill) pill.className = 'flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-amber-50 text-amber-800 border border-amber-300';
-        if (dot) dot.className = 'w-2.5 h-2.5 rounded-full bg-amber-500 status-dot-pulse';
-        if (text) text.textContent = 'Syncing Server...';
+        if (pill) pill.className = 'flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[11px] font-bold bg-amber-50 text-amber-800 border border-amber-300';
+        if (dot) dot.className = 'w-2 h-2 rounded-full bg-amber-500 status-dot-pulse';
+        if (text) text.textContent = 'Syncing...';
       } else {
         STATE.isOnline = false;
-        if (pill) pill.className = 'flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-red-50 text-red-700 border border-red-300';
-        if (dot) dot.className = 'w-2.5 h-2.5 rounded-full bg-red-600';
-        if (text) text.textContent = 'Not Connected to Server';
+        if (pill) pill.className = 'flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[11px] font-bold bg-red-50 text-red-700 border border-red-300';
+        if (dot) dot.className = 'w-2 h-2 rounded-full bg-red-600';
+        if (text) text.textContent = 'Offline';
         if (loginPill) {
           loginPill.className = 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-red-50 text-red-700 border border-red-300';
           loginPill.innerHTML = '<span class="w-2 h-2 rounded-full bg-red-600"></span> Not Connected to Server';
@@ -1069,7 +1108,8 @@
       const clean = [];
       (arr || []).forEach(s => {
         if (!s || !s.Name) return;
-        const key = `${String(s.Name).trim().toLowerCase()}|${String(s.FatherName || '').trim().toLowerCase()}|${String(s.Semester || '').trim().toUpperCase()}`;
+        s.Semester = normalizeSem(s.Semester);
+        const key = `${String(s.Name).trim().toLowerCase()}|${String(s.FatherName || '').trim().toLowerCase()}|${s.Semester}`;
         if (!seen.has(key)) {
           seen.add(key);
           clean.push(s);
@@ -1078,7 +1118,7 @@
       return clean;
     }
 
-    // DUAL-CHANNEL LEAVE SYNC HELPER (MERGES LEAVES_DB + SETTINGS_DB BACKUP MIRROR)
+    // DUAL-CHANNEL LEAVE SYNC HELPER
     function mergeDualChannelLeaves(cloudLeavesArray, settingsObj) {
       const map = new Map();
       let backupArr = [];
@@ -1098,11 +1138,17 @@
         if (!raw || !raw.LeaveID) return;
         const clean = normalizeLeaveRecord(raw);
         const existing = map.get(clean.LeaveID);
-        if (existing && existing.Status !== 'Pending' && clean.Status === 'Pending') {
-          map.set(clean.LeaveID, existing);
-        } else {
-          map.set(clean.LeaveID, clean);
+        if (existing) {
+          // Preserve full timestamp if one of the copies has the exact time
+          if (existing.SubmittedAt && existing.SubmittedAt.includes(':') && !clean.SubmittedAt.includes(':')) {
+            clean.SubmittedAt = existing.SubmittedAt;
+          }
+          if (existing.Status !== 'Pending' && clean.Status === 'Pending') {
+            map.set(clean.LeaveID, existing);
+            return;
+          }
         }
+        map.set(clean.LeaveID, clean);
       });
       return Array.from(map.values());
     }
@@ -1112,7 +1158,7 @@
         LeaveID: lv.LeaveID,
         StudentID: lv.StudentID,
         StudentName: lv.StudentName,
-        Semester: lv.Semester,
+        Semester: normalizeSem(lv.Semester),
         StartDate: lv.StartDate,
         EndDate: lv.EndDate,
         Reason: lv.Reason,
@@ -1134,7 +1180,7 @@
       document.getElementById('manLvStart').value = today;
       document.getElementById('manLvEnd').value = today;
 
-      const saved = localStorage.getItem('APDC_PORTAL_V11');
+      const saved = localStorage.getItem('APDC_PORTAL_V12');
       if (saved) {
         try {
           const parsed = JSON.parse(saved);
@@ -1216,7 +1262,6 @@
             STATE.settings = { ...STATE.settings, ...data.settings };
           }
 
-          // Merge Leaves_DB + Settings_DB Backup Mirror so no student leave is ever missed
           const mergedLeaves = mergeDualChannelLeaves(data.leaves || [], STATE.settings);
           STATE.leaves = mergedLeaves;
           applyAllApprovedLeavesToAttendance();
@@ -1254,7 +1299,7 @@
         LeaveID: String(lv.LeaveID || '').trim(),
         StudentID: String(lv.StudentID || '').trim(),
         StudentName: String(lv.StudentName || '').trim(),
-        Semester: String(lv.Semester || '').trim(),
+        Semester: normalizeSem(lv.Semester),
         StartDate: String(lv.StartDate || '').substring(0, 10),
         EndDate: String(lv.EndDate || '').substring(0, 10),
         Reason: String(lv.Reason || '').trim(),
@@ -1262,7 +1307,8 @@
         Status: status,
         Remarks: String(lv.Remarks || '').trim(),
         ActionBy: String(lv.ActionBy || lv.ApprovedBy || '').trim(),
-        SubmittedAt: String(lv.SubmittedAt || getTodayDateString()).substring(0, 10)
+        // Preserve full Date + Time (up to 25 chars)
+        SubmittedAt: String(lv.SubmittedAt || getTodayDateTimeString()).trim()
       };
     }
 
@@ -1272,7 +1318,7 @@
         if (lv.Status === 'Approved' && lv.StartDate && lv.EndDate) {
           const stu = STATE.students.find(s =>
             (lv.StudentID && String(s.StudentID) === String(lv.StudentID)) ||
-            (String(s.Name).toLowerCase() === String(lv.StudentName).toLowerCase() && String(s.Semester) === String(lv.Semester))
+            (String(s.Name).toLowerCase() === String(lv.StudentName).toLowerCase() && normalizeSem(s.Semester) === normalizeSem(lv.Semester))
           );
           if (stu) {
             const dList = getDatesBetween(String(lv.StartDate).substring(0, 10), String(lv.EndDate).substring(0, 10));
@@ -1291,7 +1337,7 @@
       return STATE.leaves.some(lv => {
         if (lv.Status !== 'Approved') return false;
         const matchStu = (lv.StudentID && String(lv.StudentID) === String(student.StudentID)) ||
-                         (String(lv.StudentName).toLowerCase() === String(student.Name).toLowerCase() && String(lv.Semester) === String(student.Semester));
+                         (String(lv.StudentName).toLowerCase() === String(student.Name).toLowerCase() && normalizeSem(lv.Semester) === normalizeSem(student.Semester));
         if (!matchStu) return false;
         const start = String(lv.StartDate).substring(0, 10);
         const end = String(lv.EndDate).substring(0, 10);
@@ -1310,7 +1356,7 @@
         Name: s.name,
         FatherName: s.fname,
         Gender: s.gen,
-        Semester: s.sem,
+        Semester: normalizeSem(s.sem),
         Status: 'Active'
       }));
       STATE.attendance = {};
@@ -1327,7 +1373,7 @@
     }
 
     function saveLocalState() {
-      localStorage.setItem('APDC_PORTAL_V11', JSON.stringify({
+      localStorage.setItem('APDC_PORTAL_V12', JSON.stringify({
         users: STATE.users,
         students: STATE.students,
         attendance: STATE.attendance,
@@ -1348,7 +1394,7 @@
           body: JSON.stringify(payload)
         });
         const result = await res.json();
-        if (result && result.success) {
+        if (result && (result.success || result.alreadyLocked)) {
           setServerConnectionUI('CONNECTED');
         } else {
           setServerConnectionUI('OFFLINE');
@@ -1360,7 +1406,7 @@
       }
     }
 
-    // ================= PUBLIC STUDENT LEAVE PORTAL (DUAL-CHANNEL VERIFIED) =================
+    // ================= PUBLIC STUDENT LEAVE PORTAL (WITH EXACT SUBMISSION TIME) =================
     function togglePublicLeaveMode(mode) {
       document.getElementById('authBoxSignIn').classList.toggle('hidden', mode !== 'signin');
       document.getElementById('authBoxLeaveApply').classList.toggle('hidden', mode !== 'apply');
@@ -1372,10 +1418,10 @@
     }
 
     function populateLeaveStudentDropdown() {
-      const sem = document.getElementById('lvApplySem').value;
+      const sem = normalizeSem(document.getElementById('lvApplySem').value);
       const select = document.getElementById('lvApplyNameSelect');
       if (!select) return;
-      const list = STATE.students.filter(s => String(s.Semester) === String(sem) && s.Status !== 'Alumni');
+      const list = STATE.students.filter(s => normalizeSem(s.Semester) === sem && s.Status !== 'Alumni');
       select.innerHTML = list.map(s => `<option value="${s.StudentID}|${s.Name}">${s.Name} (S/O, D/O: ${s.FatherName})</option>`).join('');
     }
 
@@ -1384,7 +1430,7 @@
       const errBox = document.getElementById('lvSubmitErrorBox');
       errBox.classList.add('hidden');
 
-      const sem = document.getElementById('lvApplySem').value;
+      const sem = normalizeSem(document.getElementById('lvApplySem').value);
       const rawStu = document.getElementById('lvApplyNameSelect').value;
       const [stuId, stuName] = rawStu.split('|');
       const startDate = document.getElementById('lvApplyStart').value;
@@ -1401,11 +1447,10 @@
       btn.disabled = true;
       btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> Saving to Live Server...';
 
-      // Pull latest cloud leaves first so we never overwrite another student's submission
       await fetchCloudData();
 
       const leaveId = 'APDC-LV-' + Math.floor(1000 + Math.random() * 9000);
-      const nowStr = getTodayDateString();
+      const nowDateTimeStr = getTodayDateTimeString();
 
       let base64Data = '', fileName = '', mimeType = '', localDataUrl = '';
       if (fileInput.files && fileInput.files[0]) {
@@ -1430,31 +1475,36 @@
         Status: 'Pending',
         Remarks: '',
         ActionBy: '',
-        SubmittedAt: nowStr,
+        SubmittedAt: nowDateTimeStr,
         base64Data: base64Data,
         fileName: fileName,
         mimeType: mimeType
       };
 
-      // Primary Channel: Write to Leaves_DB
       const resp = await callBackend({ action: 'SUBMIT_LEAVE', leave: leaveObj });
 
-      const localCopy = { ...leaveObj, AttachmentUrl: (resp && resp.attachmentUrl) || localDataUrl || '' };
+      const finalTimestamp = (resp && resp.submittedAt) ? resp.submittedAt : nowDateTimeStr;
+      const localCopy = {
+        ...leaveObj,
+        SubmittedAt: finalTimestamp,
+        AttachmentUrl: (resp && resp.attachmentUrl) || localDataUrl || ''
+      };
       delete localCopy.base64Data;
       STATE.leaves.unshift(localCopy);
       saveLocalState();
 
-      // Secondary Backup Channel: Mirror into Settings_DB so it is 100% guaranteed to appear for Council
       await syncLeavesBackupMirror();
 
       btn.disabled = false;
       btn.innerHTML = '<i class="fa-solid fa-check-circle mr-1"></i> Submit Leave Request';
 
+      const todayStr = getTodayDateString();
       document.getElementById('publicLeaveForm').reset();
-      document.getElementById('lvApplyStart').value = nowStr;
-      document.getElementById('lvApplyEnd').value = nowStr;
+      document.getElementById('lvApplyStart').value = todayStr;
+      document.getElementById('lvApplyEnd').value = todayStr;
       document.getElementById('publicLeaveForm').classList.add('hidden');
       document.getElementById('lvGeneratedCode').textContent = leaveId;
+      document.getElementById('lvGeneratedTime').innerHTML = `<i class="fa-regular fa-clock mr-1"></i>Submitted At: ${finalTimestamp}`;
       document.getElementById('lvReceiptBox').classList.remove('hidden');
       document.getElementById('lvTrackInput').value = leaveId;
     }
@@ -1501,7 +1551,8 @@
               <span class="px-2.5 py-1 rounded-full font-extrabold border ${badgeClass}">${statusLabel}</span>
             </div>
             <div class="font-bold text-slate-900">${lv.StudentName} • Semester ${lv.Semester}</div>
-            <div class="text-slate-600">Dates: <strong>${lv.StartDate}</strong> to <strong>${lv.EndDate}</strong></div>
+            <div class="text-slate-600">Leave Dates: <strong>${lv.StartDate}</strong> to <strong>${lv.EndDate}</strong></div>
+            <div class="text-[11px] text-slate-500"><i class="fa-regular fa-clock mr-1"></i>Applied At: <strong>${lv.SubmittedAt || 'N/A'}</strong></div>
             ${lv.Status === 'Approved' ? `<div class="p-2 bg-emerald-50 text-emerald-800 rounded-lg font-medium border border-emerald-200"><i class="fa-solid fa-check-circle mr-1"></i>Your leave is approved and your attendance is automatically marked as Leave (L) for these dates.</div>` : ''}
             ${lv.Status === 'Rejected' ? `<div class="p-2.5 bg-red-50 text-red-900 rounded-lg border border-red-200"><strong>Remarks:</strong> ${lv.Remarks || 'Application declined by department council.'}</div>` : ''}
           </div>
@@ -1517,10 +1568,10 @@
     }
 
     function populateManualLeaveStudents() {
-      const sem = document.getElementById('manLvSem').value;
+      const sem = normalizeSem(document.getElementById('manLvSem').value);
       const sel = document.getElementById('manLvStu');
       if (!sel) return;
-      const list = STATE.students.filter(s => String(s.Semester) === String(sem) && s.Status !== 'Alumni');
+      const list = STATE.students.filter(s => normalizeSem(s.Semester) === sem && s.Status !== 'Alumni');
       sel.innerHTML = list.map(s => `<option value="${s.StudentID}|${s.Name}">${s.Name}</option>`).join('');
     }
 
@@ -1532,11 +1583,12 @@
 
       const customId = document.getElementById('manLvId').value.trim().toUpperCase();
       const leaveId = customId || ('APDC-LV-' + Math.floor(1000 + Math.random() * 9000));
-      const sem = document.getElementById('manLvSem').value;
+      const sem = normalizeSem(document.getElementById('manLvSem').value);
       const [stuId, stuName] = document.getElementById('manLvStu').value.split('|');
       const startDate = document.getElementById('manLvStart').value;
       const endDate = document.getElementById('manLvEnd').value;
       const reason = document.getElementById('manLvReason').value.trim();
+      const nowDateTimeStr = getTodayDateTimeString();
 
       const leaveObj = {
         LeaveID: leaveId,
@@ -1550,7 +1602,7 @@
         Status: 'Pending',
         Remarks: '',
         ActionBy: '',
-        SubmittedAt: getTodayDateString()
+        SubmittedAt: nowDateTimeStr
       };
 
       STATE.leaves.unshift(leaveObj);
@@ -1567,8 +1619,15 @@
       document.getElementById('manLvReason').value = '';
     }
 
+    // CHECK IF A SEMESTER + DATE IS ALREADY MARKED (LOCKS BOTH CR & FACULTY)
     function isSemesterDateMarked(semester, dateStr) {
-      return STATE.settings && String(STATE.settings[`locked_${semester}_${dateStr}`]) === 'true';
+      const cleanSem = normalizeSem(semester);
+      return STATE.settings && String(STATE.settings[`locked_${cleanSem}_${dateStr}`]) === 'true';
+    }
+
+    function getSemesterLockedByInfo(semester, dateStr) {
+      const cleanSem = normalizeSem(semester);
+      return (STATE.settings && STATE.settings[`lockedBy_${cleanSem}_${dateStr}`]) || 'CR / Faculty';
     }
 
     // AUTHENTICATION & ROLE-BASED ACCESS CONTROL
@@ -1618,15 +1677,17 @@
 
       if (isCR) {
         if (found.AssignedSemester && found.AssignedSemester !== 'ALL') {
-          markSemSelect.value = found.AssignedSemester;
+          const cleanAssigned = normalizeSem(found.AssignedSemester);
+          markSemSelect.value = cleanAssigned;
           markSemSelect.disabled = true;
-          regSemSelect.value = found.AssignedSemester;
+          regSemSelect.value = cleanAssigned;
           regSemSelect.disabled = true;
         }
         markDateInput.value = todayStr;
         markDateInput.disabled = true;
         switchMainTab('mark');
       } else {
+        // Faculty, Council, President, and Sir Faisal can select ANY semester
         markSemSelect.disabled = false;
         regSemSelect.disabled = false;
         markDateInput.disabled = false;
@@ -1663,7 +1724,7 @@
       });
       refreshAllViews();
 
-      if (tab === 'leaves') {
+      if (tab === 'leaves' || tab === 'mark') {
         manualRefreshServer();
       }
     }
@@ -1739,15 +1800,15 @@
       const sems = ['II', 'IV', 'VI', 'VIII'];
       const grid = document.getElementById('semesterCardsGrid');
       grid.innerHTML = sems.map(sem => {
-        const list = activeStudents.filter(s => String(s.Semester) === sem);
+        const list = activeStudents.filter(s => normalizeSem(s.Semester) === sem);
         const missing = list.filter(s => !s.GRNO || !s.SeatNo || !s.EnrolmentNo).length;
         return `
-          <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+          <div class="bg-white p-4 sm:p-5 rounded-2xl shadow-sm border border-slate-200">
             <div class="flex items-center justify-between">
               <span class="px-2.5 py-1 bg-emerald-100 text-emerald-800 font-extrabold text-xs rounded-lg">Semester ${sem}</span>
               <span class="text-xs text-slate-400 font-semibold">${list.length} Students</span>
             </div>
-            <div class="mt-4 space-y-1 text-xs text-slate-600">
+            <div class="mt-3 space-y-1 text-xs text-slate-600">
               <div>Male: <strong>${list.filter(x => x.Gender === 'M').length}</strong> • Female: <strong>${list.filter(x => x.Gender === 'F').length}</strong></div>
               <div class="${missing > 0 ? 'text-amber-600 font-semibold' : 'text-emerald-600'}">
                 ${missing > 0 ? `<i class="fa-solid fa-circle-exclamation mr-1"></i>${missing} Missing GR/Seat/Enr` : `<i class="fa-solid fa-circle-check mr-1"></i>All Credentials Complete`}
@@ -1758,23 +1819,41 @@
       }).join('');
     }
 
-    // 2. RENDER MARK ATTENDANCE
+    // 2. RENDER MARK ATTENDANCE (MUTUAL LOCK FOR CR & FACULTY SO NO DOUBLE MARKING)
     function renderMarkAttendanceList() {
-      const isCR = STATE.currentUser && STATE.currentUser.Role === 'CR';
+      const role = STATE.currentUser ? STATE.currentUser.Role : '';
+      const isCR = (role === 'CR');
+      const isSuperAdmin = (role === 'Sir Faisal' || role === 'President');
+
       const markDateInput = document.getElementById('markDateInput');
       if (isCR) {
         markDateInput.value = getTodayDateString();
         markDateInput.disabled = true;
       }
 
-      const sem = document.getElementById('markSemSelect').value;
+      const sem = normalizeSem(document.getElementById('markSemSelect').value);
       const date = markDateInput.value;
-      const list = STATE.students.filter(s => String(s.Semester) === sem && s.Status !== 'Alumni');
+      const list = STATE.students.filter(s => normalizeSem(s.Semester) === sem && s.Status !== 'Alumni');
       const tbody = document.getElementById('markAttendanceTableBody');
 
-      const lockedForCR = isCR && isSemesterDateMarked(sem, date);
-      document.getElementById('crLockedBanner').classList.toggle('hidden', !lockedForCR);
-      document.getElementById('markActionButtons').classList.toggle('hidden', lockedForCR);
+      const alreadyMarked = isSemesterDateMarked(sem, date);
+      const lockedByWho = getSemesterLockedByInfo(sem, date);
+
+      // Lock for CR, Faculty, and Council if already marked (Only Sir Faisal & President can override)
+      const lockedForCurrentUser = (!isSuperAdmin) && alreadyMarked;
+
+      const banner = document.getElementById('crLockedBanner');
+      banner.classList.toggle('hidden', !alreadyMarked);
+      if (alreadyMarked) {
+        document.getElementById('crLockedTitle').textContent = isSuperAdmin
+          ? `Attendance Already Marked by ${lockedByWho} (Executive Override Enabled)`
+          : `Attendance Already Submitted & Locked by ${lockedByWho}`;
+        document.getElementById('crLockedSub').textContent = isSuperAdmin
+          ? `This semester was already marked, but as ${role} you can edit and re-save if needed.`
+          : `To prevent double-marking between CR and Faculty, Semester ${sem} attendance for ${date} is locked.`;
+      }
+
+      document.getElementById('markActionButtons').classList.toggle('hidden', lockedForCurrentUser);
 
       if (list.length === 0) {
         tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-slate-400 text-xs">No active students found in Semester ${sem}.</td></tr>`;
@@ -1784,25 +1863,25 @@
       tbody.innerHTML = list.map((s, idx) => {
         const autoLeave = hasApprovedLeaveOnDate(s, date);
         const current = autoLeave ? 'L' : ((STATE.attendance[s.StudentID] && STATE.attendance[s.StudentID][date]) || 'P');
-        const rowLocked = lockedForCR || (isCR && autoLeave);
+        const rowLocked = lockedForCurrentUser || (!isSuperAdmin && autoLeave);
 
         return `
           <tr class="hover:bg-slate-50 ${autoLeave ? 'bg-amber-50/40' : ''}">
-            <td class="p-3.5 font-semibold text-slate-400">${idx + 1}</td>
-            <td class="p-3.5 font-mono text-xs">${s.GRNO || '<span class="text-amber-500 italic">Pending</span>'}</td>
-            <td class="p-3.5 font-mono text-xs">${s.SeatNo || '<span class="text-amber-500 italic">Pending</span>'}</td>
-            <td class="p-3.5 font-bold text-slate-900">
+            <td class="p-2.5 sm:p-3.5 font-semibold text-slate-400">${idx + 1}</td>
+            <td class="p-2.5 sm:p-3.5 font-mono text-xs">${s.GRNO || '<span class="text-amber-500 italic">Pending</span>'}</td>
+            <td class="p-2.5 sm:p-3.5 font-mono text-xs">${s.SeatNo || '<span class="text-amber-500 italic">Pending</span>'}</td>
+            <td class="p-2.5 sm:p-3.5 font-bold text-slate-900">
               ${s.Name}
-              ${autoLeave ? `<span class="ml-2 px-2 py-0.5 bg-amber-100 text-amber-800 border border-amber-300 rounded-full text-[10px] font-extrabold"><i class="fa-solid fa-check-circle mr-1"></i>Approved Leave</span>` : ''}
+              ${autoLeave ? `<span class="ml-1.5 px-2 py-0.5 bg-amber-100 text-amber-800 border border-amber-300 rounded-full text-[10px] font-extrabold"><i class="fa-solid fa-check-circle mr-1"></i>Approved Leave</span>` : ''}
             </td>
-            <td class="p-3.5 text-slate-600">${s.FatherName}</td>
-            <td class="p-3.5 text-center">
+            <td class="p-2.5 sm:p-3.5 text-slate-600">${s.FatherName}</td>
+            <td class="p-2.5 sm:p-3.5 text-center">
               <div class="inline-flex rounded-xl border border-slate-200 p-1 bg-slate-50 gap-1" data-stu="${s.StudentID}">
                 ${['P', 'A', 'L', 'NC'].map(code => `
                   <button type="button"
                     ${rowLocked ? 'disabled' : `onclick="setRowStatus('${s.StudentID}', '${code}')"`}
                     id="attbtn-${s.StudentID}-${code}"
-                    class="px-3 py-1 rounded-lg text-xs font-bold transition ${current === code ? getStatusActiveClass(code) : 'text-slate-500 hover:bg-white'} ${rowLocked ? 'opacity-75 cursor-not-allowed' : ''}">
+                    class="px-2.5 sm:px-3 py-1 rounded-lg text-xs font-bold transition ${current === code ? getStatusActiveClass(code) : 'text-slate-500 hover:bg-white'} ${rowLocked ? 'opacity-75 cursor-not-allowed' : ''}">
                     ${code}
                   </button>
                 `).join('')}
@@ -1821,27 +1900,29 @@
     }
 
     function setRowStatus(studentId, code) {
-      const isCR = STATE.currentUser && STATE.currentUser.Role === 'CR';
-      const sem = document.getElementById('markSemSelect').value;
+      const role = STATE.currentUser ? STATE.currentUser.Role : '';
+      const isSuperAdmin = (role === 'Sir Faisal' || role === 'President');
+      const sem = normalizeSem(document.getElementById('markSemSelect').value);
       const date = document.getElementById('markDateInput').value;
-      if (isCR && isSemesterDateMarked(sem, date)) return;
+      if (!isSuperAdmin && isSemesterDateMarked(sem, date)) return;
 
       const stu = STATE.students.find(x => String(x.StudentID) === String(studentId));
-      if (isCR && stu && hasApprovedLeaveOnDate(stu, date)) return;
+      if (!isSuperAdmin && stu && hasApprovedLeaveOnDate(stu, date)) return;
 
       ['P', 'A', 'L', 'NC'].forEach(c => {
         const btn = document.getElementById(`attbtn-${studentId}-${c}`);
-        if (btn) btn.className = `px-3 py-1 rounded-lg text-xs font-bold transition ${c === code ? getStatusActiveClass(c) : 'text-slate-500 hover:bg-white'}`;
+        if (btn) btn.className = `px-2.5 sm:px-3 py-1 rounded-lg text-xs font-bold transition ${c === code ? getStatusActiveClass(c) : 'text-slate-500 hover:bg-white'}`;
       });
     }
 
     function markAllStatus(code) {
-      const isCR = STATE.currentUser && STATE.currentUser.Role === 'CR';
-      const sem = document.getElementById('markSemSelect').value;
+      const role = STATE.currentUser ? STATE.currentUser.Role : '';
+      const isSuperAdmin = (role === 'Sir Faisal' || role === 'President');
+      const sem = normalizeSem(document.getElementById('markSemSelect').value);
       const date = document.getElementById('markDateInput').value;
-      if (isCR && isSemesterDateMarked(sem, date)) return;
+      if (!isSuperAdmin && isSemesterDateMarked(sem, date)) return;
 
-      STATE.students.filter(s => String(s.Semester) === sem && s.Status !== 'Alumni').forEach(s => {
+      STATE.students.filter(s => normalizeSem(s.Semester) === sem && s.Status !== 'Alumni').forEach(s => {
         if (hasApprovedLeaveOnDate(s, date)) {
           setRowStatus(s.StudentID, 'L');
         } else {
@@ -1851,18 +1932,20 @@
     }
 
     async function saveDailyAttendance() {
-      const isCR = STATE.currentUser && STATE.currentUser.Role === 'CR';
-      const sem = document.getElementById('markSemSelect').value;
+      const role = STATE.currentUser ? STATE.currentUser.Role : '';
+      const isCR = (role === 'CR');
+      const isSuperAdmin = (role === 'Sir Faisal' || role === 'President');
+      const sem = normalizeSem(document.getElementById('markSemSelect').value);
       const date = isCR ? getTodayDateString() : document.getElementById('markDateInput').value;
 
-      if (isCR && isSemesterDateMarked(sem, date)) {
-        alert("Today's attendance is already submitted and permanently locked for CR.");
+      if (!isSuperAdmin && isSemesterDateMarked(sem, date)) {
+        alert(`Attendance for Semester ${sem} on ${date} is already marked by ${getSemesterLockedByInfo(sem, date)} and cannot be marked twice.`);
         renderMarkAttendanceList();
         return;
       }
 
-      if (isCR) {
-        if (!confirm(`Confirm Attendance Submission for Semester ${sem} (${date})?\n\nOnce submitted, it becomes permanent for you and cannot be edited.`)) {
+      if (!isSuperAdmin) {
+        if (!confirm(`Confirm Attendance Submission for Semester ${sem} (${date})?\n\nOnce submitted, it locks for both CR and Faculty so it cannot be marked twice.`)) {
           return;
         }
       }
@@ -1876,7 +1959,7 @@
         STATE.dates.sort();
       }
 
-      const list = STATE.students.filter(s => String(s.Semester) === sem && s.Status !== 'Alumni');
+      const list = STATE.students.filter(s => normalizeSem(s.Semester) === sem && s.Status !== 'Alumni');
       const records = [];
       list.forEach(s => {
         let chosen = 'P';
@@ -1890,37 +1973,44 @@
         records.push({ studentId: s.StudentID, status: chosen });
       });
 
-      if (isCR) {
-        STATE.settings[`locked_${sem}_${date}`] = 'true';
-      }
+      const markedByName = STATE.currentUser ? STATE.currentUser.FullName : 'Admin';
 
       const resp = await callBackend({
         action: 'SAVE_ATTENDANCE',
         date: date,
         semester: sem,
         records: records,
-        lockForCR: isCR,
-        markedBy: STATE.currentUser ? STATE.currentUser.FullName : 'Admin'
+        userRole: role,
+        markedBy: markedByName
       });
 
       btn.disabled = false;
       btn.innerHTML = '<i class="fa-solid fa-floppy-disk mr-1"></i> Save Attendance';
+
+      if (resp && resp.alreadyLocked) {
+        await fetchCloudData();
+        alert(resp.error || `Attendance was already marked by ${resp.lockedBy}.`);
+        return;
+      }
 
       if (!resp || !resp.success) {
         alert("Warning: Could not reach the live server. Please check your internet connection and click Save Attendance again.");
         return;
       }
 
+      STATE.settings[`locked_${sem}_${date}`] = 'true';
+      STATE.settings[`lockedBy_${sem}_${date}`] = resp.lockedBy || `${markedByName} (${getTodayDateTimeString()})`;
+      saveLocalState();
       refreshAllViews();
-      alert(`Attendance for Semester ${sem} (${date}) saved to live server!`);
+      alert(`Attendance for Semester ${sem} (${date}) saved and locked on live server!`);
     }
 
     // 3. RENDER ATTENDANCE REGISTER
     function renderRegisterTable() {
-      const sem = document.getElementById('regSemSelect').value;
+      const sem = normalizeSem(document.getElementById('regSemSelect').value);
       const month = document.getElementById('regMonthSelect').value;
       const filteredDates = STATE.dates.filter(d => month === 'ALL' ? true : d.startsWith(month));
-      const list = STATE.students.filter(s => String(s.Semester) === sem && s.Status !== 'Alumni');
+      const list = STATE.students.filter(s => normalizeSem(s.Semester) === sem && s.Status !== 'Alumni');
 
       const thead = document.getElementById('regTableHead');
       thead.innerHTML = `
@@ -1960,7 +2050,7 @@
       const rows = [];
 
       STATE.students.filter(s => s.Status !== 'Alumni').forEach(s => {
-        if (semFilter !== 'ALL' && String(s.Semester) !== semFilter) return;
+        if (semFilter !== 'ALL' && normalizeSem(s.Semester) !== normalizeSem(semFilter)) return;
         const st = getStudentAttendanceStats(s.StudentID);
         if (st.total > 0 && st.pct < threshold) {
           rows.push({ s, st });
@@ -1975,7 +2065,7 @@
 
       tbody.innerHTML = rows.map(({ s, st }) => `
         <tr class="hover:bg-red-50/40">
-          <td class="p-3.5 font-bold">Semester ${s.Semester}</td>
+          <td class="p-3.5 font-bold">Semester ${normalizeSem(s.Semester)}</td>
           <td class="p-3.5 font-mono text-xs">${s.GRNO || 'Pending'}</td>
           <td class="p-3.5 font-mono text-xs">${s.SeatNo || 'Pending'}</td>
           <td class="p-3.5 font-bold text-slate-900">${s.Name}</td>
@@ -1986,14 +2076,14 @@
       `).join('');
     }
 
-    // 5. RENDER LEAVE REQUESTS & PERMANENT HISTORY TAB
+    // 5. RENDER LEAVE REQUESTS & PERMANENT HISTORY TAB (WITH APPLIED TIME)
     function renderLeavesManagementTable() {
       const filter = document.getElementById('leaveStatusFilter').value;
       const list = STATE.leaves.filter(lv => filter === 'ALL' || lv.Status === filter);
       const tbody = document.getElementById('leavesTableBody');
 
       if (list.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-slate-400 font-medium">No leave records found in "${filter}". Click "Refresh Server" at the top right to check for new submissions.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-slate-400 font-medium">No leave records found in "${filter}". Click "Refresh" at the top right to check for new submissions.</td></tr>`;
         return;
       }
 
@@ -2006,10 +2096,15 @@
 
         return `
           <tr class="hover:bg-slate-50">
-            <td class="p-3.5 font-mono font-bold text-slate-700">${lv.LeaveID}</td>
+            <td class="p-3.5">
+              <div class="font-mono font-bold text-slate-800">${lv.LeaveID}</div>
+              <div class="text-[11px] text-emerald-700 font-semibold mt-0.5">
+                <i class="fa-regular fa-clock mr-1"></i>Applied: ${lv.SubmittedAt || 'N/A'}
+              </div>
+            </td>
             <td class="p-3.5">
               <div class="font-bold text-slate-900">${lv.StudentName}</div>
-              <div class="text-slate-500">Semester ${lv.Semester}</div>
+              <div class="text-slate-500">Semester ${normalizeSem(lv.Semester)}</div>
             </td>
             <td class="p-3.5 font-mono">
               <div>${lv.StartDate}</div>
@@ -2073,7 +2168,7 @@
         }
       }
 
-      const reviewerName = STATE.currentUser ? STATE.currentUser.FullName : 'Council';
+      const reviewerName = STATE.currentUser ? `${STATE.currentUser.FullName} (${getTodayDateTimeString()})` : 'Council';
       lv.Status = newStatus;
       lv.Remarks = remarks;
       lv.ActionBy = reviewerName;
@@ -2081,7 +2176,7 @@
       const datesList = getDatesBetween(String(lv.StartDate).substring(0, 10), String(lv.EndDate).substring(0, 10));
       const stu = STATE.students.find(s =>
         (lv.StudentID && String(s.StudentID) === String(lv.StudentID)) ||
-        (String(s.Name).toLowerCase() === String(lv.StudentName).toLowerCase() && String(s.Semester) === String(lv.Semester))
+        (String(s.Name).toLowerCase() === String(lv.StudentName).toLowerCase() && normalizeSem(s.Semester) === normalizeSem(lv.Semester))
       );
 
       if (newStatus === 'Approved' && stu) {
@@ -2104,7 +2199,7 @@
         actionBy: reviewerName,
         datesList: datesList,
         studentId: stu ? stu.StudentID : lv.StudentID,
-        semester: lv.Semester,
+        semester: normalizeSem(lv.Semester),
         fullLeaveObj: lv
       });
 
@@ -2143,7 +2238,7 @@
       const missingOnly = document.getElementById('cpMissingOnly').checked;
 
       const filtered = STATE.students.filter(s => {
-        if (sem !== 'ALL' && String(s.Semester) !== sem) return false;
+        if (sem !== 'ALL' && normalizeSem(s.Semester) !== normalizeSem(sem)) return false;
         if (missingOnly && s.GRNO && s.SeatNo && s.EnrolmentNo) return false;
         if (q && !(`${s.Name} ${s.FatherName} ${s.GRNO} ${s.SeatNo} ${s.EnrolmentNo}`.toLowerCase().includes(q))) return false;
         return true;
@@ -2154,7 +2249,7 @@
       const tbody = document.getElementById('cpStudentsTableBody');
       tbody.innerHTML = filtered.map(s => `
         <tr class="hover:bg-slate-50">
-          <td class="p-3 font-bold">${s.Semester}</td>
+          <td class="p-3 font-bold">${normalizeSem(s.Semester)}</td>
           <td class="p-3 font-mono">${s.GRNO || '<span class="px-2 py-0.5 bg-amber-100 text-amber-800 rounded font-sans text-[11px]">Missing GR</span>'}</td>
           <td class="p-3 font-mono">${s.SeatNo || '<span class="px-2 py-0.5 bg-amber-100 text-amber-800 rounded font-sans text-[11px]">Missing Seat</span>'}</td>
           <td class="p-3 font-mono">${s.EnrolmentNo || '<span class="px-2 py-0.5 bg-amber-100 text-amber-800 rounded font-sans text-[11px]">Missing Enr</span>'}</td>
@@ -2179,7 +2274,7 @@
       document.getElementById('stuFormId').value = s.StudentID;
       document.getElementById('stuFormName').value = s.Name;
       document.getElementById('stuFormFather').value = s.FatherName;
-      document.getElementById('stuFormSem').value = s.Semester;
+      document.getElementById('stuFormSem').value = normalizeSem(s.Semester);
       document.getElementById('stuFormGender').value = s.Gender;
       document.getElementById('stuFormGR').value = s.GRNO || '';
       document.getElementById('stuFormSeat').value = s.SeatNo || '';
@@ -2208,13 +2303,13 @@
 
       const nameVal = document.getElementById('stuFormName').value.trim();
       const fatherVal = document.getElementById('stuFormFather').value.trim();
-      const semVal = document.getElementById('stuFormSem').value;
+      const semVal = normalizeSem(document.getElementById('stuFormSem').value);
       let existingId = document.getElementById('stuFormId').value;
 
       const duplicateMatch = STATE.students.find(x =>
         String(x.Name).trim().toLowerCase() === nameVal.toLowerCase() &&
         String(x.FatherName).trim().toLowerCase() === fatherVal.toLowerCase() &&
-        String(x.Semester).trim().toUpperCase() === semVal.toUpperCase()
+        normalizeSem(x.Semester) === semVal
       );
       if (!existingId && duplicateMatch) {
         existingId = duplicateMatch.StudentID;
@@ -2313,7 +2408,7 @@
           <td class="p-3.5 font-bold text-slate-900">${u.FullName}</td>
           <td class="p-3.5 font-mono text-emerald-700 font-bold">${u.Username}</td>
           <td class="p-3.5 font-mono text-slate-700">${u.Password}</td>
-          <td class="p-3.5 font-semibold">${u.AssignedSemester === 'ALL' ? 'All Semesters' : 'Semester ' + u.AssignedSemester}</td>
+          <td class="p-3.5 font-semibold">${u.AssignedSemester === 'ALL' ? 'All Semesters' : 'Semester ' + normalizeSem(u.AssignedSemester)}</td>
           <td class="p-3.5 text-right space-x-2 whitespace-nowrap">
             <button onclick="editUser('${u.UserID}')" class="px-2.5 py-1 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded-lg font-bold">
               <i class="fa-solid fa-key mr-1"></i> Edit / Change Password
@@ -2334,20 +2429,21 @@
       document.getElementById('userFormUsername').value = u.Username;
       document.getElementById('userFormPassword').value = u.Password;
       document.getElementById('userFormRole').value = u.Role;
-      document.getElementById('userFormSem').value = u.AssignedSemester || 'ALL';
+      document.getElementById('userFormSem').value = u.AssignedSemester === 'ALL' ? 'ALL' : normalizeSem(u.AssignedSemester);
       window.scrollTo({ top: 180, behavior: 'smooth' });
     }
 
     async function handleSaveUser(e) {
       e.preventDefault();
       const id = document.getElementById('userFormId').value || ('USR-' + Date.now());
+      const rawSem = document.getElementById('userFormSem').value;
       const userObj = {
         UserID: id,
         FullName: document.getElementById('userFormFullName').value.trim(),
         Username: document.getElementById('userFormUsername').value.trim(),
         Password: document.getElementById('userFormPassword').value.trim(),
         Role: document.getElementById('userFormRole').value,
-        AssignedSemester: document.getElementById('userFormSem').value
+        AssignedSemester: rawSem === 'ALL' ? 'ALL' : normalizeSem(rawSem)
       };
       const idx = STATE.users.findIndex(x => String(x.UserID) === String(id));
       if (idx >= 0) STATE.users[idx] = userObj;
@@ -2463,12 +2559,13 @@
     }
 
     async function promoteSemesterBatch() {
-      const fromSem = document.getElementById('promoFromSem').value;
-      const toSem = document.getElementById('promoToSem').value;
+      const fromSem = normalizeSem(document.getElementById('promoFromSem').value);
+      const rawTo = document.getElementById('promoToSem').value;
+      const toSem = rawTo === 'Graduated' ? 'Graduated' : normalizeSem(rawTo);
       if (!confirm(`Are you sure you want to promote all Semester ${fromSem} students to ${toSem}?`)) return;
 
       STATE.students.forEach(s => {
-        if (String(s.Semester) === fromSem) {
+        if (normalizeSem(s.Semester) === fromSem) {
           s.Semester = toSem;
           if (toSem === 'Graduated') s.Status = 'Alumni';
         }
