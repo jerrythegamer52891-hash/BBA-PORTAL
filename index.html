@@ -244,7 +244,7 @@
           </div>
         </div>
 
-        <!-- Row 2: Single-Line Horizontal Scroll Navigation Bar (Never wraps into tall blocks on mobile) -->
+        <!-- Row 2: Single-Line Horizontal Scroll Navigation Bar -->
         <nav class="flex items-center gap-1 overflow-x-auto no-scrollbar pb-0.5">
           <button onclick="switchMainTab('dashboard')" id="nav-dashboard" class="nav-btn active px-3 py-1.5 rounded-xl text-xs whitespace-nowrap flex items-center gap-1.5 hover:bg-slate-100 transition shrink-0">
             <i class="fa-solid fa-chart-pie"></i> Dashboard
@@ -258,6 +258,7 @@
           <button onclick="switchMainTab('redzone')" id="nav-redzone" class="nav-btn px-3 py-1.5 rounded-xl text-xs whitespace-nowrap flex items-center gap-1.5 hover:bg-slate-100 transition shrink-0">
             <i class="fa-solid fa-triangle-exclamation text-red-500"></i> Red Zone
           </button>
+          <!-- LEAVE APPROVAL TAB (SIR FAISAL + PRESIDENT + COUNCIL + BBA FACULTY) -->
           <button onclick="switchMainTab('leaves')" id="nav-leaves" class="nav-btn hidden px-3 py-1.5 rounded-xl text-xs whitespace-nowrap flex items-center gap-1.5 hover:bg-slate-100 transition shrink-0">
             <i class="fa-solid fa-envelope-open-text text-emerald-600"></i> Leave Requests
             <span id="pendingLeavesBadge" class="hidden px-1.5 py-0.5 text-[10px] bg-red-600 text-white rounded-full font-extrabold">0</span>
@@ -302,7 +303,7 @@
           <div class="bg-white p-4 sm:p-5 rounded-2xl shadow-sm border border-slate-200">
             <div class="text-[11px] font-bold uppercase text-amber-600">Pending Leave Requests</div>
             <div id="statPendingLeaves" class="text-2xl sm:text-3xl font-extrabold text-amber-600 mt-1">0</div>
-            <div class="text-[11px] text-slate-500 mt-1">Awaiting Council / HOD Review</div>
+            <div class="text-[11px] text-slate-500 mt-1">Awaiting Faculty / Council / HOD</div>
           </div>
         </div>
 
@@ -312,16 +313,16 @@
 
       <!-- 2. MARK ATTENDANCE TAB -->
       <section id="tab-mark" class="hidden space-y-3">
-        <!-- Mutual CR & Faculty Permanent Lock Banner -->
+        <!-- Lock / Override Banner -->
         <div id="crLockedBanner" class="hidden bg-emerald-50 border border-emerald-300 text-emerald-900 p-3.5 rounded-2xl flex flex-wrap items-center justify-between gap-2">
           <div class="flex items-center gap-3">
-            <i class="fa-solid fa-lock text-emerald-700 text-base"></i>
+            <i id="crLockedIcon" class="fa-solid fa-lock text-emerald-700 text-base"></i>
             <div>
               <h4 id="crLockedTitle" class="font-extrabold text-xs sm:text-sm">Attendance is Submitted & Locked</h4>
-              <p id="crLockedSub" class="text-[11px] text-emerald-700">This semester's attendance has already been marked for this date. To prevent double-marking by CR and Faculty, it is now locked. Contact Sir Faisal or the President for any changes.</p>
+              <p id="crLockedSub" class="text-[11px] text-emerald-700">This semester's attendance has already been marked for this date.</p>
             </div>
           </div>
-          <span class="px-2.5 py-1 bg-emerald-700 text-white text-[11px] font-bold rounded-full uppercase">Locked</span>
+          <span id="crLockedBadgeText" class="px-2.5 py-1 bg-emerald-700 text-white text-[11px] font-bold rounded-full uppercase">Locked</span>
         </div>
 
         <div class="bg-white p-3.5 sm:p-4 rounded-2xl shadow-sm border border-slate-200 flex flex-wrap items-end justify-between gap-3">
@@ -348,7 +349,7 @@
             <button onclick="markAllStatus('P')" class="px-3 py-1.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded-xl text-xs font-bold border border-emerald-200">Mark All Present (P)</button>
             <button onclick="markAllStatus('NC')" class="px-3 py-1.5 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-xl text-xs font-bold">No Class (NC)</button>
             <button id="saveAttBtn" onclick="saveDailyAttendance()" class="px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs sm:text-sm font-bold shadow">
-              <i class="fa-solid fa-floppy-disk mr-1"></i> Save Attendance
+              <i class="fa-solid fa-floppy-disk mr-1"></i> Save / Update Attendance
             </button>
           </div>
         </div>
@@ -449,7 +450,7 @@
         </div>
       </section>
 
-      <!-- 5. LEAVE REQUESTS MANAGEMENT TAB (COUNCIL & SIR FAISAL) -->
+      <!-- 5. LEAVE REQUESTS MANAGEMENT TAB (SIR FAISAL, PRESIDENT, COUNCIL & FACULTY) -->
       <section id="tab-leaves" class="hidden space-y-4">
         <div class="bg-white p-4 sm:p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-wrap items-center justify-between gap-4">
           <div>
@@ -475,11 +476,11 @@
           </div>
         </div>
 
-        <!-- QUICK MANUAL / EMERGENCY LEAVE ENTRY BOX FOR COUNCIL -->
+        <!-- QUICK MANUAL / EMERGENCY LEAVE ENTRY BOX -->
         <div id="manualLeaveEntryBox" class="hidden bg-emerald-50/70 border border-emerald-300 p-5 rounded-2xl space-y-3">
           <div class="flex items-center justify-between">
             <div>
-              <h4 class="font-extrabold text-emerald-950 text-sm"><i class="fa-solid fa-file-medical mr-1.5 text-emerald-700"></i>Log Student Leave by Reference ID / Direct Council Entry</h4>
+              <h4 class="font-extrabold text-emerald-950 text-sm"><i class="fa-solid fa-file-medical mr-1.5 text-emerald-700"></i>Log Student Leave by Reference ID / Direct Entry</h4>
               <p class="text-xs text-emerald-800">Enter a student's Reference ID or emergency leave directly here to register & approve it immediately.</p>
             </div>
             <button type="button" onclick="toggleManualLeaveBox()" class="text-xs text-slate-500 font-bold hover:underline">Close</button>
@@ -723,7 +724,7 @@
                 <select id="userFormRole" onchange="autoSuggestCRCreds()" class="w-full px-3 py-2 border rounded-xl text-xs font-bold">
                   <option value="CR" selected>Class Representative (CR)</option>
                   <option value="Council">Council Member</option>
-                  <option value="Faculty">Faculty</option>
+                  <option value="Faculty">Faculty (Edit Attendance + Leaves)</option>
                   <option value="President">President (Full Control)</option>
                   <option value="Sir Faisal">Sir Faisal (Full Control)</option>
                 </select>
@@ -874,12 +875,12 @@
     </main>
   </div>
 
-  <!-- ================= JAVASCRIPT & HIGH-SPEED ENGINE v12 ================= -->
+  <!-- ================= JAVASCRIPT & HIGH-SPEED ENGINE v13 ================= -->
   <script>
-    // YOUR NEW v12 GOOGLE APPS SCRIPT DEPLOYMENT URL:
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxBostK45xiAH-WzkE-yy427zMhB-cDJ2NgDAVklzTPOPqQAmZqbAn4Wvda6ZYQ7MvfvQ/exec";
+    // YOUR NEW v13 GOOGLE APPS SCRIPT DEPLOYMENT URL:
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwMCCQblsELGsCPMt6SUh4ODTlHPMuQUlxBKdULkOOsDGulluAgtdXkdra864L0nZfazQ/exec";
 
-    // NORMALIZE SEMESTER ('6' -> 'VI', 'sem vi' -> 'VI', etc.) SO SEMESTER VI NEVER FAILS
+    // NORMALIZE SEMESTER ('6' -> 'VI', 'sem vi' -> 'VI', etc.)
     function normalizeSem(sem) {
       const s = String(sem || '').trim().toUpperCase().replace(/^SEMESTER\s+/i, '').replace(/^SEM\s+/i, '');
       const map = { '1': 'I', '2': 'II', '3': 'III', '4': 'IV', '5': 'V', '6': 'VI', '7': 'VII', '8': 'VIII' };
@@ -894,7 +895,6 @@
       return `${y}-${m}-${d}`;
     }
 
-    // EXACT DATE & TIME STRING (e.g., "2026-10-22 03:24 PM")
     function getTodayDateTimeString() {
       const now = new Date();
       const datePart = getTodayDateString();
@@ -1065,9 +1065,14 @@
       settings: {
         redZoneThreshold: 75,
         academicSession: 'Fall 2026',
-        announcement: 'Welcome to the Official APDC BBA Portal — Live Server v12 Active.'
+        announcement: 'Welcome to the Official APDC BBA Portal — Live Server v13 Active.'
       }
     };
+
+    // CHECK IF CURRENT USER HAS ATTENDANCE EDIT / OVERRIDE AUTHORITY (SIR FAISAL, PRESIDENT, FACULTY)
+    function hasAttendanceOverrideAuthority(role) {
+      return (role === 'Sir Faisal' || role === 'President' || role === 'Faculty');
+    }
 
     function setServerConnectionUI(state) {
       const pill = document.getElementById('serverConnectionPill');
@@ -1139,7 +1144,6 @@
         const clean = normalizeLeaveRecord(raw);
         const existing = map.get(clean.LeaveID);
         if (existing) {
-          // Preserve full timestamp if one of the copies has the exact time
           if (existing.SubmittedAt && existing.SubmittedAt.includes(':') && !clean.SubmittedAt.includes(':')) {
             clean.SubmittedAt = existing.SubmittedAt;
           }
@@ -1180,7 +1184,7 @@
       document.getElementById('manLvStart').value = today;
       document.getElementById('manLvEnd').value = today;
 
-      const saved = localStorage.getItem('APDC_PORTAL_V12');
+      const saved = localStorage.getItem('APDC_PORTAL_V13') || localStorage.getItem('APDC_PORTAL_V12');
       if (saved) {
         try {
           const parsed = JSON.parse(saved);
@@ -1307,7 +1311,6 @@
         Status: status,
         Remarks: String(lv.Remarks || '').trim(),
         ActionBy: String(lv.ActionBy || lv.ApprovedBy || '').trim(),
-        // Preserve full Date + Time (up to 25 chars)
         SubmittedAt: String(lv.SubmittedAt || getTodayDateTimeString()).trim()
       };
     }
@@ -1373,7 +1376,7 @@
     }
 
     function saveLocalState() {
-      localStorage.setItem('APDC_PORTAL_V12', JSON.stringify({
+      localStorage.setItem('APDC_PORTAL_V13', JSON.stringify({
         users: STATE.users,
         students: STATE.students,
         attendance: STATE.attendance,
@@ -1406,7 +1409,7 @@
       }
     }
 
-    // ================= PUBLIC STUDENT LEAVE PORTAL (WITH EXACT SUBMISSION TIME) =================
+    // ================= PUBLIC STUDENT LEAVE PORTAL =================
     function togglePublicLeaveMode(mode) {
       document.getElementById('authBoxSignIn').classList.toggle('hidden', mode !== 'signin');
       document.getElementById('authBoxLeaveApply').classList.toggle('hidden', mode !== 'apply');
@@ -1554,13 +1557,13 @@
             <div class="text-slate-600">Leave Dates: <strong>${lv.StartDate}</strong> to <strong>${lv.EndDate}</strong></div>
             <div class="text-[11px] text-slate-500"><i class="fa-regular fa-clock mr-1"></i>Applied At: <strong>${lv.SubmittedAt || 'N/A'}</strong></div>
             ${lv.Status === 'Approved' ? `<div class="p-2 bg-emerald-50 text-emerald-800 rounded-lg font-medium border border-emerald-200"><i class="fa-solid fa-check-circle mr-1"></i>Your leave is approved and your attendance is automatically marked as Leave (L) for these dates.</div>` : ''}
-            ${lv.Status === 'Rejected' ? `<div class="p-2.5 bg-red-50 text-red-900 rounded-lg border border-red-200"><strong>Remarks:</strong> ${lv.Remarks || 'Application declined by department council.'}</div>` : ''}
+            ${lv.Status === 'Rejected' ? `<div class="p-2.5 bg-red-50 text-red-900 rounded-lg border border-red-200"><strong>Remarks:</strong> ${lv.Remarks || 'Application declined by department.'}</div>` : ''}
           </div>
         `;
       }).join('');
     }
 
-    // MANUAL COUNCIL LEAVE ENTRY
+    // MANUAL LEAVE ENTRY
     function toggleManualLeaveBox() {
       const box = document.getElementById('manualLeaveEntryBox');
       box.classList.toggle('hidden');
@@ -1619,7 +1622,6 @@
       document.getElementById('manLvReason').value = '';
     }
 
-    // CHECK IF A SEMESTER + DATE IS ALREADY MARKED (LOCKS BOTH CR & FACULTY)
     function isSemesterDateMarked(semester, dateStr) {
       const cleanSem = normalizeSem(semester);
       return STATE.settings && String(STATE.settings[`locked_${cleanSem}_${dateStr}`]) === 'true';
@@ -1659,7 +1661,8 @@
       document.getElementById('currentUserDisplay').textContent = `${found.FullName} • Role: ${found.Role}`;
 
       const isSuperAdmin = (found.Role === 'Sir Faisal' || found.Role === 'President');
-      const canApproveLeaves = (found.Role === 'Sir Faisal' || found.Role === 'President' || found.Role === 'Council');
+      // BBA Faculty now ALSO has access to Leave Requests alongside Sir Faisal, President & Council
+      const canApproveLeaves = (found.Role === 'Sir Faisal' || found.Role === 'President' || found.Role === 'Council' || found.Role === 'Faculty');
       const isCR = (found.Role === 'CR');
 
       document.getElementById('nav-dashboard').classList.toggle('hidden', isCR);
@@ -1687,7 +1690,7 @@
         markDateInput.disabled = true;
         switchMainTab('mark');
       } else {
-        // Faculty, Council, President, and Sir Faisal can select ANY semester
+        // Faculty, Council, President, and Sir Faisal can select ANY semester & date
         markSemSelect.disabled = false;
         regSemSelect.disabled = false;
         markDateInput.disabled = false;
@@ -1819,11 +1822,11 @@
       }).join('');
     }
 
-    // 2. RENDER MARK ATTENDANCE (MUTUAL LOCK FOR CR & FACULTY SO NO DOUBLE MARKING)
+    // 2. RENDER MARK ATTENDANCE (SIR FAISAL, PRESIDENT & FACULTY CAN EDIT/OVERRIDE ANYTIME)
     function renderMarkAttendanceList() {
       const role = STATE.currentUser ? STATE.currentUser.Role : '';
       const isCR = (role === 'CR');
-      const isSuperAdmin = (role === 'Sir Faisal' || role === 'President');
+      const canOverride = hasAttendanceOverrideAuthority(role);
 
       const markDateInput = document.getElementById('markDateInput');
       if (isCR) {
@@ -1839,18 +1842,22 @@
       const alreadyMarked = isSemesterDateMarked(sem, date);
       const lockedByWho = getSemesterLockedByInfo(sem, date);
 
-      // Lock for CR, Faculty, and Council if already marked (Only Sir Faisal & President can override)
-      const lockedForCurrentUser = (!isSuperAdmin) && alreadyMarked;
+      // Lock for CR & Council if already marked, but allow Sir Faisal, President & Faculty to edit freely
+      const lockedForCurrentUser = (!canOverride) && alreadyMarked;
 
       const banner = document.getElementById('crLockedBanner');
       banner.classList.toggle('hidden', !alreadyMarked);
       if (alreadyMarked) {
-        document.getElementById('crLockedTitle').textContent = isSuperAdmin
-          ? `Attendance Already Marked by ${lockedByWho} (Executive Override Enabled)`
+        document.getElementById('crLockedIcon').className = canOverride
+          ? 'fa-solid fa-pen-to-square text-emerald-700 text-base'
+          : 'fa-solid fa-lock text-emerald-700 text-base';
+        document.getElementById('crLockedBadgeText').textContent = canOverride ? 'Edit Mode Active' : 'Locked';
+        document.getElementById('crLockedTitle').textContent = canOverride
+          ? `Attendance Marked by ${lockedByWho} (${role} Edit Mode Enabled)`
           : `Attendance Already Submitted & Locked by ${lockedByWho}`;
-        document.getElementById('crLockedSub').textContent = isSuperAdmin
-          ? `This semester was already marked, but as ${role} you can edit and re-save if needed.`
-          : `To prevent double-marking between CR and Faculty, Semester ${sem} attendance for ${date} is locked.`;
+        document.getElementById('crLockedSub').textContent = canOverride
+          ? `As ${role}, you have full authority to modify any student's status below and click "Save / Update Attendance" to overwrite the record.`
+          : `Semester ${sem} attendance for ${date} is locked. Only Sir Faisal, President, or BBA Faculty can edit saved attendance.`;
       }
 
       document.getElementById('markActionButtons').classList.toggle('hidden', lockedForCurrentUser);
@@ -1863,7 +1870,7 @@
       tbody.innerHTML = list.map((s, idx) => {
         const autoLeave = hasApprovedLeaveOnDate(s, date);
         const current = autoLeave ? 'L' : ((STATE.attendance[s.StudentID] && STATE.attendance[s.StudentID][date]) || 'P');
-        const rowLocked = lockedForCurrentUser || (!isSuperAdmin && autoLeave);
+        const rowLocked = lockedForCurrentUser || (!canOverride && autoLeave);
 
         return `
           <tr class="hover:bg-slate-50 ${autoLeave ? 'bg-amber-50/40' : ''}">
@@ -1901,13 +1908,13 @@
 
     function setRowStatus(studentId, code) {
       const role = STATE.currentUser ? STATE.currentUser.Role : '';
-      const isSuperAdmin = (role === 'Sir Faisal' || role === 'President');
+      const canOverride = hasAttendanceOverrideAuthority(role);
       const sem = normalizeSem(document.getElementById('markSemSelect').value);
       const date = document.getElementById('markDateInput').value;
-      if (!isSuperAdmin && isSemesterDateMarked(sem, date)) return;
+      if (!canOverride && isSemesterDateMarked(sem, date)) return;
 
       const stu = STATE.students.find(x => String(x.StudentID) === String(studentId));
-      if (!isSuperAdmin && stu && hasApprovedLeaveOnDate(stu, date)) return;
+      if (!canOverride && stu && hasApprovedLeaveOnDate(stu, date)) return;
 
       ['P', 'A', 'L', 'NC'].forEach(c => {
         const btn = document.getElementById(`attbtn-${studentId}-${c}`);
@@ -1917,10 +1924,10 @@
 
     function markAllStatus(code) {
       const role = STATE.currentUser ? STATE.currentUser.Role : '';
-      const isSuperAdmin = (role === 'Sir Faisal' || role === 'President');
+      const canOverride = hasAttendanceOverrideAuthority(role);
       const sem = normalizeSem(document.getElementById('markSemSelect').value);
       const date = document.getElementById('markDateInput').value;
-      if (!isSuperAdmin && isSemesterDateMarked(sem, date)) return;
+      if (!canOverride && isSemesterDateMarked(sem, date)) return;
 
       STATE.students.filter(s => normalizeSem(s.Semester) === sem && s.Status !== 'Alumni').forEach(s => {
         if (hasApprovedLeaveOnDate(s, date)) {
@@ -1934,18 +1941,18 @@
     async function saveDailyAttendance() {
       const role = STATE.currentUser ? STATE.currentUser.Role : '';
       const isCR = (role === 'CR');
-      const isSuperAdmin = (role === 'Sir Faisal' || role === 'President');
+      const canOverride = hasAttendanceOverrideAuthority(role);
       const sem = normalizeSem(document.getElementById('markSemSelect').value);
       const date = isCR ? getTodayDateString() : document.getElementById('markDateInput').value;
 
-      if (!isSuperAdmin && isSemesterDateMarked(sem, date)) {
-        alert(`Attendance for Semester ${sem} on ${date} is already marked by ${getSemesterLockedByInfo(sem, date)} and cannot be marked twice.`);
+      if (!canOverride && isSemesterDateMarked(sem, date)) {
+        alert(`Attendance for Semester ${sem} on ${date} is already marked by ${getSemesterLockedByInfo(sem, date)} and cannot be modified by ${role}.`);
         renderMarkAttendanceList();
         return;
       }
 
-      if (!isSuperAdmin) {
-        if (!confirm(`Confirm Attendance Submission for Semester ${sem} (${date})?\n\nOnce submitted, it locks for both CR and Faculty so it cannot be marked twice.`)) {
+      if (!canOverride) {
+        if (!confirm(`Confirm Attendance Submission for Semester ${sem} (${date})?\n\nOnce submitted, it locks permanently for CRs.`)) {
           return;
         }
       }
@@ -1967,7 +1974,7 @@
           const b = document.getElementById(`attbtn-${s.StudentID}-${c}`);
           if (b && b.className.includes('text-white')) chosen = c;
         });
-        if (hasApprovedLeaveOnDate(s, date)) chosen = 'L';
+        if (!canOverride && hasApprovedLeaveOnDate(s, date)) chosen = 'L';
         if (!STATE.attendance[s.StudentID]) STATE.attendance[s.StudentID] = {};
         STATE.attendance[s.StudentID][date] = chosen;
         records.push({ studentId: s.StudentID, status: chosen });
@@ -1985,7 +1992,7 @@
       });
 
       btn.disabled = false;
-      btn.innerHTML = '<i class="fa-solid fa-floppy-disk mr-1"></i> Save Attendance';
+      btn.innerHTML = '<i class="fa-solid fa-floppy-disk mr-1"></i> Save / Update Attendance';
 
       if (resp && resp.alreadyLocked) {
         await fetchCloudData();
@@ -2002,7 +2009,7 @@
       STATE.settings[`lockedBy_${sem}_${date}`] = resp.lockedBy || `${markedByName} (${getTodayDateTimeString()})`;
       saveLocalState();
       refreshAllViews();
-      alert(`Attendance for Semester ${sem} (${date}) saved and locked on live server!`);
+      alert(`Attendance for Semester ${sem} (${date}) saved and updated on live server!`);
     }
 
     // 3. RENDER ATTENDANCE REGISTER
@@ -2076,7 +2083,7 @@
       `).join('');
     }
 
-    // 5. RENDER LEAVE REQUESTS & PERMANENT HISTORY TAB (WITH APPLIED TIME)
+    // 5. RENDER LEAVE REQUESTS & PERMANENT HISTORY TAB (ACCESSIBLE TO FACULTY, COUNCIL, PRESIDENT & SIR FAISAL)
     function renderLeavesManagementTable() {
       const filter = document.getElementById('leaveStatusFilter').value;
       const list = STATE.leaves.filter(lv => filter === 'ALL' || lv.Status === filter);
@@ -2168,7 +2175,7 @@
         }
       }
 
-      const reviewerName = STATE.currentUser ? `${STATE.currentUser.FullName} (${getTodayDateTimeString()})` : 'Council';
+      const reviewerName = STATE.currentUser ? `${STATE.currentUser.FullName} (${getTodayDateTimeString()})` : 'Council / Faculty';
       lv.Status = newStatus;
       lv.Remarks = remarks;
       lv.ActionBy = reviewerName;
@@ -2404,7 +2411,7 @@
       const tbody = document.getElementById('cpUsersTableBody');
       tbody.innerHTML = STATE.users.map(u => `
         <tr class="hover:bg-slate-50">
-          <td class="p-3.5"><span class="px-2.5 py-1 rounded-full text-xs font-bold ${u.Role === 'Sir Faisal' || u.Role === 'President' ? 'bg-amber-100 text-amber-900' : u.Role === 'Council' ? 'bg-purple-100 text-purple-900' : u.Role === 'CR' ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-700'}">${u.Role}</span></td>
+          <td class="p-3.5"><span class="px-2.5 py-1 rounded-full text-xs font-bold ${u.Role === 'Sir Faisal' || u.Role === 'President' ? 'bg-amber-100 text-amber-900' : u.Role === 'Council' ? 'bg-purple-100 text-purple-900' : u.Role === 'Faculty' ? 'bg-sky-100 text-sky-900' : 'bg-emerald-100 text-emerald-800'}">${u.Role}</span></td>
           <td class="p-3.5 font-bold text-slate-900">${u.FullName}</td>
           <td class="p-3.5 font-mono text-emerald-700 font-bold">${u.Username}</td>
           <td class="p-3.5 font-mono text-slate-700">${u.Password}</td>
